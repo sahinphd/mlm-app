@@ -22,11 +22,37 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role',
+        'phone',
+        'avatar',
     ];
 
     public function wallet()
     {
         return $this->hasOne(Wallet::class);
+    }
+
+    public function creditAccount()
+    {
+        return $this->hasOne(CreditAccount::class);
+    }
+
+    public function referralRecord()
+    {
+        return $this->hasOne(Referral::class, 'user_id');
+    }
+
+    public function referredUsers()
+    {
+        // users who have this user as parent_id in referrals table
+        return $this->hasManyThrough(
+            User::class,
+            Referral::class,
+            'parent_id', // Foreign key on referrals table...
+            'id',        // Foreign key on users table...
+            'id',        // Local key on users table...
+            'user_id'    // Local key on referrals table...
+        );
     }
 
     public function paymentRequests()
@@ -37,6 +63,37 @@ class User extends Authenticatable
     public function isAdmin(): bool
     {
         return $this->role === 'admin';
+    }
+
+    /**
+     * Return a usable avatar URL for the user.
+     */
+    public function getAvatarUrlAttribute(): string
+    {
+        $a = $this->avatar;
+        if (empty($a)) {
+            return asset('/images/user/default.png');
+        }
+        // If stored as a full URL, return as-is
+        if (str_starts_with($a, 'http://') || str_starts_with($a, 'https://')) {
+            return $a;
+        }
+        // Otherwise assume it's a public path and use asset()
+        return asset($a);
+    }
+
+    /**
+     * Scope a query to search name/email/phone.
+     */
+    public function scopeSearch($query, ?string $term)
+    {
+        if (empty($term)) return $query;
+        $term = "%{$term}%";
+        return $query->where(function($q) use ($term) {
+            $q->where('name', 'like', $term)
+              ->orWhere('email', 'like', $term)
+              ->orWhere('phone', 'like', $term);
+        });
     }
 
     /**

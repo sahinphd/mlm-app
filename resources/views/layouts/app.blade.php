@@ -16,7 +16,10 @@
                 <a href="/" class="font-semibold">{{ config('app.name', 'MLM') }}</a>
                 <div class="space-x-3">
                     @auth
+                        <a href="/shop" class="text-sm">Shop</a>
+                        <a href="/orders" class="text-sm">My Orders</a>
                         <a href="/payments" class="text-sm">My Payments</a>
+                        <a href="/commissions" class="text-sm">My Commissions</a>
                         @if(auth()->user()->isAdmin())
                             <a href="/admin/payments" class="text-sm">Admin</a>
                         @endif

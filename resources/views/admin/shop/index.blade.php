@@ -1,0 +1,67 @@
+@extends('admin.layout')
+
+@section('content')
+<div class="mx-auto max-w-screen-2xl p-4 md:p-6">
+    <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h2 class="text-title-md2 font-bold text-black dark:text-white">Admin Shop (Order for User)</h2>
+    </div>
+
+    <!-- Packages Section -->
+    @if($packages->count() > 0)
+    <div class="mb-10">
+        <h3 class="mb-5 text-xl font-semibold text-black dark:text-white">Packages</h3>
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 xl:grid-cols-4 2xl:gap-7.5">
+            @foreach($packages as $package)
+            <div class="rounded-sm border border-stroke bg-white p-4 shadow-default dark:border-strokedark dark:bg-boxdark">
+                <div class="mb-4 h-48 w-full bg-gray-2 dark:bg-meta-4 flex items-center justify-center overflow-hidden rounded">
+                    @if($package->image)
+                        <img src="{{ $package->image }}" alt="{{ $package->name }}" class="h-full w-full object-cover">
+                    @else
+                        <svg class="h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                        </svg>
+                    @endif
+                </div>
+                <div>
+                    <h4 class="mb-1.5 font-semibold text-black dark:text-white">{{ $package->name }}</h4>
+                    <p class="text-sm font-medium">Price: Rs.{{ number_format($package->price, 2) }}</p>
+                    <p class="text-xs text-meta-3 mb-4">BV: {{ $package->bv }}</p>
+                    <a href="{{ route('admin.shop.checkout', ['package_id' => $package->id]) }}" class="flex w-full justify-center rounded bg-primary py-2 px-6 font-medium text-gray hover:bg-opacity-90">
+                        Order for User
+                    </a>
+                </div>
+            </div>
+            @endforeach
+        </div>
+    </div>
+    @endif
+
+    <!-- Products Section -->
+    <div>
+        <h3 class="mb-5 text-xl font-semibold text-black dark:text-white">Individual Products</h3>
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 xl:grid-cols-4 2xl:gap-7.5">
+            @foreach($products as $product)
+            <div class="rounded-sm border border-stroke bg-white p-4 shadow-default dark:border-strokedark dark:bg-boxdark">
+                <div class="mb-4 h-48 w-full bg-gray-2 dark:bg-meta-4 flex items-center justify-center overflow-hidden rounded">
+                    @if($product->image)
+                        <img src="{{ $product->image }}" alt="{{ $product->name }}" class="h-full w-full object-cover">
+                    @else
+                        <svg class="h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                        </svg>
+                    @endif
+                </div>
+                <div>
+                    <h4 class="mb-1.5 font-semibold text-black dark:text-white">{{ $product->name }}</h4>
+                    <p class="text-sm font-medium">Price: Rs.{{ number_format($product->price, 2) }}</p>
+                    <p class="text-xs text-meta-3 mb-4">BV: {{ $product->bv }}</p>
+                    <a href="{{ route('admin.shop.checkout', ['product_id' => $product->id]) }}" class="flex w-full justify-center rounded bg-primary py-2 px-6 font-medium text-gray hover:bg-opacity-90">
+                        Order for User
+                    </a>
+                </div>
+            </div>
+            @endforeach
+        </div>
+    </div>
+</div>
+@endsection

@@ -17,7 +17,10 @@ class LoginController extends Controller
 
         if (Auth::attempt(['email' => $data['email'], 'password' => $data['password']], $request->filled('remember'))) {
             $request->session()->regenerate();
-            return redirect()->intended('/payments');
+            $fallback = Auth::user() && method_exists(Auth::user(), 'isAdmin') && Auth::user()->isAdmin()
+                ? '/admin'
+                : '/payments';
+            return redirect()->intended($fallback);
         }
 
         return back()->withErrors(['email' => 'Invalid credentials'])->withInput();

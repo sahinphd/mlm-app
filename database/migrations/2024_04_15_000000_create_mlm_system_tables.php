@@ -15,7 +15,7 @@ return new class extends Migration
         Schema::table('users', function (Blueprint $table) {
             $table->string('phone')->nullable()->after('email');
             $table->enum('role', ['admin', 'user'])->default('user')->after('password');
-            $table->enum('status', ['active', 'blocked'])->default('active')->after('role');
+            $table->enum('status', ['active', 'blocked', 'pending'])->default('pending')->after('role');
         });
 
         // 2. Referrals Table (Unilevel Tree)

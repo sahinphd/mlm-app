@@ -7,6 +7,10 @@ use App\Models\PaymentRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
+use App\Models\User;
+use App\Notifications\NewPaymentRequestNotification;
+use Illuminate\Support\Facades\Notification;
+
 class PaymentRequestController extends Controller
 {
     public function index(Request $request)
@@ -26,6 +30,10 @@ class PaymentRequestController extends Controller
         ]);
 
         $pr = PaymentRequest::create(array_merge($data, ['user_id' => $user->id]));
+
+        // Notify admins
+        $admins = User::where('role', 'admin')->get();
+        Notification::send($admins, new NewPaymentRequestNotification($pr));
 
         return response()->json(['data' => $pr], 201);
     }

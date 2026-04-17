@@ -11,6 +11,7 @@ use App\Models\WalletTransaction;
 use App\Models\CreditAccount;
 use App\Models\EmiSchedule;
 use App\Models\Commission;
+use App\Services\MLMService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -18,6 +19,13 @@ use Illuminate\Support\Carbon;
 
 class OrderController extends Controller
 {
+    protected $mlmService;
+
+    public function __construct(MLMService $mlmService)
+    {
+        $this->mlmService = $mlmService;
+    }
+
     public function index()
     {
         $user = Auth::user();
@@ -87,59 +95,10 @@ class OrderController extends Controller
                 }
             }
 
-            // Commission distribution (repurchase) up to 5 levels
-            $this->distributeRepurchaseCommissions($user->id, $order->id, $total_bv, $total);
+            // Commission distribution
+            $this->mlmService->distributeOrderCommissions($order);
 
             return response()->json(['message'=>'Order placed','order'=>$order]);
         });
-    }
-
-    protected function distributeRepurchaseCommissions($buyerId, $orderId, $orderBv, $orderTotal)
-    {
-        // percentages per level (as % of BV converted value)
-        $percentages = [200,100,50,30,20];
-        $bv_value = (float) $this->getSetting('bv_value', 1);
-        $payout_cap_percent = (float) $this->getSetting('payout_cap_percent', 60);
-
-        // compute gross commissions
-        $gross = [];
-        $sumGross = 0;
-        foreach($percentages as $lvl => $pct){
-            $amt = ($orderBv * $bv_value) * ($pct/100);
-            $gross[$lvl+1] = $amt; $sumGross += $amt;
-        }
-
-        // apply payout cap
-        $maxPayout = $orderTotal * ($payout_cap_percent/100);
-        $scale = 1.0;
-        if($sumGross > $maxPayout){ $scale = $maxPayout / $sumGross; }
-
-        // traverse upline
-        $current = $buyerId; $level = 1; $paidTotal = 0;
-        while($level<=5){
-            $ref = DB::table('referrals')->where('user_id',$current)->first();
-            if(!$ref || !$ref->parent_id) break;
-            $uplineId = $ref->parent_id;
-            $amount = round($gross[$level] * $scale,2);
-
-            if($amount>0){
-                // create commission record and credit wallet earning_balance
-                $comm = Commission::create(['user_id'=>$uplineId,'from_user_id'=>$buyerId,'order_id'=>$orderId,'level'=>$level,'amount'=>$amount,'type'=>'repurchase']);
-                $wallet = Wallet::firstOrCreate(['user_id'=>$uplineId],['main_balance'=>0,'earning_balance'=>0,'credit_balance'=>0]);
-                $wallet->earning_balance += $amount; $wallet->save();
-                WalletTransaction::create(['wallet_id'=>$wallet->id,'type'=>'credit','source'=>'commission','amount'=>$amount,'reference_id'=>'commission:'.$comm->id,'description'=>'MLM repurchase commission']);
-                $paidTotal += $amount;
-            }
-
-            $current = $uplineId; $level++;
-        }
-
-        return $paidTotal;
-    }
-
-    protected function getSetting($key, $default=null)
-    {
-        $row = DB::table('settings')->where('key',$key)->first();
-        return $row ? $row->value : $default;
     }
 }

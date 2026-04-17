@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin - Duare Dokandar</title>
+            <link rel="preload" as="style" href="http://127.0.0.1:8000/build/assets/app-D_zwJrp9.css" /><link rel="modulepreload" as="script" href="http://127.0.0.1:8000/build/assets/app-BbzB21r_.js" /><link rel="stylesheet" href="http://127.0.0.1:8000/build/assets/app-D_zwJrp9.css" /><script type="module" src="http://127.0.0.1:8000/build/assets/app-BbzB21r_.js"></script>      </head>
+  <body class="bg-gray-50">
+    <div id="preloader" class="fixed inset-0 z-50 flex items-center justify-center bg-white">
+	<div class="h-12 w-12 animate-spin rounded-full border-4 border-gray-300 border-t-transparent"></div>
+</div>
+
+    <div class="flex h-screen overflow-hidden">
+      <aside class="w-64 bg-white border-r dark:bg-gray-900 dark:border-gray-800 transform lg:translate-x-0 -translate-x-full lg:static fixed inset-y-0 left-0 z-50">
+	<div class="p-4">
+		<a href="/admin" class="flex items-center gap-2">
+			<img src="/images/logo/logo.svg" alt="Logo" class="h-8">
+			<span class="font-semibold">Admin</span>
+		</a>
+	</div>
+
+	<nav class="px-2 pb-8">
+		<ul class="space-y-1">
+			<li><a href="/admin" class="block px-3 py-2 rounded hover:bg-gray-100">Dashboard</a></li>
+			<li><a href="/payments" class="block px-3 py-2 rounded hover:bg-gray-100">Payments</a></li>
+			<li><a href="/admin/orders" class="block px-3 py-2 rounded hover:bg-gray-100">Orders</a></li>
+			<li><a href="/admin/users" class="block px-3 py-2 rounded hover:bg-gray-100">Users</a></li>
+			<li><a href="/admin/settings" class="block px-3 py-2 rounded hover:bg-gray-100">Settings</a></li>
+		</ul>
+	</nav>
+</aside>
+
+      <div class="relative flex flex-col flex-1 overflow-x-hidden overflow-y-auto">
+        <div id="overlay" class="hidden fixed inset-0 z-40 bg-black/50 lg:hidden"></div>
+
+        <header class="sticky top-0 z-50 w-full border-b bg-white dark:bg-gray-900">
+	<div class="flex items-center justify-between px-4 py-3 lg:px-6">
+		<div class="flex items-center gap-3">
+			<button id="sidebarToggle" class="p-2 rounded-lg border lg:hidden">
+				☰
+			</button>
+			<a href="/admin" class="flex items-center gap-2">
+				<img src="/images/logo/logo.svg" alt="Logo" class="h-8">
+				<span class="font-semibold text-lg">Duare Dokandar</span>
+			</a>
+		</div>
+
+		<div class="flex items-center gap-3">
+			<form class="hidden lg:block">
+				<input type="text" placeholder="Search..." class="rounded-lg border px-3 py-2" />
+			</form>
+
+			<a href="#" class="p-2 rounded-full border">🔔</a>
+			<a href="#" class="p-2 rounded-full border">👤</a>
+		</div>
+	</div>
+</header>
+
+        <main class="p-4 mx-auto max-w-(--breakpoint-2xl) md:p-6">
+            <div class="container mx-auto p-4">
+    <h1 class="text-2xl font-semibold mb-4">Admin Dashboard</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div class="p-4 rounded border bg-white shadow">
+        <div class="text-sm text-gray-500">Total Users</div>
+        <div class="text-2xl font-bold">4</div>
+      </div>
+      <div class="p-4 rounded border bg-white shadow">
+        <div class="text-sm text-gray-500">Total Orders</div>
+        <div class="text-2xl font-bold">0</div>
+      </div>
+      <div class="p-4 rounded border bg-white shadow">
+        <div class="text-sm text-gray-500">Total Wallet Balance</div>
+        <div class="text-2xl font-bold">$0.00</div>
+      </div>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+      <div class="bg-white rounded shadow p-4">
+        <h3 class="text-sm text-gray-500">Signups (last 7 days)</h3>
+        <canvas id="signupsChart" width="400" height="120"></canvas>
+      </div>
+
+      <div class="bg-white rounded shadow p-4">
+        <h3 class="text-sm text-gray-500">Orders by Status</h3>
+        <ul class="mt-2">
+                                <li class="flex justify-between py-1 border-b last:border-b-0">
+              <span class="capitalize">pending</span>
+              <span>0</span>
+            </li>
+                      <li class="flex justify-between py-1 border-b last:border-b-0">
+              <span class="capitalize">paid</span>
+              <span>0</span>
+            </li>
+                      <li class="flex justify-between py-1 border-b last:border-b-0">
+              <span class="capitalize">shipped</span>
+              <span>0</span>
+            </li>
+                      <li class="flex justify-between py-1 border-b last:border-b-0">
+              <span class="capitalize">cancelled</span>
+              <span>0</span>
+            </li>
+                      <li class="flex justify-between py-1 border-b last:border-b-0">
+              <span class="capitalize">completed</span>
+              <span>0</span>
+            </li>
+                  </ul>
+      </div>
+
+      <div class="bg-white rounded shadow p-4">
+        <div class="flex justify-between items-center">
+          <h3 class="text-sm text-gray-500">Recent Payments</h3>
+          <div>
+            <a href="/admin/reports/export?type=pdf" class="text-sm text-blue-600 mr-2">Export PDF</a>
+            <a href="/admin/reports/export?type=csv" class="text-sm text-gray-600">CSV</a>
+          </div>
+        </div>
+        <div class="mt-2">
+                      <div class="text-sm text-gray-500">No payments data available.</div>
+                  </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    (function(){
+      const ctx = document.getElementById('signupsChart').getContext('2d');
+      const labels = ["Apr 10","Apr 11","Apr 12","Apr 13","Apr 14","Apr 15","Apr 16"];
+      const data = [0,0,0,0,0,0,4];
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Signups',
+            data: data,
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59,130,246,0.1)',
+            fill: true,
+            tension: 0.3,
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true, precision:0 } }
+        }
+      });
+    })();
+  </script>
+  
+  <!-- Projects grid (Metronic-like cards) -->
+  <div class="container mx-auto p-4">
+    <h2 class="text-xl font-semibold mb-4">Projects</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div class="bg-white rounded-lg border shadow-sm p-5">
+          <div class="flex items-start justify-between">
+            <div class="flex items-center gap-3">
+              <div class="h-12 w-12 rounded-md bg-gray-100 flex items-center justify-center">
+                <svg class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3-1.343-3-3S10.343 2 12 2s3 1.343 3 3-1.343 3-3 3zM6 20c0-3.866 3.582-7 8-7s8 3.134 8 7"/></svg>
+              </div>
+              <div>
+                <div class="text-lg font-medium">Phoenix SaaS</div>
+                <div class="text-sm text-gray-500">Real-time photo sharing app</div>
+              </div>
+            </div>
+            <div>
+                                              <span class="px-3 py-1 text-xs rounded-full bg-blue-100 text-blue-700">In progress</span>
+                          </div>
+          </div>
+
+          <div class="mt-4 text-sm text-gray-600">Start: <strong class="text-gray-800">Mar 06</strong> &nbsp; End: <strong class="text-gray-800">Dec 21</strong></div>
+
+          <div class="mt-4">
+            <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+              <div class="h-2 rounded-full bg-blue-500" style="width: 45%"></div>
+            </div>
+            <div class="text-sm text-gray-500 mt-2">Progress: 45%</div>
+          </div>
+
+          <div class="mt-4 flex items-center">
+            <div class="flex -space-x-2">
+                                                <img src="/images/user/avatar-1.jpg" class="h-8 w-8 rounded-full border-2 border-white" alt="avatar">
+                                  <img src="/images/user/avatar-2.jpg" class="h-8 w-8 rounded-full border-2 border-white" alt="avatar">
+                                                        </div>
+            <div class="ml-auto text-sm text-gray-500">&nbsp;</div>
+          </div>
+        </div>
+              <div class="bg-white rounded-lg border shadow-sm p-5">
+          <div class="flex items-start justify-between">
+            <div class="flex items-center gap-3">
+              <div class="h-12 w-12 rounded-md bg-gray-100 flex items-center justify-center">
+                <svg class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3-1.343-3-3S10.343 2 12 2s3 1.343 3 3-1.343 3-3 3zM6 20c0-3.866 3.582-7 8-7s8 3.134 8 7"/></svg>
+              </div>
+              <div>
+                <div class="text-lg font-medium">Radiant Wave</div>
+                <div class="text-sm text-gray-500">Short-term accommodation marketplace</div>
+              </div>
+            </div>
+            <div>
+                                              <span class="px-3 py-1 text-xs rounded-full bg-green-100 text-green-700">Completed</span>
+                          </div>
+          </div>
+
+          <div class="mt-4 text-sm text-gray-600">Start: <strong class="text-gray-800">Mar 09</strong> &nbsp; End: <strong class="text-gray-800">Dec 23</strong></div>
+
+          <div class="mt-4">
+            <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+              <div class="h-2 rounded-full bg-blue-500" style="width: 100%"></div>
+            </div>
+            <div class="text-sm text-gray-500 mt-2">Progress: 100%</div>
+          </div>
+
+          <div class="mt-4 flex items-center">
+            <div class="flex -space-x-2">
+                                                <img src="/images/user/avatar-3.jpg" class="h-8 w-8 rounded-full border-2 border-white" alt="avatar">
+                                  <img src="/images/user/avatar-4.jpg" class="h-8 w-8 rounded-full border-2 border-white" alt="avatar">
+                                                        </div>
+            <div class="ml-auto text-sm text-gray-500">&nbsp;</div>
+          </div>
+        </div>
+              <div class="bg-white rounded-lg border shadow-sm p-5">
+          <div class="flex items-start justify-between">
+            <div class="flex items-center gap-3">
+              <div class="h-12 w-12 rounded-md bg-gray-100 flex items-center justify-center">
+                <svg class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3-1.343-3-3S10.343 2 12 2s3 1.343 3 3-1.343 3-3 3zM6 20c0-3.866 3.582-7 8-7s8 3.134 8 7"/></svg>
+              </div>
+              <div>
+                <div class="text-lg font-medium">Dreamweaver</div>
+                <div class="text-sm text-gray-500">Social media photo sharing</div>
+              </div>
+            </div>
+            <div>
+                                              <span class="px-3 py-1 text-xs rounded-full bg-gray-50 text-gray-600">Upcoming</span>
+                          </div>
+          </div>
+
+          <div class="mt-4 text-sm text-gray-600">Start: <strong class="text-gray-800">Mar 05</strong> &nbsp; End: <strong class="text-gray-800">Dec 12</strong></div>
+
+          <div class="mt-4">
+            <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+              <div class="h-2 rounded-full bg-blue-500" style="width: 85%"></div>
+            </div>
+            <div class="text-sm text-gray-500 mt-2">Progress: 85%</div>
+          </div>
+
+          <div class="mt-4 flex items-center">
+            <div class="flex -space-x-2">
+                                                <img src="/images/user/avatar-5.jpg" class="h-8 w-8 rounded-full border-2 border-white" alt="avatar">
+                                  <img src="/images/user/avatar-6.jpg" class="h-8 w-8 rounded-full border-2 border-white" alt="avatar">
+                                                            <div class="h-8 w-8 rounded-full bg-green-500 text-white flex items-center justify-center text-xs font-semibold border-2 border-white">+10</div>
+                          </div>
+            <div class="ml-auto text-sm text-gray-500">&nbsp;</div>
+          </div>
+        </div>
+              <div class="bg-white rounded-lg border shadow-sm p-5">
+          <div class="flex items-start justify-between">
+            <div class="flex items-center gap-3">
+              <div class="h-12 w-12 rounded-md bg-gray-100 flex items-center justify-center">
+                <svg class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3-1.343-3-3S10.343 2 12 2s3 1.343 3 3-1.343 3-3 3zM6 20c0-3.866 3.582-7 8-7s8 3.134 8 7"/></svg>
+              </div>
+              <div>
+                <div class="text-lg font-medium">Horizon Quest</div>
+                <div class="text-sm text-gray-500">Team communication and collaboration</div>
+              </div>
+            </div>
+            <div>
+                                              <span class="px-3 py-1 text-xs rounded-full bg-blue-100 text-blue-700">In progress</span>
+                          </div>
+          </div>
+
+          <div class="mt-4 text-sm text-gray-600">Start: <strong class="text-gray-800">Mar 11</strong> &nbsp; End: <strong class="text-gray-800">Nov 12</strong></div>
+
+          <div class="mt-4">
+            <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+              <div class="h-2 rounded-full bg-blue-500" style="width: 35%"></div>
+            </div>
+            <div class="text-sm text-gray-500 mt-2">Progress: 35%</div>
+          </div>
+
+          <div class="mt-4 flex items-center">
+            <div class="flex -space-x-2">
+                                                <img src="/images/user/avatar-7.jpg" class="h-8 w-8 rounded-full border-2 border-white" alt="avatar">
+                                                        </div>
+            <div class="ml-auto text-sm text-gray-500">&nbsp;</div>
+          </div>
+        </div>
+              <div class="bg-white rounded-lg border shadow-sm p-5">
+          <div class="flex items-start justify-between">
+            <div class="flex items-center gap-3">
+              <div class="h-12 w-12 rounded-md bg-gray-100 flex items-center justify-center">
+                <svg class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3-1.343-3-3S10.343 2 12 2s3 1.343 3 3-1.343 3-3 3zM6 20c0-3.866 3.582-7 8-7s8 3.134 8 7"/></svg>
+              </div>
+              <div>
+                <div class="text-lg font-medium">Golden Gate Analytics</div>
+                <div class="text-sm text-gray-500">Note-taking and organization app</div>
+              </div>
+            </div>
+            <div>
+                                              <span class="px-3 py-1 text-xs rounded-full bg-gray-50 text-gray-600">Upcoming</span>
+                          </div>
+          </div>
+
+          <div class="mt-4 text-sm text-gray-600">Start: <strong class="text-gray-800">Mar 15</strong> &nbsp; End: <strong class="text-gray-800">Oct 19</strong></div>
+
+          <div class="mt-4">
+            <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+              <div class="h-2 rounded-full bg-blue-500" style="width: 10%"></div>
+            </div>
+            <div class="text-sm text-gray-500 mt-2">Progress: 10%</div>
+          </div>
+
+          <div class="mt-4 flex items-center">
+            <div class="flex -space-x-2">
+                                        </div>
+            <div class="ml-auto text-sm text-gray-500">&nbsp;</div>
+          </div>
+        </div>
+              <div class="bg-white rounded-lg border shadow-sm p-5">
+          <div class="flex items-start justify-between">
+            <div class="flex items-center gap-3">
+              <div class="h-12 w-12 rounded-md bg-gray-100 flex items-center justify-center">
+                <svg class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3-1.343-3-3S10.343 2 12 2s3 1.343 3 3-1.343 3-3 3zM6 20c0-3.866 3.582-7 8-7s8 3.134 8 7"/></svg>
+              </div>
+              <div>
+                <div class="text-lg font-medium">Celestial SaaS</div>
+                <div class="text-sm text-gray-500">CRM App application to HR efficiency</div>
+              </div>
+            </div>
+            <div>
+                                              <span class="px-3 py-1 text-xs rounded-full bg-green-100 text-green-700">Completed</span>
+                          </div>
+          </div>
+
+          <div class="mt-4 text-sm text-gray-600">Start: <strong class="text-gray-800">Mar 20</strong> &nbsp; End: <strong class="text-gray-800">Dec 01</strong></div>
+
+          <div class="mt-4">
+            <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+              <div class="h-2 rounded-full bg-blue-500" style="width: 100%"></div>
+            </div>
+            <div class="text-sm text-gray-500 mt-2">Progress: 100%</div>
+          </div>
+
+          <div class="mt-4 flex items-center">
+            <div class="flex -space-x-2">
+                                                <img src="/images/user/avatar-8.jpg" class="h-8 w-8 rounded-full border-2 border-white" alt="avatar">
+                                  <img src="/images/user/avatar-9.jpg" class="h-8 w-8 rounded-full border-2 border-white" alt="avatar">
+                                                        </div>
+            <div class="ml-auto text-sm text-gray-500">&nbsp;</div>
+          </div>
+        </div>
+          </div>
+  </div>
+        </main>
+      </div>
+    </div>
+    <script>
+      (function(){
+        const btn = document.getElementById('sidebarToggle');
+        const aside = document.querySelector('aside');
+        const overlay = document.getElementById('overlay');
+        if (!btn || !aside) return;
+        btn.addEventListener('click', ()=>{
+          aside.classList.toggle('-translate-x-full');
+          if (overlay) overlay.classList.toggle('hidden');
+        });
+        if (overlay) overlay.addEventListener('click', ()=>{
+          aside.classList.add('-translate-x-full'); overlay.classList.add('hidden');
+        });
+      })();
+    </script>
+  </body>
+</html>

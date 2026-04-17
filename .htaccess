@@ -1,0 +1,14 @@
+# Deny direct access to application folders
+RewriteRule ^(app|bootstrap|config|database|resources|routes|storage|vendor)/ - [F,L,NC]
+
+# If request already targets /public, serve normally
+RewriteCond %{REQUEST_URI} ^/public/ [NC]
+RewriteRule ^ - [L]
+
+# Serve existing files/directories in project root directly
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Otherwise send request to public/index.php
+RewriteRule ^ public/index.php [L]
