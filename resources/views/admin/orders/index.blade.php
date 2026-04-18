@@ -79,9 +79,11 @@
         <form method="GET" action="{{ route('admin.orders') }}">
             <div class="flex flex-wrap items-center gap-4">
                 <div class="flex-1 min-w-[200px]">
-                    <input type="text" name="q" value="{{ $q }}" placeholder="Search by Order ID or User..." class="w-full rounded border-[1.5px] border-stroke bg-transparent py-2 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary">
+                    <label class="mb-1 block text-sm font-medium text-black dark:text-white">Search</label>
+                    <input type="text" name="q" value="{{ $q }}" placeholder="ID or User..." class="w-full rounded border-[1.5px] border-stroke bg-transparent py-2 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary">
                 </div>
                 <div class="w-48">
+                    <label class="mb-1 block text-sm font-medium text-black dark:text-white">Status</label>
                     <select name="status" class="w-full rounded border-[1.5px] border-stroke bg-transparent py-2 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary">
                         <option value="">All Statuses</option>
                         <option value="pending" {{ $status === 'pending' ? 'selected' : '' }}>Pending</option>
@@ -90,12 +92,30 @@
                         <option value="cancelled" {{ $status === 'cancelled' ? 'selected' : '' }}>Cancelled</option>
                     </select>
                 </div>
-                <button type="submit" class="flex justify-center rounded bg-primary py-2 px-6 font-medium text-gray hover:bg-opacity-90 transition">
-                    Filter
-                </button>
-                <a href="{{ route('admin.orders') }}" class="flex justify-center rounded border border-stroke py-2 px-6 font-medium text-black hover:shadow-1 dark:border-strokedark dark:text-white transition">
-                    Reset
-                </a>
+                <div class="w-48">
+                    <label class="mb-1 block text-sm font-medium text-black dark:text-white">Start Date</label>
+                    <input type="date" name="start_date" value="{{ $startDate }}" class="w-full rounded border-[1.5px] border-stroke bg-transparent py-2 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary">
+                </div>
+                <div class="w-48">
+                    <label class="mb-1 block text-sm font-medium text-black dark:text-white">End Date</label>
+                    <input type="date" name="end_date" value="{{ $endDate }}" class="w-full rounded border-[1.5px] border-stroke bg-transparent py-2 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary">
+                </div>
+                <div class="w-32">
+                    <label class="mb-1 block text-sm font-medium text-black dark:text-white">Per Page</label>
+                    <select name="per_page" class="w-full rounded border-[1.5px] border-stroke bg-transparent py-2 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary">
+                        @foreach([15, 30, 50, 100] as $val)
+                            <option value="{{ $val }}" {{ $perPage == $val ? 'selected' : '' }}>{{ $val }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="flex items-end gap-2 pt-6">
+                    <button type="submit" class="flex justify-center rounded bg-primary py-2 px-6 font-medium text-gray hover:bg-opacity-90 transition">
+                        Filter
+                    </button>
+                    <a href="{{ route('admin.orders') }}" class="flex justify-center rounded border border-stroke py-2 px-6 font-medium text-black hover:shadow-1 dark:border-strokedark dark:text-white transition">
+                        Reset
+                    </a>
+                </div>
             </div>
         </form>
     </div>

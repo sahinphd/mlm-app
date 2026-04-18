@@ -12,11 +12,22 @@ class OrderController extends Controller
     {
         $status = $request->query('status');
         $q = $request->query('q');
+        $startDate = $request->query('start_date');
+        $endDate = $request->query('end_date');
+        $perPage = $request->query('per_page', 15);
 
         $query = Order::with('user')->orderBy('created_at', 'desc');
 
         if ($status) {
             $query->where('status', $status);
+        }
+
+        if ($startDate) {
+            $query->whereDate('created_at', '>=', $startDate);
+        }
+
+        if ($endDate) {
+            $query->whereDate('created_at', '<=', $endDate);
         }
 
         if ($q) {
@@ -28,7 +39,7 @@ class OrderController extends Controller
             });
         }
 
-        $orders = $query->paginate(15);
+        $orders = $query->paginate($perPage);
 
         // Stats for cards
         $stats = [
@@ -38,7 +49,7 @@ class OrderController extends Controller
             'revenue' => Order::where('status', 'completed')->sum('total_amount'),
         ];
 
-        return view('admin.orders.index', compact('orders', 'stats', 'status', 'q'));
+        return view('admin.orders.index', compact('orders', 'stats', 'status', 'q', 'startDate', 'endDate', 'perPage'));
     }
 
     public function show(Order $order)

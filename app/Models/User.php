@@ -88,11 +88,12 @@ class User extends Authenticatable
     public function scopeSearch($query, ?string $term)
     {
         if (empty($term)) return $query;
-        $term = "%{$term}%";
-        return $query->where(function($q) use ($term) {
-            $q->where('name', 'like', $term)
-              ->orWhere('email', 'like', $term)
-              ->orWhere('phone', 'like', $term);
+        $termSearch = "%{$term}%";
+        return $query->where(function($q) use ($termSearch, $term) {
+            $q->where('id', $term)
+              ->orWhere('name', 'like', $termSearch)
+              ->orWhere('email', 'like', $termSearch)
+              ->orWhere('phone', 'like', $termSearch);
         });
     }
 

@@ -21,8 +21,11 @@
                         <th class="min-w-[250px] py-4 px-4 font-medium text-black dark:text-white">
                             Items
                         </th>
-                        <th class="min-w-[120px] py-4 px-4 font-medium text-black dark:text-white">
+                        <th class="min-w-[120px] py-4 px-4 font-medium text-black dark:text-white text-right">
                             Total Amount
+                        </th>
+                        <th class="min-w-[100px] py-4 px-4 font-medium text-black dark:text-white text-right">
+                            Total BV
                         </th>
                         <th class="min-w-[150px] py-4 px-4 font-medium text-black dark:text-white">
                             Payment
@@ -44,18 +47,36 @@
                         <td class="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
                             <p class="text-black dark:text-white text-sm">
                                 @foreach($order->items as $item)
-                                    {{ $item->product->name }} (x{{ $item->quantity }})@if(!$loop->last), @endif
+                                    @if($item->product)
+                                        {{ $item->product->name }}
+                                    @elseif($item->package)
+                                        {{ $item->package->name }}
+                                    @else
+                                        Unknown Item
+                                    @endif
+                                    (x{{ $item->quantity }})@if(!$loop->last), @endif
                                 @endforeach
                             </p>
                         </td>
-                        <td class="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
+                        <td class="border-b border-[#eee] py-5 px-4 dark:border-strokedark text-right">
                             <p class="text-black dark:text-white">{{ number_format($order->total_amount, 2) }}</p>
+                        </td>
+                        <td class="border-b border-[#eee] py-5 px-4 dark:border-strokedark text-right">
+                            <p class="text-black dark:text-white">{{ number_format($order->total_bv, 2) }}</p>
                         </td>
                         <td class="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
                             <p class="text-black dark:text-white text-sm">{{ str_replace('_', ' ', ucfirst($order->payment_method)) }}</p>
                         </td>
                         <td class="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
-                            <p class="inline-flex rounded-full bg-success bg-opacity-10 py-1 px-3 text-sm font-medium text-success">
+                            @php
+                                $statusColor = match($order->status) {
+                                    'completed' => 'success',
+                                    'pending' => 'warning',
+                                    'failed', 'cancelled' => 'danger',
+                                    default => 'primary',
+                                };
+                            @endphp
+                            <p class="inline-flex rounded-full bg-{{ $statusColor }} bg-opacity-10 py-1 px-3 text-sm font-medium text-{{ $statusColor }}">
                                 {{ ucfirst($order->status) }}
                             </p>
                         </td>
@@ -65,7 +86,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="6" class="border-b border-[#eee] py-5 px-4 text-center dark:border-strokedark">
+                        <td colspan="7" class="border-b border-[#eee] py-5 px-4 text-center dark:border-strokedark">
                             No orders found.
                         </td>
                     </tr>

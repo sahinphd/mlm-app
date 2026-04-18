@@ -192,23 +192,23 @@
                     <div class="mt-5.5 grid grid-cols-1 gap-5.5 sm:grid-cols-5">
                         <div>
                             <label class="mb-3 block text-sm font-medium text-black dark:text-white">Level 1 (%)</label>
-                            <input type="number" name="repurchase_commission_level_1" value="{{ $settings['repurchase_commission_level_1'] ?? 20 }}" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
+                            <input type="number" step="0.01" name="repurchase_commission_level_1" value="{{ $settings['repurchase_commission_level_1'] ?? 20 }}" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
                         </div>
                         <div>
                             <label class="mb-3 block text-sm font-medium text-black dark:text-white">Level 2 (%)</label>
-                            <input type="number" name="repurchase_commission_level_2" value="{{ $settings['repurchase_commission_level_2'] ?? 10 }}" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
+                            <input type="number" step="0.01" name="repurchase_commission_level_2" value="{{ $settings['repurchase_commission_level_2'] ?? 10 }}" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
                         </div>
                         <div>
                             <label class="mb-3 block text-sm font-medium text-black dark:text-white">Level 3 (%)</label>
-                            <input type="number" name="repurchase_commission_level_3" value="{{ $settings['repurchase_commission_level_3'] ?? 5 }}" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
+                            <input type="number" step="0.01" name="repurchase_commission_level_3" value="{{ $settings['repurchase_commission_level_3'] ?? 5 }}" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
                         </div>
                         <div>
                             <label class="mb-3 block text-sm font-medium text-black dark:text-white">Level 4 (%)</label>
-                            <input type="number" name="repurchase_commission_level_4" value="{{ $settings['repurchase_commission_level_4'] ?? 3 }}" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
+                            <input type="number" step="0.01" name="repurchase_commission_level_4" value="{{ $settings['repurchase_commission_level_4'] ?? 3 }}" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
                         </div>
                         <div>
                             <label class="mb-3 block text-sm font-medium text-black dark:text-white">Level 5 (%)</label>
-                            <input type="number" name="repurchase_commission_level_5" value="{{ $settings['repurchase_commission_level_5'] ?? 2 }}" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
+                            <input type="number" step="0.01" name="repurchase_commission_level_5" value="{{ $settings['repurchase_commission_level_5'] ?? 2 }}" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
                         </div>
                     </div>
 

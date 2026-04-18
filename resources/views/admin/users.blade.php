@@ -26,71 +26,93 @@
         </div>
     @endif
 
-    <div class="bg-white rounded shadow p-4">
-        <table id="usersTable" class="min-w-full divide-y" style="width:100%">
-            <thead>
-                <tr>
-                    <th class="px-3 py-2 text-left">ID</th>
-                    <th class="px-3 py-2 text-left">Avatar</th>
-                    <th class="px-3 py-2 text-left">Name</th>
-                    <th class="px-3 py-2 text-left">Email</th>
-                    <th class="px-3 py-2 text-left">Phone</th>
-                    <th class="px-3 py-2 text-left">Role</th>
-                    <th class="px-3 py-2 text-left">Status</th>
-                    <th class="px-3 py-2 text-left">Created</th>
-                    <th class="px-3 py-2 text-left">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- server-side fallback rows (also used by DataTables AJAX) -->
-                @if(!empty($users) && $users->count())
-                    @foreach($users as $u)
-                        <tr>
-                            <td class="px-3 py-2">{{ $u->id }}</td>
-                            <td class="px-3 py-2"><img src="{{ $u->avatar_url }}" alt="avatar" class="w-8 h-8 rounded-full" /></td>
-                            <td class="px-3 py-2">{{ $u->name }}</td>
-                            <td class="px-3 py-2"><a href="mailto:{{ $u->email }}" class="text-blue-600">{{ $u->email }}</a></td>
-                            <td class="px-3 py-2">{{ $u->phone ?? '-' }}</td>
-                            <td class="px-3 py-2">{{ $u->role ?? 'user' }}</td>
-                            <td class="px-3 py-2">
-                                @if($u->status === 'active')
-                                    <span class="px-2 py-1 rounded-full text-xs font-semibold bg-success-50 text-success-600">Active</span>
-                                @elseif($u->status === 'pending')
-                                    <span class="px-2 py-1 rounded-full text-xs font-semibold bg-warning-50 text-warning-600">Pending</span>
-                                @else
-                                    <span class="px-2 py-1 rounded-full text-xs font-semibold bg-danger-50 text-danger-600">Blocked</span>
-                                @endif
-                            </td>
-                            <td class="px-3 py-2">{{ $u->created_at?->format('Y-m-d') }}</td>
-                            <td class="px-3 py-2"> <a href="/admin/users/{{ $u->id }}/edit" class="text-sm text-blue-600 mr-2">Edit</a> <a href="#" data-id="{{ $u->id }}" class="text-sm text-red-600 js-delete">Delete</a></td>
-                        </tr>
-                    @endforeach
-                @endif
-            </tbody>
-        </table>
-    </div>
-
-    <div class="mt-4">
-        {{ $users->appends(request()->query())->links() }}
+    <div class="bg-white rounded shadow p-4 dark:bg-boxdark">
+        <div class="max-w-full overflow-x-auto">
+            <table id="usersTable" class="min-w-full divide-y border-collapse" style="width:100%">
+                <thead>
+                    <tr class="bg-gray-2 text-left dark:bg-meta-4">
+                        <th class="px-3 py-4 font-medium text-black dark:text-white">ID</th>
+                        <th class="px-3 py-4 font-medium text-black dark:text-white">Avatar</th>
+                        <th class="px-3 py-4 font-medium text-black dark:text-white">Name</th>
+                        <th class="px-3 py-4 font-medium text-black dark:text-white">Email</th>
+                        <th class="px-3 py-4 font-medium text-black dark:text-white">Role</th>
+                        <th class="px-3 py-4 font-medium text-black dark:text-white">Status</th>
+                        <th class="px-3 py-4 font-medium text-black dark:text-white text-right">Credit Limit</th>
+                        <th class="px-3 py-4 font-medium text-black dark:text-white text-center">Credit Status</th>
+                        <th class="px-3 py-4 font-medium text-black dark:text-white">Created</th>
+                        <th class="px-3 py-4 font-medium text-black dark:text-white">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
 <!-- DataTables CDN -->
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+<style>
+    .dataTables_wrapper .dataTables_length select {
+        @apply bg-transparent border border-stroke rounded px-2 py-1 dark:border-strokedark dark:text-white;
+    }
+    .dataTables_wrapper .dataTables_filter input {
+        @apply bg-transparent border border-stroke rounded px-3 py-1 ml-2 dark:border-strokedark dark:text-white;
+    }
+    .dataTables_wrapper .dataTables_paginate .paginate_button {
+        @apply border-0 bg-transparent text-body dark:text-bodydark;
+    }
+    .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+        @apply bg-primary text-white border-primary rounded;
+    }
+    .dataTables_wrapper .dataTables_info {
+        @apply text-body dark:text-bodydark;
+    }
+    table.dataTable.no-footer {
+        border-bottom: 1px solid #e2e8f0;
+    }
+    .dark table.dataTable.no-footer {
+        border-bottom: 1px solid #2e3a47;
+    }
+    table.dataTable thead th {
+        border-bottom: 1px solid #e2e8f0;
+    }
+    .dark table.dataTable thead th {
+        border-bottom: 1px solid #2e3a47;
+    }
+</style>
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
     $(document).ready(function(){
-        // Use client-side DataTables on the already-rendered table so rows
-        // seeded by the server are visible immediately. Server-side AJAX
-        // mode can be re-enabled later if desired.
         const table = $('#usersTable').DataTable({
-            paging: false,
-            searching: true,
-            info: false,
-            order: [[0,'desc']]
+            processing: true,
+            serverSide: true,
+            ajax: "{{ route('admin.users.data') }}",
+            columns: [
+                { data: 0, name: 'id' },
+                { data: 1, name: 'avatar', orderable: false, searchable: false },
+                { data: 2, name: 'name' },
+                { data: 3, name: 'email' },
+                { data: 4, name: 'role' },
+                { data: 5, name: 'status' },
+                { data: 6, name: 'credit_limit', className: 'text-right' },
+                { data: 7, name: 'credit_status', className: 'text-center' },
+                { data: 8, name: 'created_at' },
+                { data: 9, name: 'actions', orderable: false, searchable: false }
+            ],
+            order: [[0, 'desc']],
+            pageLength: 25,
+            language: {
+                searchPlaceholder: "Search users...",
+                search: ""
+            },
+            drawCallback: function() {
+                $('.dataTables_paginate > .paginate_button').addClass('px-3 py-1');
+            }
         });
 
         // handle delete
@@ -117,9 +139,8 @@
                                 'Deleted!',
                                 'User has been deleted.',
                                 'success'
-                            ).then(() => {
-                                window.location.reload(); 
-                            });
+                            );
+                            table.ajax.reload();
                         },
                         error(){ 
                             Swal.fire(

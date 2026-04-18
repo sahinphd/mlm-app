@@ -4,6 +4,16 @@
   <div class="container mx-auto p-4">
     <h1 class="text-2xl font-semibold mb-4">Admin Dashboard</h1>
 
+    @php
+      use Illuminate\Support\Facades\Storage;
+      $settingsFile = 'settings.json';
+      $settings = Storage::disk('local')->exists($settingsFile) ? json_decode(Storage::disk('local')->get($settingsFile), true) : [];
+      $currencyCode = $settings['currency'] ?? 'INR';
+      $currencySymbols = [
+        'INR' => '₹', 'USD' => '$', 'EUR' => '€', 'GBP' => '£', 'JPY' => '¥', 'AUD' => 'A$', 'CAD' => 'C$'
+      ];
+      $symbol = $currencySymbols[$currencyCode] ?? $currencyCode;
+    @endphp
     <!-- Quick Management Section -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
       <a href="{{ route('admin.products') }}" class="p-4 rounded border bg-blue-50 border-blue-200 shadow-sm hover:bg-blue-100 transition flex items-center gap-3">
@@ -46,7 +56,7 @@
       </div>
       <div class="p-4 rounded border bg-white shadow">
         <div class="text-sm text-gray-500">Total Wallet Balance</div>
-        <div class="text-2xl font-bold">${{ number_format($walletTotal ?? 0, 2) }}</div>
+        <div class="text-2xl font-bold">{{ ($symbol ?? '') . number_format($walletTotal ?? 0, 2) }}</div>
       </div>
     </div>
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
@@ -95,7 +105,7 @@
                     <div class="text-xs text-gray-500">{{ $p->created_at->format('Y-m-d H:i') }}</div>
                   </div>
                   <div class="text-right">
-                    <div class="font-medium">${{ number_format($p->amount ?? 0,2) }}</div>
+                    <div class="font-medium">{{ ($symbol ?? '') . number_format($p->amount ?? 0,2) }}</div>
                     <div class="text-xs text-gray-500">{{ $p->type ?? 'payment' }}</div>
                   </div>
                 </li>

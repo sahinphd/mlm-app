@@ -33,7 +33,7 @@
                                 @foreach($order->items as $item)
                                     <tr>
                                         <td class="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
-                                            <p class="text-black dark:text-white font-medium">{{ $item->product?->name ?? 'Deleted Product' }}</p>
+                                            <p class="text-black dark:text-white font-medium">{{ $item->product ? $item->product->name : ($item->package ? $item->package->name : 'N/A') }}</p>
                                         </td>
                                         <td class="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
                                             <p class="text-black dark:text-white">${{ number_format($item->price, 2) }}</p>

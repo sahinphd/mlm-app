@@ -19,34 +19,52 @@ class UserController extends Controller
 
     public function index(Request $request)
     {
-        if (!Auth::check()) {
-            return redirect('/login');
-        }
-        if (!Auth::user()->isAdmin()) {
+        if (!Auth::check() || !Auth::user()->isAdmin()) {
             abort(403);
         }
 
-        $users = User::orderBy('created_at','desc')->paginate(25);
-        return view('admin.users', compact('users'));
+        return view('admin.users');
+    }
+
+    public function genealogyIndex(Request $request)
+    {
+        if (!Auth::check() || !Auth::user()->isAdmin()) {
+            abort(403);
+        }
+
+        $userId = $request->query('user_id');
+        
+        if ($userId) {
+            $user = User::with('referralRecord')->find($userId);
+        } else {
+            // Default to the first user (the root of the system)
+            $user = User::with('referralRecord')->orderBy('id', 'asc')->first();
+        }
+
+        return view('admin.genealogy.genealogy', compact('user'));
     }
 
     // Server-side DataTables JSON
     public function data(Request $request)
     {
-        if (!Auth::check()) {
-            return response()->json(['error' => 'unauthenticated'], 401);
-        }
-        if (!Auth::user()->isAdmin()) {
+        if (!Auth::check() || !Auth::user()->isAdmin()) {
             return response()->json(['error' => 'forbidden'], 403);
         }
 
-        $columns = ['id','name','email','phone','role','status','created_at'];
+        $columns = [
+            0 => 'id',
+            2 => 'name',
+            3 => 'email',
+            4 => 'role',
+            5 => 'status',
+            8 => 'created_at'
+        ];
 
-        $query = User::query();
+        $query = User::with('creditAccount');
 
         $recordsTotal = $query->count();
 
-        // global search (use User::scopeSearch)
+        // global search
         $search = $request->input('search.value');
         if ($search) {
             $query->search($search);
@@ -57,7 +75,7 @@ class UserController extends Controller
         // ordering
         $orderColIndex = $request->input('order.0.column');
         $orderDir = $request->input('order.0.dir', 'desc');
-        if (is_numeric($orderColIndex) && isset($columns[$orderColIndex])) {
+        if (isset($columns[$orderColIndex])) {
             $query->orderBy($columns[$orderColIndex], $orderDir);
         } else {
             $query->orderBy('created_at', 'desc');
@@ -76,19 +94,28 @@ class UserController extends Controller
                 default => e($u->status)
             };
 
+            $cs = $u->creditAccount->approval_status ?? 'N/A';
+            $creditStatusBadge = match($cs) {
+                'approved' => '<span class="px-2 py-1 rounded-full text-xs font-semibold bg-success-50 text-success-600">Approved</span>',
+                'pending' => '<span class="px-2 py-1 rounded-full text-xs font-semibold bg-warning-50 text-warning-600">Pending</span>',
+                'rejected' => '<span class="px-2 py-1 rounded-full text-xs font-semibold bg-danger-50 text-danger-600">Rejected</span>',
+                default => '<span class="text-xs text-gray-400">N/A</span>'
+            };
+
             return [
                 $u->id,
-                // avatar + name
-                '<div style="display:flex;align-items:center;gap:8px">' .
-                    '<img src="'.e($u->avatar_url).'" alt="avatar" style="width:32px;height:32px;border-radius:50%" />' .
-                    '<span>'.e($u->name).'</span>' .
-                '</div>',
-                '<a href="mailto:'.e($u->email).'" class="text-blue-600">'.e($u->email).'</a>',
-                e($u->phone ?? '-'),
+                '<img src="'.e($u->avatar_url).'" alt="avatar" class="w-8 h-8 rounded-full" />',
+                e($u->name),
+                '<a href="mailto:'.e($u->email).'" class="text-blue-600 truncate inline-block max-w-[150px]">'.e($u->email).'</a>',
                 e($u->role ?? 'user'),
                 $statusBadge,
+                'Rs.' . number_format($u->creditAccount->credit_limit ?? 0, 2),
+                $creditStatusBadge,
                 $u->created_at?->format('Y-m-d'),
-                '<a href="/admin/users/'. $u->id .'/edit" class="text-sm text-blue-600 mr-2">Edit</a> <a href="#" data-id="'. $u->id .'" class="text-sm text-red-600 js-delete">Delete</a>'
+                '<a href="'.route('admin.users.show', $u->id).'" class="text-sm text-primary mr-2">View</a>' .
+                '<a href="'.route('admin.users.genealogy', $u->id).'" class="text-sm text-success mr-2">Genealogy</a>' .
+                '<a href="/admin/users/'. $u->id .'/edit" class="text-sm text-blue-600 mr-2">Edit</a>' .
+                '<a href="#" data-id="'. $u->id .'" class="text-sm text-red-600 js-delete">Delete</a>'
             ];
         })->toArray();
 
@@ -108,6 +135,39 @@ class UserController extends Controller
         return view('admin.users_edit', compact('user'));
     }
 
+    public function show(User $user)
+    {
+        if (!Auth::check() || !Auth::user()->isAdmin()) {
+            abort(403);
+        }
+
+        $user->load(['wallet', 'creditAccount', 'referralRecord']);
+        
+        $transactions = [];
+        if ($user->wallet) {
+            $transactions = \App\Models\WalletTransaction::where('wallet_id', $user->wallet->id)
+                ->orderBy('created_at', 'desc')
+                ->paginate(20);
+        }
+
+        return view('admin.users_show', compact('user', 'transactions'));
+    }
+
+    public function genealogy(User $user)
+    {
+        if (!Auth::check() || !Auth::user()->isAdmin()) {
+            abort(403);
+        }
+
+        $user->load(['referralRecord']);
+        
+        // We'll build a tree structure. 
+        // For simplicity in the view, we can just pass the user and use a recursive partial or 
+        // a frontend library. Let's use a recursive approach in the view.
+        
+        return view('admin.genealogy.users_genealogy', compact('user'));
+    }
+
     public function update(Request $request, User $user)
     {
         if (!Auth::check() || !Auth::user()->isAdmin()) {
@@ -121,6 +181,9 @@ class UserController extends Controller
             'role' => 'required|string|in:user,admin',
             'status' => 'required|string|in:active,pending,blocked',
             'password' => 'nullable|string|min:6',
+            'credit_limit' => 'nullable|numeric|min:0',
+            'credit_approval' => 'nullable|string|in:pending,approved,rejected',
+            'avatar' => 'nullable|image|max:10',
         ]);
 
         $oldStatus = $user->status;
@@ -129,10 +192,40 @@ class UserController extends Controller
         $user->phone = $data['phone'];
         $user->role = $data['role'];
         $user->status = $data['status'];
+
+        if ($request->hasFile('avatar')) {
+            $file = $request->file('avatar');
+            $ext = $file->getClientOriginalExtension();
+            $filename = 'avatar_' . $user->id . '_' . time() . '.' . $ext;
+            $file->move(public_path('images/user'), $filename);
+            $user->avatar = 'images/user/' . $filename;
+        }
+
         if (!empty($data['password'])) {
             $user->password = bcrypt($data['password']);
         }
         $user->save();
+
+        // Manage Credit Account
+        if (isset($data['credit_limit']) || isset($data['credit_approval'])) {
+            $ca = \App\Models\CreditAccount::firstOrNew(['user_id' => $user->id]);
+            $oldCreditStatus = $ca->exists ? $ca->approval_status : 'pending';
+            
+            if (isset($data['credit_limit'])) {
+                $ca->credit_limit = $data['credit_limit'];
+                // Recalculate available credit if limit changed
+                $ca->available_credit = max(0, $ca->credit_limit - $ca->used_credit);
+            }
+            if (isset($data['credit_approval'])) {
+                $ca->approval_status = $data['credit_approval'];
+            }
+            $ca->save();
+
+            // Trigger commission if credit is approved for the first time
+            if ($oldCreditStatus !== 'approved' && $ca->approval_status === 'approved') {
+                $this->mlmService->distributeJoiningCommissions($user->id);
+            }
+        }
 
         if ($oldStatus === 'pending' && $user->status === 'active') {
             $this->mlmService->distributeJoiningCommissions($user->id);

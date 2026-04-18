@@ -10,7 +10,10 @@ class ProfileController extends Controller
     public function edit()
     {
         $user = Auth::user();
-        return view('profile.edit', ['user' => $user]);
+        return view('profile.edit', [
+            'user' => $user,
+            'page' => 'profile'
+        ]);
     }
 
     public function update(Request $request)

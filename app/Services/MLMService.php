@@ -51,6 +51,7 @@ class MLMService
     {
         $settings = $this->getSettings();
         $totalBv = $order->total_bv;
+        $totalAmount = $order->total_amount;
         $buyerId = $order->user_id;
         
         $current = $buyerId;
@@ -66,14 +67,20 @@ class MLMService
             $uplineUser = User::find($uplineId);
 
             if ($uplineUser && $uplineUser->status === 'active') {
+                // 1. BV-based commission
                 $rateKey = 'order_commission_level_' . $level;
                 $rate = (float) ($settings[$rateKey] ?? 0);
-                
-                // Commission = Total BV * Rate per BV
-                $amount = $totalBv * $rate;
+                $bvAmount = $totalBv * $rate;
 
-                if ($amount > 0) {
-                    $this->creditCommission($uplineId, $buyerId, $order->id, $level, $amount, 'repurchase');
+                // 2. Percentage-based commission
+                $percKey = 'repurchase_commission_level_' . $level;
+                $percentage = (float) ($settings[$percKey] ?? 0);
+                $percAmount = ($totalAmount * $percentage) / 100;
+
+                $totalCommission = $bvAmount + $percAmount;
+
+                if ($totalCommission > 0) {
+                    $this->creditCommission($uplineId, $buyerId, $order->id, $level, $totalCommission, 'repurchase');
                 }
             }
 
@@ -123,6 +130,11 @@ class MLMService
                 'joining_commission_level_3' => 30,
                 'joining_commission_level_4' => 20,
                 'joining_commission_level_5' => 10,
+                'repurchase_commission_level_1' => 20,
+                'repurchase_commission_level_2' => 10,
+                'repurchase_commission_level_3' => 5,
+                'repurchase_commission_level_4' => 3,
+                'repurchase_commission_level_5' => 2,
                 'order_commission_level_1' => 2.0,
                 'order_commission_level_2' => 1.0,
                 'order_commission_level_3' => 0.3,

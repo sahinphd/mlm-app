@@ -72,6 +72,13 @@ Route::middleware('auth')->group(function () {
 
         Route::get('referrals/verify/{code}', [\App\Http\Controllers\Api\ReferralController::class, 'verify']);
         Route::get('referrals/me', [\App\Http\Controllers\Api\ReferralController::class, 'myReferral']);
+
+        // Admin API routes
+        Route::prefix('admin')->group(function() {
+            Route::get('payment-requests', [PaymentApprovalController::class, 'index']);
+            Route::post('payment-requests/{id}/approve', [PaymentApprovalController::class, 'approve']);
+            Route::post('payment-requests/{id}/reject', [PaymentApprovalController::class, 'reject']);
+        });
     });
 
     // Admin Section
@@ -108,10 +115,13 @@ Route::middleware('auth')->group(function () {
 
         // Admin Users
         Route::get('/admin/users', [\App\Http\Controllers\Admin\UserController::class, 'index'])->name('admin.users');
+        Route::get('/admin/genealogy', [\App\Http\Controllers\Admin\UserController::class, 'genealogyIndex'])->name('admin.genealogy.genealogy');
         Route::get('/admin/users/search', [\App\Http\Controllers\Admin\UserController::class, 'searchUsers'])->name('admin.users.search');
         Route::get('/admin/users/data', [\App\Http\Controllers\Admin\UserController::class, 'data'])->name('admin.users.data');
         Route::get('/admin/users/create', [\App\Http\Controllers\Admin\UserController::class, 'create'])->name('admin.users.create');
         Route::post('/admin/users/store', [\App\Http\Controllers\Admin\UserController::class, 'store'])->name('admin.users.store');
+        Route::get('/admin/users/{user}', [\App\Http\Controllers\Admin\UserController::class, 'show'])->name('admin.users.show');
+        Route::get('/admin/users/{user}/genealogy', [\App\Http\Controllers\Admin\UserController::class, 'genealogy'])->name('admin.users.genealogy');
         Route::get('/admin/users/{user}/edit', [\App\Http\Controllers\Admin\UserController::class, 'edit'])->name('admin.users.edit');
         Route::post('/admin/users/{user}', [\App\Http\Controllers\Admin\UserController::class, 'update'])->name('admin.users.update');
         Route::delete('/admin/users/{user}', [\App\Http\Controllers\Admin\UserController::class, 'destroy'])->name('admin.users.destroy');
@@ -150,6 +160,7 @@ Route::middleware('auth')->group(function () {
 
         // Admin Commissions & Settings
         Route::get('/admin/commissions', [\App\Http\Controllers\CommissionController::class, 'adminIndex'])->name('admin.commissions');
+        Route::get('/admin/commissions/export', [\App\Http\Controllers\CommissionController::class, 'adminExport'])->name('admin.commissions.export');
         Route::get('/admin/settings', [\App\Http\Controllers\Admin\SettingController::class, 'index'])->name('admin.settings');
         Route::post('/admin/settings', [\App\Http\Controllers\Admin\SettingController::class, 'update'])->name('admin.settings.update');
         Route::get('/admin/reports/export', [\App\Http\Controllers\Admin\ReportController::class, 'export'])->name('admin.reports.export');

@@ -15,7 +15,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // User::factory(10)->create(['status' => 'active']);
 
         // Create admin (uses SUPER_ADMIN_EMAIL / SUPER_ADMIN_PASSWORD)
         $superEmail = env('SUPER_ADMIN_EMAIL', 'admin@example.com');

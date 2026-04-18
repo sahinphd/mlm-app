@@ -153,6 +153,9 @@ class ShopController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(15);
             
-        return view('orders.index', compact('orders'));
+        return view('orders.index', [
+            'orders' => $orders,
+            'page' => 'orders'
+        ]);
     }
 }
