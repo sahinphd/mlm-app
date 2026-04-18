@@ -18,7 +18,7 @@ class DatabaseSeeder extends Seeder
         // User::factory(10)->create(['status' => 'active']);
 
         // Create admin (uses SUPER_ADMIN_EMAIL / SUPER_ADMIN_PASSWORD)
-        $superEmail = env('SUPER_ADMIN_EMAIL', 'admin@example.com');
+        $superEmail = env('SUPER_ADMIN_EMAIL', 'super@mabia.in');
         $superPass = env('SUPER_ADMIN_PASSWORD', 'password');
 
         \App\Models\User::updateOrCreate([
@@ -32,12 +32,12 @@ class DatabaseSeeder extends Seeder
 
         // Create regular user
         \App\Models\User::firstOrCreate([
-            'email' => 'test@example.com',
+            'email' => 'sahin@mbia.in',
         ], [
             'name' => 'Test User',
             'role' => 'user',
             'password' => bcrypt('password'),
-            'avatar' => '/images/user/avatar-1.jpg',
+            'avatar' => '/images/user/default.png',
         ]);
 
         // Seed sample projects if none exist
