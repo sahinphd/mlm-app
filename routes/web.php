@@ -51,6 +51,7 @@ Route::middleware('auth')->group(function () {
 
     Route::view('/payments', 'payments.index')->name('payments.index');
     Route::get('/referrals', [\App\Http\Controllers\ReferralController::class, 'index'])->name('referrals.index');
+    Route::get('/genealogy', [\App\Http\Controllers\ReferralController::class, 'genealogy'])->name('genealogy.index');
     Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
     Route::post('/profile', [\App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
     Route::get('/commissions', [\App\Http\Controllers\CommissionController::class, 'index'])->name('commissions.index');
