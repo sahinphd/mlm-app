@@ -16,7 +16,7 @@ class RegisterController extends Controller
     {
         $data = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
+            'email' => 'required|email',
             'password' => 'required|string|min:6|confirmed',
             'country' => 'required|string|max:8',
             'phone' => 'required|string|max:30',
@@ -25,6 +25,15 @@ class RegisterController extends Controller
 
         $phoneCombined = trim(($data['country'] ?? '') . ' ' . ($data['phone'] ?? ''));
 
+        // If a user already exists with this email or phone, redirect to login with a warning
+        $exists = User::where('email', $data['email'])
+            ->orWhere('phone', $phoneCombined)
+            ->first();
+
+        if ($exists) {
+            return redirect('/login')->with('warning', 'An account with this email or phone already exists. Please login.');
+        }
+
         $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
@@ -32,48 +41,39 @@ class RegisterController extends Controller
             'password' => Hash::make($data['password']),
         ]);
 
-        // Handle referral: if a referral code was provided, link the new user
-        if (!empty($data['referral'])) {
-            $code = trim($data['referral']);
-            $parent = DB::table('referrals')->where('referral_code', $code)->first();
+        // Ensure role is always a regular user for public registrations
+        $user->role = 'user';
+        $user->save();
 
-            $parentId = null;
-            $parentLevel = 0;
+        // Handle referral: if a referral code was provided, link the new user
+        $code = !empty($data['referral']) ? trim($data['referral']) : null;
+        
+        $parentId = null;
+        $parentLevel = 0;
+
+        if ($code) {
+            $parent = DB::table('referrals')->where('referral_code', $code)->first();
             if ($parent) {
                 $parentId = $parent->user_id;
                 $parentLevel = intval($parent->level_depth);
             }
-
-            // generate a referral code for the new user
-            $newCode = Str::upper(Str::random(6));
-            // ensure uniqueness (rare collision)
-            while (DB::table('referrals')->where('referral_code', $newCode)->exists()) {
-                $newCode = Str::upper(Str::random(6));
-            }
-
-            DB::table('referrals')->insert([
-                'user_id' => $user->id,
-                'parent_id' => $parentId,
-                'referral_code' => $newCode,
-                'level_depth' => $parentId ? ($parentLevel + 1) : 0,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        } else {
-            // create a referral entry without parent
-            $newCode = Str::upper(Str::random(6));
-            while (DB::table('referrals')->where('referral_code', $newCode)->exists()) {
-                $newCode = Str::upper(Str::random(6));
-            }
-            DB::table('referrals')->insert([
-                'user_id' => $user->id,
-                'parent_id' => null,
-                'referral_code' => $newCode,
-                'level_depth' => 0,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
         }
+
+        // generate a referral code for the new user
+        $newCode = Str::upper(Str::random(6));
+        // ensure uniqueness (rare collision)
+        while (DB::table('referrals')->where('referral_code', $newCode)->exists()) {
+            $newCode = Str::upper(Str::random(6));
+        }
+
+        DB::table('referrals')->insert([
+            'user_id' => $user->id,
+            'parent_id' => $parentId,
+            'referral_code' => $newCode,
+            'level_depth' => $parentId ? ($parentLevel + 1) : 0,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
 
         Auth::login($user);
 
