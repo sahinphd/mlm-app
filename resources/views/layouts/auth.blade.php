@@ -21,7 +21,7 @@
         <div class="relative flex flex-col justify-center w-full min-h-screen dark:bg-gray-900 sm:p-0 lg:flex-row">
             @yield('content')
             
-            <div class="relative items-center hidden w-full h-full bg-brand-950 dark:bg-white/5 lg:grid lg:w-1/2">
+            <div class="relative items-center hidden w-full h-100% bg-brand-950 dark:bg-white/5 lg:grid lg:w-1/2">
                 <div class="flex items-center justify-center z-1">
                     <div class="flex flex-col items-center max-w-xs">
                         <a href="{{ url('/') }}" class="block mb-4">
