@@ -60,7 +60,7 @@ class UserController extends Controller
             8 => 'created_at'
         ];
 
-        $query = User::with('creditAccount');
+        $query = User::with(['creditAccount', 'referralRecord.parent']);
 
         $recordsTotal = $query->count();
 
@@ -102,9 +102,20 @@ class UserController extends Controller
                 default => '<span class="text-xs text-gray-400">N/A</span>'
             };
 
+            $parentName = $u->referralRecord?->parent?->name ?? 'None';
+            $referralCode = $u->referralRecord?->referral_code ?? '-';
+
             return [
                 $u->id,
-                '<img src="'.e($u->avatar_url).'" alt="avatar" class="w-8 h-8 rounded-full" />',
+                '<img src="'.e($u->avatar_url).'" 
+                      alt="avatar" 
+                      class="w-10 h-10 rounded-full border border-stroke dark:border-strokedark cursor-pointer js-user-info" 
+                      data-name="'.e($u->name).'"
+                      data-phone="'.e($u->phone ?? '-').'"
+                      data-ref-by="'.e($parentName).'"
+                      data-ref-code="'.e($referralCode).'"
+                      data-avatar="'.e($u->avatar_url).'"
+                />',
                 e($u->name),
                 '<a href="mailto:'.e($u->email).'" class="text-blue-600 truncate inline-block max-w-[150px]">'.e($u->email).'</a>',
                 e($u->role ?? 'user'),

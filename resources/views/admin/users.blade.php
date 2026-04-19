@@ -52,6 +52,7 @@
 
 <!-- DataTables CDN -->
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
 <style>
     .dataTables_wrapper .dataTables_length select {
         @apply bg-transparent border border-stroke rounded px-2 py-1 dark:border-strokedark dark:text-white;
@@ -80,10 +81,22 @@
     .dark table.dataTable thead th {
         border-bottom: 1px solid #2e3a47;
     }
+    /* Responsive adjustment */
+    #usersTable {
+        width: 100% !important;
+    }
+    /* Tooltip container needs to be visible over table */
+    #usersTable td {
+        overflow: visible !important;
+    }
+    .dataTables_scrollBody {
+        overflow: visible !important;
+    }
 </style>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
@@ -91,6 +104,7 @@
         const table = $('#usersTable').DataTable({
             processing: true,
             serverSide: true,
+            responsive: true,
             ajax: "{{ route('admin.users.data') }}",
             columns: [
                 { data: 0, name: 'id' },
@@ -113,6 +127,38 @@
             drawCallback: function() {
                 $('.dataTables_paginate > .paginate_button').addClass('px-3 py-1');
             }
+        });
+
+        // Handle avatar click for info popup
+        $('#usersTable').on('click', '.js-user-info', function() {
+            const data = $(this).data();
+            Swal.fire({
+                title: `<div class="text-xl font-bold text-black dark:text-white">${data.name}</div>`,
+                html: `
+                    <div class="flex flex-col items-center justify-center space-y-4 py-4 text-left">
+                        <img src="${data.avatar}" class="w-24 h-24 rounded-full border-4 border-primary shadow-lg mb-2" />
+                        <div class="w-full bg-gray-50 dark:bg-meta-4 rounded-lg p-4 space-y-3">
+                            <div class="flex justify-between border-b border-stroke dark:border-strokedark pb-2">
+                                <span class="font-semibold text-gray-600 dark:text-gray-300">Phone:</span>
+                                <span class="text-black dark:text-white font-medium">${data.phone}</span>
+                            </div>
+                            <div class="flex justify-between border-b border-stroke dark:border-strokedark pb-2">
+                                <span class="font-semibold text-gray-600 dark:text-gray-300">Referred By:</span>
+                                <span class="text-black dark:text-white font-medium">${data.refBy}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="font-semibold text-gray-600 dark:text-gray-300">Referral Code:</span>
+                                <span class="text-black dark:text-white font-mono bg-white dark:bg-boxdark px-2 rounded border border-stroke dark:border-strokedark">${data.refCode}</span>
+                            </div>
+                        </div>
+                    </div>
+                `,
+                showConfirmButton: true,
+                confirmButtonText: 'Close',
+                confirmButtonColor: '#3C50E0',
+                background: document.documentElement.classList.contains('dark') ? '#24303F' : '#fff',
+                color: document.documentElement.classList.contains('dark') ? '#fff' : '#000'
+            });
         });
 
         // handle delete
