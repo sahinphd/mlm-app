@@ -15,7 +15,12 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm text-neutral-600 mb-1">Password</label>
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="block text-sm text-neutral-600">Password</label>
+                        @if (Route::has('password.request'))
+                            <a href="{{ route('password.request') }}" class="text-xs text-blue-600 hover:underline dark:text-blue-400">Forgot password?</a>
+                        @endif
+                    </div>
                     <input name="password" type="password" required placeholder="Enter Password" class="mt-1 block w-full border border-neutral-200 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-200">
                 </div>
 
