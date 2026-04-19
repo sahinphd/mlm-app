@@ -34,6 +34,15 @@ class CreditApprovalController extends Controller
         $ca->available_credit = max(0, $ca->credit_limit - $ca->used_credit);
         $ca->approval_status = 'approved';
         $ca->save();
+
+        \App\Models\CreditTransaction::create([
+            'credit_account_id' => $ca->id,
+            'type' => 'credit',
+            'amount' => $ca->credit_limit,
+            'source' => 'manual',
+            'description' => 'Credit limit approved/updated by admin'
+        ]);
+        
         return response()->json(['message' => 'Approved', 'credit_account' => $ca]);
     }
 
