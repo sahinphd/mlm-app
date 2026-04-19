@@ -24,5 +24,15 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('admin-access', function (User $user) {
             return $user->isAdmin();
         });
+
+        // Share settings with all views
+        \Illuminate\Support\Facades\View::composer('*', function ($view) {
+            $settingsFile = 'settings.json';
+            $settings = [];
+            if (\Illuminate\Support\Facades\Storage::disk('local')->exists($settingsFile)) {
+                $settings = json_decode(\Illuminate\Support\Facades\Storage::disk('local')->get($settingsFile), true);
+            }
+            $view->with('systemSettings', $settings);
+        });
     }
 }

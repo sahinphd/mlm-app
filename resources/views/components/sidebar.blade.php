@@ -198,6 +198,50 @@
           </li>
           <!-- Menu Item Shop -->
 
+          <!-- Menu Item Commissions -->
+          <li>
+            <a
+              href="{{ route('commissions.index') }}"
+              class="menu-item group"
+              :class=" (page === 'commissions') ? 'menu-item-active' : 'menu-item-inactive'"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 1.343-3 3s1.343 3 3 3 3-1.343 3-3-1.343-3-3-3zM12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zM12 20c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8z" />
+              </svg>
+
+              <span
+                class="menu-item-text"
+                :class="sidebarToggle ? 'lg:hidden' : ''"
+              >
+                Commissions
+              </span>
+            </a>
+          </li>
+          <!-- Menu Item Commissions -->
+
+          @if(($systemSettings['enable_bv_commission'] ?? 'on') === 'on')
+          <!-- Menu Item BV Commissions -->
+          <li>
+            <a
+              href="{{ route('commissions.bv') }}"
+              class="menu-item group"
+              :class=" (page === 'bv_commissions') ? 'menu-item-active' : 'menu-item-inactive'"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+
+              <span
+                class="menu-item-text"
+                :class="sidebarToggle ? 'lg:hidden' : ''"
+              >
+                BV Commissions
+              </span>
+            </a>
+          </li>
+          <!-- Menu Item BV Commissions -->
+          @endif
+
           @can('admin-access')
           <!-- Menu Item Products (Admin) -->
           <li>

@@ -55,6 +55,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
     Route::post('/profile', [\App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
     Route::get('/commissions', [\App\Http\Controllers\CommissionController::class, 'index'])->name('commissions.index');
+    Route::get('/commissions/bv', [\App\Http\Controllers\CommissionController::class, 'bvIndex'])->name('commissions.bv');
+    Route::get('/commissions/data', [\App\Http\Controllers\CommissionController::class, 'data'])->name('commissions.data');
     
     Route::get('/shop', [\App\Http\Controllers\ShopController::class, 'index'])->name('shop.index');
     Route::get('/shop/checkout', [\App\Http\Controllers\ShopController::class, 'checkout'])->name('shop.checkout');

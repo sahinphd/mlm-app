@@ -39,6 +39,11 @@ class SettingController extends Controller
 
         $data = $request->except(['_token', 'logo', 'logo_dark', 'logo_icon', 'auth_logo']);
         
+        // Handle checkboxes that might be missing if unchecked
+        if (!$request->has('enable_bv_commission')) {
+            $data['enable_bv_commission'] = 'off';
+        }
+
         $settings = $this->getSettings();
         $newSettings = array_merge($settings, $data);
         
@@ -57,6 +62,7 @@ class SettingController extends Controller
                 'min_withdrawal' => 500,
                 'maintenance_mode' => 'off',
                 'registration_enabled' => 'on',
+                'enable_bv_commission' => 'on',
                 'joining_commission_level_1' => 100,
                 'joining_commission_level_2' => 50,
                 'joining_commission_level_3' => 30,

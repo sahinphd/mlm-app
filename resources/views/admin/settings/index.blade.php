@@ -215,6 +215,7 @@
                     <div class="border-b border-stroke py-4 dark:border-strokedark">
                         <h3 class="font-medium text-black dark:text-white">Order Commission Rates (Per BV Point)</h3>
                     </div>
+
                     <div class="mt-5.5 grid grid-cols-1 gap-5.5 sm:grid-cols-5">
                         <div>
                             <label class="mb-3 block text-sm font-medium text-black dark:text-white">Level 1 (per BV)</label>
@@ -253,6 +254,14 @@
                             <option value="on" {{ ($settings['maintenance_mode'] ?? 'off') === 'on' ? 'selected' : '' }}>Enabled (Under Maintenance)</option>
                         </select>
                         <p class="mt-2 text-xs text-meta-1">Warning: Site will be inaccessible to non-admin users if enabled.</p>
+                    </div>
+
+                    <div class="mb-5.5">
+                        <label class="mb-3 block text-sm font-medium text-black dark:text-white">Enable BV Commissions Page for Users</label>
+                        <select name="enable_bv_commission" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
+                            <option value="on" {{ ($settings['enable_bv_commission'] ?? 'on') === 'on' ? 'selected' : '' }}>Enabled (Show page to users)</option>
+                            <option value="off" {{ ($settings['enable_bv_commission'] ?? 'on') === 'off' ? 'selected' : '' }}>Disabled (Hide page from users)</option>
+                        </select>
                     </div>
                 </div>
             </div>

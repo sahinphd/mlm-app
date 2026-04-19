@@ -10,16 +10,35 @@ class CommissionController extends Controller
 {
     public function index()
     {
-        $user = Auth::user();
         return view('commissions.index', [
             'page' => 'commissions'
+        ]);
+    }
+
+    public function bvIndex()
+    {
+        $settings = $this->getSettings();
+        if (($settings['enable_bv_commission'] ?? 'off') !== 'on') {
+            abort(404);
+        }
+
+        return view('commissions.bv', [
+            'page' => 'bv_commissions'
         ]);
     }
 
     public function data(Request $request)
     {
         $user = Auth::user();
+        $type = $request->query('type');
+        
         $query = Commission::where('user_id', $user->id)->with('fromUser');
+
+        if ($type === 'bv') {
+            $query->where('type', 'bv');
+        } else {
+            $query->where('type', '!=', 'bv');
+        }
 
         // Total count
         $totalData = $query->count();
@@ -59,7 +78,9 @@ class CommissionController extends Controller
                 'amount' => '₹' . number_format($comm->amount, 2),
                 'type' => $comm->type === 'joining' 
                     ? '<span class="px-2 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">Joining</span>'
-                    : '<span class="px-2 py-1 rounded-full text-xs font-semibold bg-purple-50 text-purple-600 dark:bg-purple-500/10 dark:text-purple-400">' . ucfirst($comm->type) . '</span>',
+                    : ($comm->type === 'bv' 
+                        ? '<span class="px-2 py-1 rounded-full text-xs font-semibold bg-green-50 text-green-600 dark:bg-green-500/10 dark:text-green-400">BV</span>'
+                        : '<span class="px-2 py-1 rounded-full text-xs font-semibold bg-purple-50 text-purple-600 dark:bg-purple-500/10 dark:text-purple-400">' . ucfirst($comm->type) . '</span>'),
                 'date' => $comm->created_at->format('M d, Y H:i'),
                 'raw_date' => $comm->created_at->toDateTimeString()
             ];
@@ -71,6 +92,15 @@ class CommissionController extends Controller
             "recordsFiltered" => intval($totalFiltered),
             "data"            => $data
         ]);
+    }
+
+    protected function getSettings()
+    {
+        $settingsFile = 'settings.json';
+        if (!\Illuminate\Support\Facades\Storage::disk('local')->exists($settingsFile)) {
+            return [];
+        }
+        return json_decode(\Illuminate\Support\Facades\Storage::disk('local')->get($settingsFile), true);
     }
 
     public function adminIndex(Request $request)
