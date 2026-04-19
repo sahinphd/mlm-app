@@ -17,21 +17,23 @@ class UserController extends Controller
         $this->mlmService = $mlmService;
     }
 
-    public function index(Request $request)
+    private function ensureAdmin(): void
     {
-        if (!Auth::check() || !Auth::user()->isAdmin()) {
+        $user = Auth::user();
+        if (! $user || $user->role !== 'admin') {
             abort(403);
         }
+    }
 
+    public function index(Request $request)
+    {
+        $this->ensureAdmin();
         return view('admin.users');
     }
 
     public function genealogyIndex(Request $request)
     {
-        if (!Auth::check() || !Auth::user()->isAdmin()) {
-            abort(403);
-        }
-
+        $this->ensureAdmin();
         $userId = $request->query('user_id');
         
         if ($userId) {
@@ -47,9 +49,7 @@ class UserController extends Controller
     // Server-side DataTables JSON
     public function data(Request $request)
     {
-        if (!Auth::check() || !Auth::user()->isAdmin()) {
-            return response()->json(['error' => 'forbidden'], 403);
-        }
+        $this->ensureAdmin();
 
         $columns = [
             0 => 'id',
@@ -129,18 +129,13 @@ class UserController extends Controller
 
     public function edit(User $user)
     {
-        if (!Auth::check() || !Auth::user()->isAdmin()) {
-            abort(403);
-        }
+        $this->ensureAdmin();
         return view('admin.users_edit', compact('user'));
     }
 
     public function show(User $user)
     {
-        if (!Auth::check() || !Auth::user()->isAdmin()) {
-            abort(403);
-        }
-
+        $this->ensureAdmin();
         $user->load(['wallet', 'creditAccount', 'referralRecord']);
         
         $transactions = [];
@@ -155,10 +150,7 @@ class UserController extends Controller
 
     public function genealogy(User $user)
     {
-        if (!Auth::check() || !Auth::user()->isAdmin()) {
-            abort(403);
-        }
-
+        $this->ensureAdmin();
         $user->load(['referralRecord']);
         
         // We'll build a tree structure. 
@@ -170,9 +162,7 @@ class UserController extends Controller
 
     public function update(Request $request, User $user)
     {
-        if (!Auth::check() || !Auth::user()->isAdmin()) {
-            return response()->json(['error' => 'forbidden'], 403);
-        }
+        $this->ensureAdmin();
 
         $data = $request->validate([
             'name' => 'required|string|max:255',
@@ -236,9 +226,7 @@ class UserController extends Controller
 
     public function destroy(Request $request, User $user)
     {
-        if (!Auth::check() || !Auth::user()->isAdmin()) {
-            return response()->json(['error' => 'forbidden'], 403);
-        }
+        $this->ensureAdmin();
 
         // prevent deleting self
         if (Auth::id() === $user->id) {
@@ -251,9 +239,7 @@ class UserController extends Controller
 
     public function create()
     {
-        if (!Auth::check() || !Auth::user()->isAdmin()) {
-            abort(403);
-        }
+        $this->ensureAdmin();
         return view('admin.users_create');
     }
 
@@ -262,9 +248,7 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        if (!Auth::check() || !Auth::user()->isAdmin()) {
-            abort(403);
-        }
+        $this->ensureAdmin();
 
         $data = $request->validate([
             'name' => 'required|string|max:255',
@@ -313,9 +297,7 @@ class UserController extends Controller
 
     public function searchUsers(Request $request)
     {
-        if (!Auth::check() || !Auth::user()->isAdmin()) {
-            return response()->json(['error' => 'forbidden'], 403);
-        }
+        $this->ensureAdmin();
 
         $term = $request->query('q');
         $users = User::search($term)

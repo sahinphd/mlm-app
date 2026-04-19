@@ -60,4 +60,17 @@
     </div>
   </div>
 </div>
+
+@if(session('status'))
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        Swal.fire({
+            icon: 'success',
+            title: 'Email Sent!',
+            text: '{{ session("status") }}',
+        });
+    });
+</script>
+@endif
 @endsection

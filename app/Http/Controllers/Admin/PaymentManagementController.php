@@ -24,7 +24,7 @@ class PaymentManagementController extends Controller
     private function ensureAdmin(): void
     {
         $user = Auth::user();
-        if (! $user || ! method_exists($user, 'isAdmin') || ! $user->isAdmin()) {
+        if (! $user || $user->role !== 'admin') {
             abort(403);
         }
     }
