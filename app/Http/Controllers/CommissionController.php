@@ -75,7 +75,7 @@ class CommissionController extends Controller
 
     public function adminIndex(Request $request)
     {
-        if (!Auth::user()->isAdmin()) {
+        if (Auth::user()->role !== 'admin') {
             abort(403);
         }
 
@@ -89,7 +89,7 @@ class CommissionController extends Controller
         $level = $request->query('level');
         $perPage = $request->query('per_page', 50);
 
-        $query = Commission::with(['user', 'fromUser'])->orderBy('created_at', 'desc');
+        $query = Commission::with(['user', 'fromUser'])->where('type', '!=', 'bv')->orderBy('created_at', 'desc');
 
         if ($receiverId) {
             $query->where('user_id', $receiverId);
@@ -120,9 +120,37 @@ class CommissionController extends Controller
         return view('admin.commissions.index', compact('commissions', 'receiverId', 'fromUserId', 'receiverName', 'fromUserName', 'startDate', 'endDate', 'type', 'level', 'perPage'));
     }
 
+    public function bvAdminIndex(Request $request)
+    {
+        if (Auth::user()->role !== 'admin') {
+            abort(403);
+        }
+
+        $receiverId = $request->query('receiver_id');
+        $fromUserId = $request->query('from_user_id');
+        $receiverName = $request->query('receiver_name'); 
+        $fromUserName = $request->query('from_user_name'); 
+        $startDate = $request->query('start_date');
+        $endDate = $request->query('end_date');
+        $level = $request->query('level');
+        $perPage = $request->query('per_page', 50);
+
+        $query = Commission::with(['user', 'fromUser'])->where('type', 'bv')->orderBy('created_at', 'desc');
+
+        if ($receiverId) $query->where('user_id', $receiverId);
+        if ($fromUserId) $query->where('from_user_id', $fromUserId);
+        if ($level) $query->where('level', $level);
+        if ($startDate) $query->whereDate('created_at', '>=', $startDate);
+        if ($endDate) $query->whereDate('created_at', '<=', $endDate);
+
+        $commissions = $query->paginate($perPage);
+            
+        return view('admin.commissions.bv', compact('commissions', 'receiverId', 'fromUserId', 'receiverName', 'fromUserName', 'startDate', 'endDate', 'level', 'perPage'));
+    }
+
     public function adminExport(Request $request)
     {
-        if (!Auth::user()->isAdmin()) {
+        if (Auth::user()->role !== 'admin') {
             abort(403);
         }
 
@@ -133,7 +161,7 @@ class CommissionController extends Controller
         $type = $request->query('type');
         $level = $request->query('level');
 
-        $query = Commission::with(['user', 'fromUser'])->orderBy('created_at', 'desc');
+        $query = Commission::with(['user', 'fromUser'])->where('type', '!=', 'bv')->orderBy('created_at', 'desc');
 
         if ($receiverId) $query->where('user_id', $receiverId);
         if ($fromUserId) $query->where('from_user_id', $fromUserId);
@@ -168,6 +196,61 @@ class CommissionController extends Controller
                     'Level ' . $comm->level,
                     number_format($comm->amount, 2),
                     ucfirst($comm->type),
+                    $comm->created_at->format('Y-m-d H:i:s')
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    public function bvAdminExport(Request $request)
+    {
+        if (Auth::user()->role !== 'admin') {
+            abort(403);
+        }
+
+        $receiverId = $request->query('receiver_id');
+        $fromUserId = $request->query('from_user_id');
+        $startDate = $request->query('start_date');
+        $endDate = $request->query('end_date');
+        $level = $request->query('level');
+
+        $query = Commission::with(['user', 'fromUser'])->where('type', 'bv')->orderBy('created_at', 'desc');
+
+        if ($receiverId) $query->where('user_id', $receiverId);
+        if ($fromUserId) $query->where('from_user_id', $fromUserId);
+        if ($level) $query->where('level', $level);
+        if ($startDate) $query->whereDate('created_at', '>=', $startDate);
+        if ($endDate) $query->whereDate('created_at', '<=', $endDate);
+
+        $commissions = $query->get();
+
+        $headers = [
+            "Content-type"        => "text/csv",
+            "Content-Disposition" => "attachment; filename=bv_commissions_export_" . date('Y-m-d') . ".csv",
+            "Pragma"              => "no-cache",
+            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+            "Expires"             => "0"
+        ];
+
+        $columns = ['ID', 'Receiver Name', 'Receiver Email', 'From User', 'From User Email', 'Level', 'BV Amount', 'Date'];
+
+        $callback = function() use($commissions, $columns) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $columns);
+
+            foreach ($commissions as $comm) {
+                fputcsv($file, [
+                    $comm->id,
+                    $comm->user->name ?? 'N/A',
+                    $comm->user->email ?? '',
+                    $comm->fromUser->name ?? 'N/A',
+                    $comm->fromUser->email ?? '',
+                    'Level ' . $comm->level,
+                    number_format($comm->amount, 2),
                     $comm->created_at->format('Y-m-d H:i:s')
                 ]);
             }

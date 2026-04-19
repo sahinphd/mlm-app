@@ -167,7 +167,9 @@ Route::middleware('auth')->group(function () {
 
         // Admin Commissions & Settings
         Route::get('/admin/commissions', [\App\Http\Controllers\CommissionController::class, 'adminIndex'])->name('admin.commissions');
+        Route::get('/admin/commissions/bv', [\App\Http\Controllers\CommissionController::class, 'bvAdminIndex'])->name('admin.commissions.bv');
         Route::get('/admin/commissions/export', [\App\Http\Controllers\CommissionController::class, 'adminExport'])->name('admin.commissions.export');
+        Route::get('/admin/commissions/bv/export', [\App\Http\Controllers\CommissionController::class, 'bvAdminExport'])->name('admin.commissions.bv.export');
         Route::get('/admin/settings', [\App\Http\Controllers\Admin\SettingController::class, 'index'])->name('admin.settings');
         Route::post('/admin/settings', [\App\Http\Controllers\Admin\SettingController::class, 'update'])->name('admin.settings.update');
         Route::get('/admin/reports/export', [\App\Http\Controllers\Admin\ReportController::class, 'export'])->name('admin.reports.export');

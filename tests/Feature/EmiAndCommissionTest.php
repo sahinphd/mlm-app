@@ -31,9 +31,9 @@ class EmiAndCommissionTest extends TestCase
         $this->seedSettings();
 
         // Build referral chain: grandparent -> parent -> buyer
-        $grand = User::factory()->create();
-        $parent = User::factory()->create();
-        $buyer = User::factory()->create();
+        $grand = User::factory()->create(['status' => 'active']);
+        $parent = User::factory()->create(['status' => 'active']);
+        $buyer = User::factory()->create(['status' => 'active']);
 
         // Insert referrals (direct DB writes matching migration)
         DB::table('referrals')->insert([
@@ -69,8 +69,17 @@ class EmiAndCommissionTest extends TestCase
         $this->assertNotNull($parentWallet);
         $this->assertNotNull($grandWallet);
 
-        $this->assertGreaterThan(0, $parentWallet->earning_balance);
-        $this->assertGreaterThan(0, $grandWallet->earning_balance);
+        // Product has Price: 200, BV: 5
+        // Level 1: Repurchase (2%) = 4, BV (Rate 2) = 10 (Total 14)
+        // Level 2: Repurchase (1%) = 2, BV (Rate 1) = 5 (Total 7)
+        
+        $this->assertDatabaseHas('commissions', ['user_id' => $parent->id, 'type' => 'repurchase', 'amount' => 4]);
+        $this->assertDatabaseHas('commissions', ['user_id' => $parent->id, 'type' => 'bv', 'amount' => 10]);
+        $this->assertDatabaseHas('commissions', ['user_id' => $grand->id, 'type' => 'repurchase', 'amount' => 2]);
+        $this->assertDatabaseHas('commissions', ['user_id' => $grand->id, 'type' => 'bv', 'amount' => 5]);
+
+        $this->assertEquals(14, $parentWallet->earning_balance);
+        $this->assertEquals(7, $grandWallet->earning_balance);
     }
 
     public function test_commission_scaling_applies_when_cap_exceeded()
@@ -78,9 +87,9 @@ class EmiAndCommissionTest extends TestCase
         $this->seedSettings();
 
         // Create deeper chain and a very high BV order so gross > cap
-        $u1 = User::factory()->create();
-        $u2 = User::factory()->create();
-        $u3 = User::factory()->create();
+        $u1 = User::factory()->create(['status' => 'active']);
+        $u2 = User::factory()->create(['status' => 'active']);
+        $u3 = User::factory()->create(['status' => 'active']);
         DB::table('referrals')->insert([
             ['user_id'=>$u1->id,'parent_id'=>null,'referral_code'=>'A','level_depth'=>0],
             ['user_id'=>$u2->id,'parent_id'=>$u1->id,'referral_code'=>'B','level_depth'=>1],
@@ -98,6 +107,54 @@ class EmiAndCommissionTest extends TestCase
         $maxPayout = $order->total_amount * (60/100);
 
         $this->assertLessThanOrEqual($maxPayout + 0.01, $commSum);
+    }
+
+    public function test_commission_is_skipped_for_inactive_upline()
+    {
+        $this->seedSettings();
+
+        // Build referral chain: grandparent (active) -> parent (pending/inactive) -> buyer (active)
+        $grand = User::factory()->create(['status' => 'active']);
+        $parent = User::factory()->create(['status' => 'pending']); 
+        $buyer = User::factory()->create(['status' => 'active']);
+
+        DB::table('referrals')->insert([
+            ['user_id' => $grand->id, 'parent_id' => null, 'referral_code' => 'G2', 'level_depth' => 0],
+            ['user_id' => $parent->id, 'parent_id' => $grand->id, 'referral_code' => 'P2', 'level_depth' => 1],
+            ['user_id' => $buyer->id, 'parent_id' => $parent->id, 'referral_code' => 'B2', 'level_depth' => 2],
+        ]);
+
+        $product = Product::create(['name' => 'SkipItem', 'price' => 200, 'stock' => 10, 'bv' => 5]);
+        CreditAccount::create(['user_id' => $buyer->id, 'credit_limit' => 1000, 'used_credit' => 0, 'available_credit' => 1000, 'approval_status' => 'approved']);
+
+        $this->actingAs($buyer)->postJson('/api/orders', [
+            'items' => [ ['product_id' => $product->id, 'quantity' => 1] ],
+            'payment_method' => 'credit_wallet'
+        ])->assertStatus(200);
+
+        // Parent (inactive) should have commission records with amount 0 and note
+        $this->assertDatabaseHas('commissions', [
+            'user_id' => $parent->id,
+            'amount' => 0,
+            'note' => 'Commission skipped as not active user'
+        ]);
+
+        // Grandparent (active) should have normal commission records
+        $this->assertDatabaseHas('commissions', [
+            'user_id' => $grand->id,
+            'amount' => 2, // 1% of 200
+            'type' => 'repurchase',
+            'note' => null
+        ]);
+
+        // Wallets: Parent should have 0 balance (or no wallet at all if it was never created)
+        $parentWallet = Wallet::where('user_id', $parent->id)->first();
+        if ($parentWallet) {
+            $this->assertEquals(0, $parentWallet->earning_balance);
+        }
+
+        $grandWallet = Wallet::where('user_id', $grand->id)->first();
+        $this->assertEquals(7, $grandWallet->earning_balance); // 2 + 5
     }
 
     public function test_insufficient_credit_blocks_order()

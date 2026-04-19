@@ -33,12 +33,17 @@ class MLMService
                 ->where('type', 'joining')
                 ->exists();
 
-            if (!$exists && $uplineUser && $uplineUser->status === 'active') {
+            if (!$exists && $uplineUser) {
                 $amountKey = 'joining_commission_level_' . $level;
                 $amount = (float) ($settings[$amountKey] ?? 0);
                 
                 if ($amount > 0) {
-                    $this->creditCommission($uplineId, $newUserId, null, $level, $amount, 'joining');
+                    if ($uplineUser->status === 'active') {
+                        $this->creditCommission($uplineId, $newUserId, null, $level, $amount, 'joining');
+                    } else {
+                        // Skip commission for inactive user but log it
+                        $this->creditCommission($uplineId, $newUserId, null, $level, 0, 'joining', 'Commission skipped as not active user');
+                    }
                 }
             }
             
@@ -66,21 +71,26 @@ class MLMService
             $uplineId = $ref->parent_id;
             $uplineUser = User::find($uplineId);
 
-            if ($uplineUser && $uplineUser->status === 'active') {
-                // 1. BV-based commission
-                $rateKey = 'order_commission_level_' . $level;
-                $rate = (float) ($settings[$rateKey] ?? 0);
-                $bvAmount = $totalBv * $rate;
+            if ($uplineUser) {
+                $isActive = ($uplineUser->status === 'active');
+                $note = $isActive ? null : 'Commission skipped as not active user';
 
-                // 2. Percentage-based commission
+                // 1. Repurchase Commission (Percentage of total order amount)
                 $percKey = 'repurchase_commission_level_' . $level;
                 $percentage = (float) ($settings[$percKey] ?? 0);
-                $percAmount = ($totalAmount * $percentage) / 100;
+                $repurchaseCommission = ($totalAmount * $percentage) / 100;
 
-                $totalCommission = $bvAmount + $percAmount;
+                if ($repurchaseCommission > 0) {
+                    $this->creditCommission($uplineId, $buyerId, $order->id, $level, $isActive ? $repurchaseCommission : 0, 'repurchase', $note);
+                }
 
-                if ($totalCommission > 0) {
-                    $this->creditCommission($uplineId, $buyerId, $order->id, $level, $totalCommission, 'repurchase');
+                // 2. BV Commission (Rate per BV point)
+                $rateKey = 'order_commission_level_' . $level;
+                $rate = (float) ($settings[$rateKey] ?? 0);
+                $bvCommission = $totalBv * $rate;
+
+                if ($bvCommission > 0) {
+                    $this->creditCommission($uplineId, $buyerId, $order->id, $level, $isActive ? $bvCommission : 0, 'bv', $note);
                 }
             }
 
@@ -89,34 +99,38 @@ class MLMService
         }
     }
 
-    protected function creditCommission($uplineId, $fromUserId, $orderId, $level, $amount, $type)
+    protected function creditCommission($uplineId, $fromUserId, $orderId, $level, $amount, $type, $note = null)
     {
-        DB::transaction(function () use ($uplineId, $fromUserId, $orderId, $level, $amount, $type) {
+        DB::transaction(function () use ($uplineId, $fromUserId, $orderId, $level, $amount, $type, $note) {
             $comm = Commission::create([
                 'user_id' => $uplineId,
                 'from_user_id' => $fromUserId,
                 'order_id' => $orderId,
                 'level' => $level,
                 'amount' => $amount,
-                'type' => $type
+                'type' => $type,
+                'note' => $note
             ]);
 
-            $wallet = Wallet::firstOrCreate(
-                ['user_id' => $uplineId],
-                ['main_balance' => 0, 'earning_balance' => 0, 'credit_balance' => 0]
-            );
+            // Only update wallet and create transaction if amount is > 0
+            if ($amount > 0) {
+                $wallet = Wallet::firstOrCreate(
+                    ['user_id' => $uplineId],
+                    ['main_balance' => 0, 'earning_balance' => 0, 'credit_balance' => 0]
+                );
 
-            $wallet->earning_balance += $amount;
-            $wallet->save();
+                $wallet->earning_balance += $amount;
+                $wallet->save();
 
-            WalletTransaction::create([
-                'wallet_id' => $wallet->id,
-                'type' => 'credit',
-                'source' => 'commission',
-                'amount' => $amount,
-                'reference_id' => 'commission:' . $comm->id,
-                'description' => ucfirst($type) . ' commission (Level ' . $level . ') from Order/User #' . ($orderId ?? $fromUserId)
-            ]);
+                WalletTransaction::create([
+                    'wallet_id' => $wallet->id,
+                    'type' => 'credit',
+                    'source' => 'commission',
+                    'amount' => $amount,
+                    'reference_id' => 'commission:' . $comm->id,
+                    'description' => ucfirst($type) . ' commission (Level ' . $level . ') from Order/User #' . ($orderId ?? $fromUserId)
+                ]);
+            }
         });
     }
 
