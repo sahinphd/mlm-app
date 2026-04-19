@@ -10,20 +10,32 @@ class CommissionController extends Controller
 {
     public function index()
     {
+        $user = Auth::user();
+        $totalCommission = Commission::where('user_id', $user->id)
+            ->where('type', '!=', 'bv')
+            ->sum('amount');
+
         return view('commissions.index', [
-            'page' => 'commissions'
+            'page' => 'commissions',
+            'totalCommission' => $totalCommission
         ]);
     }
 
     public function bvIndex()
     {
+        $user = Auth::user();
         $settings = $this->getSettings();
         if (($settings['enable_bv_commission'] ?? 'off') !== 'on') {
             abort(404);
         }
 
+        $totalBvCommission = Commission::where('user_id', $user->id)
+            ->where('type', 'bv')
+            ->sum('amount');
+
         return view('commissions.bv', [
-            'page' => 'bv_commissions'
+            'page' => 'bv_commissions',
+            'totalBvCommission' => $totalBvCommission
         ]);
     }
 
@@ -59,8 +71,8 @@ class CommissionController extends Controller
         }
 
         // Sorting
-        $columns = ['created_at', 'from_user_id', 'level', 'amount', 'type', 'created_at'];
-        $orderColumnIndex = $request->input('order.0.column', 5);
+        $columns = ['from_user_id', 'level', 'type', 'amount', 'created_at'];
+        $orderColumnIndex = $request->input('order.0.column', 4);
         $orderDir = $request->input('order.0.dir', 'desc');
         $orderColumn = $columns[$orderColumnIndex] ?? 'created_at';
         $query->orderBy($orderColumn, $orderDir);

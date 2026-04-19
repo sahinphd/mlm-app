@@ -9,6 +9,7 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>{{ config('app.name', 'MLM App') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @stack('styles')
   </head>
   <body
     x-data="{ page: 'ecommerce', 'loaded': true, 'darkMode': false, 'stickyMenu': false, 'sidebarToggle': false, 'scrollTop': false }"
@@ -42,5 +43,6 @@
       <!-- ===== Content Area End ===== -->
     </div>
     <!-- ===== Page Wrapper End ===== -->
+    @stack('scripts')
   </body>
 </html>

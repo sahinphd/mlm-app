@@ -34,8 +34,8 @@
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
             <div class="rounded-2xl border border-gray-100 bg-brand-50/50 p-5 dark:border-gray-800 dark:bg-white/[0.03]">
-                <h4 class="text-sm font-medium text-gray-500 mb-1">Total Earning Balance</h4>
-                <p class="text-2xl font-bold text-brand-600 dark:text-white">₹{{ number_format(auth()->user()->wallet->earning_balance ?? 0, 2) }}</p>
+                <h4 class="text-sm font-medium text-gray-500 mb-1">Total Commission Earned</h4>
+                <p class="text-2xl font-bold text-brand-600 dark:text-white">₹{{ number_format($totalCommission ?? 0, 2) }}</p>
             </div>
             <div class="rounded-2xl border border-gray-100 bg-green-50/50 p-5 dark:border-gray-800 dark:bg-white/[0.03]">
                 <h4 class="text-sm font-medium text-gray-500 mb-1">My Referral Count</h4>
