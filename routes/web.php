@@ -58,6 +58,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/commissions/bv', [\App\Http\Controllers\CommissionController::class, 'bvIndex'])->name('commissions.bv');
     Route::get('/commissions/data', [\App\Http\Controllers\CommissionController::class, 'data'])->name('commissions.data');
     
+    Route::get('/wallet/history', [\App\Http\Controllers\WalletHistoryController::class, 'walletIndex'])->name('wallet.history');
+    Route::get('/wallet/history/data', [\App\Http\Controllers\WalletHistoryController::class, 'walletData'])->name('wallet.history.data');
+    Route::get('/credit/history', [\App\Http\Controllers\WalletHistoryController::class, 'creditIndex'])->name('credit.history');
+    Route::get('/credit/history/data', [\App\Http\Controllers\WalletHistoryController::class, 'creditData'])->name('credit.history.data');
+
     Route::get('/shop', [\App\Http\Controllers\ShopController::class, 'index'])->name('shop.index');
     Route::get('/shop/checkout', [\App\Http\Controllers\ShopController::class, 'checkout'])->name('shop.checkout');
     Route::post('/shop/place-order', [\App\Http\Controllers\ShopController::class, 'placeOrder'])->name('shop.place-order');
@@ -172,7 +177,14 @@ Route::middleware('auth')->group(function () {
         Route::get('/admin/commissions/bv', [\App\Http\Controllers\CommissionController::class, 'bvAdminIndex'])->name('admin.commissions.bv');
         Route::get('/admin/commissions/export', [\App\Http\Controllers\CommissionController::class, 'adminExport'])->name('admin.commissions.export');
         Route::get('/admin/commissions/bv/export', [\App\Http\Controllers\CommissionController::class, 'bvAdminExport'])->name('admin.commissions.bv.export');
+
+        Route::get('/admin/wallet/history', [\App\Http\Controllers\Admin\AdminWalletHistoryController::class, 'walletIndex'])->name('admin.wallet.history');
+        Route::get('/admin/wallet/history/data', [\App\Http\Controllers\Admin\AdminWalletHistoryController::class, 'walletData'])->name('admin.wallet.history.data');
+        Route::get('/admin/credit/history', [\App\Http\Controllers\Admin\AdminWalletHistoryController::class, 'creditIndex'])->name('admin.credit.history');
+        Route::get('/admin/credit/history/data', [\App\Http\Controllers\Admin\AdminWalletHistoryController::class, 'creditData'])->name('admin.credit.history.data');
+
         Route::get('/admin/settings', [\App\Http\Controllers\Admin\SettingController::class, 'index'])->name('admin.settings');
+
         Route::post('/admin/settings', [\App\Http\Controllers\Admin\SettingController::class, 'update'])->name('admin.settings.update');
         Route::get('/admin/reports/export', [\App\Http\Controllers\Admin\ReportController::class, 'export'])->name('admin.reports.export');
     });

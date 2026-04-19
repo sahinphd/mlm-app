@@ -78,6 +78,9 @@
 							if (($systemSettings['enable_bv_commission'] ?? 'on') === 'on') {
 								render_admin_menu_item(route('commissions.bv'), 'BV Commissions', '<path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>', ['commissions/bv*']);
 							}
+
+							render_admin_menu_item(route('wallet.history'), 'Wallet History', '<path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>', ['wallet/history*']);
+							render_admin_menu_item(route('credit.history'), 'Credit History', '<path d="M12 8c-1.657 0-3 1.343-3 3s1.343 3 3 3 3-1.343 3-3-1.343-3-3-3zM12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zM12 20c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>', ['credit/history*']);
 						@endphp
 					@endcan
 				</ul>

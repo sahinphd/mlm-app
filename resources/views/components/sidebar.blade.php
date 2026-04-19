@@ -325,6 +325,48 @@
           </li>
           <!-- Menu Item Orders -->
 
+          <!-- Menu Item Wallet History -->
+          <li>
+            <a
+              href="{{ route('wallet.history') }}"
+              class="menu-item group"
+              :class=" (page === 'wallet_history') ? 'menu-item-active' : 'menu-item-inactive'"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+              </svg>
+
+              <span
+                class="menu-item-text"
+                :class="sidebarToggle ? 'lg:hidden' : ''"
+              >
+                Wallet History
+              </span>
+            </a>
+          </li>
+          <!-- Menu Item Wallet History -->
+
+          <!-- Menu Item Credit History -->
+          <li>
+            <a
+              href="{{ route('credit.history') }}"
+              class="menu-item group"
+              :class=" (page === 'credit_history') ? 'menu-item-active' : 'menu-item-inactive'"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 1.343-3 3s1.343 3 3 3 3-1.343 3-3-1.343-3-3-3zM12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zM12 20c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8z" />
+              </svg>
+
+              <span
+                class="menu-item-text"
+                :class="sidebarToggle ? 'lg:hidden' : ''"
+              >
+                Credit History
+              </span>
+            </a>
+          </li>
+          <!-- Menu Item Credit History -->
+
           <!-- Menu Item Profile -->
           <li>
             <a

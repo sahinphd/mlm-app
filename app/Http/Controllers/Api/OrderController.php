@@ -69,6 +69,15 @@ class OrderController extends Controller
                 $ca->used_credit += $total;
                 $ca->available_credit = max(0, $ca->credit_limit - $ca->used_credit);
                 $ca->save();
+
+                \App\Models\CreditTransaction::create([
+                    'credit_account_id' => $ca->id,
+                    'type' => 'debit',
+                    'amount' => $total,
+                    'source' => 'purchase',
+                    'description' => 'Order purchase'
+                ]);
+
                 // log as wallet transaction on credit_balance for record
                 $wallet = Wallet::firstOrCreate(['user_id'=>$user->id],['main_balance'=>0,'earning_balance'=>0,'credit_balance'=>0]);
                 WalletTransaction::create(['wallet_id'=>$wallet->id,'type'=>'debit','source'=>'purchase','amount'=>$total,'description'=>'Order paid using credit']);
