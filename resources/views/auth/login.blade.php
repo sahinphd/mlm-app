@@ -19,6 +19,10 @@
                     <input name="password" type="password" required placeholder="Enter Password" class="mt-1 block w-full border border-neutral-200 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-200">
                 </div>
 
+                <div class="text-right text-sm">
+                    <a href="{{ route('password.request') }}" class="text-blue-600">Forgot password?</a>
+                </div>
+
                 <div class="pt-2">
                     <button type="submit" class="w-full bg-blue-600 text-white rounded-md py-2.5 font-medium">Sign in</button>
                 </div>
