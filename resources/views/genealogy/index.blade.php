@@ -20,30 +20,35 @@
 
     <div class="max-w-4xl mx-auto">
         <!-- Root Card (Current View Root) -->
-        <div class="flex items-center gap-4 p-5 rounded-xl border-2 border-brand-500 bg-brand-50/50 dark:bg-brand-500/5 mb-8 shadow-sm">
-            <div class="relative">
-                <img src="{{ $rootUser->avatar_url }}" alt="Avatar" class="w-14 h-14 rounded-full border-2 border-white dark:border-gray-800 shadow-md" />
-                <div class="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 border-2 border-white dark:border-gray-900 rounded-full flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                    </svg>
+        <div class="relative mb-8">
+            <div class="flex items-center gap-4 p-5 rounded-xl border-2 border-brand-500 bg-brand-50/50 dark:bg-brand-500/5 shadow-sm relative z-10">
+                <div class="relative">
+                    <img src="{{ $rootUser->avatar_url }}" alt="Avatar" class="w-14 h-14 rounded-full border-2 border-white dark:border-gray-800 shadow-md" />
+                    <div class="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 border-2 border-white dark:border-gray-900 rounded-full flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center gap-2">
+                        <h4 class="text-base font-bold text-gray-800 dark:text-white">{{ $rootUser->name }}</h4>
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-brand-500 text-white">Focus Root</span>
+                    </div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">{{ $rootUser->email }}</p>
+                    <p class="text-xs text-brand-600 dark:text-brand-400 mt-1 font-medium">Referred by: {{ $rootUser->referralRecord->parent->name ?? 'None' }}</p>
                 </div>
             </div>
-            <div class="flex-1">
-                <div class="flex items-center gap-2">
-                    <h4 class="text-base font-bold text-gray-800 dark:text-white">{{ $rootUser->name }}</h4>
-                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-brand-500 text-white">Focus Root</span>
-                </div>
-                <p class="text-sm text-gray-500 dark:text-gray-400">{{ $rootUser->email }}</p>
-                <p class="text-xs text-brand-600 dark:text-brand-400 mt-1 font-medium">Referred by: {{ $rootUser->referralRecord->parent->name ?? 'None' }}</p>
-            </div>
+            
+            @if(count($genealogy) > 0)
+                <!-- Connection line from root to first child group -->
+                <div class="absolute left-[47px] top-full h-8 w-[2px] bg-gray-300 dark:bg-gray-700"></div>
+            @endif
         </div>
 
         <!-- Genealogy Tree -->
-        <div class="relative pl-6">
+        <div class="relative pl-12">
             @if(count($genealogy) > 0)
-                <div class="absolute left-[23px] top-0 bottom-0 w-px bg-gray-200 dark:bg-gray-800"></div>
-                
                 <div class="space-y-6">
                     @foreach($genealogy as $item)
                         @include('genealogy.tree_node', ['node' => $item, 'isLast' => $loop->last])
@@ -61,14 +66,24 @@
 <style>
     .tree-node-connector {
         position: absolute;
-        left: -23px;
-        top: 25px;
-        width: 23px;
-        height: 1px;
-        background-color: #e5e7eb;
+        left: -48px;
+        top: 27px;
+        width: 48px;
+        height: 2px;
+        background-color: #d1d5db; /* gray-300 */
     }
     .dark .tree-node-connector {
-        background-color: #1f2937;
+        background-color: #374151; /* gray-700 */
+    }
+    .tree-vertical-line {
+        position: absolute;
+        left: -48px;
+        top: 0;
+        width: 2px;
+        background-color: #d1d5db; /* gray-300 */
+    }
+    .dark .tree-vertical-line {
+        background-color: #374151; /* gray-700 */
     }
 </style>
 @endsection

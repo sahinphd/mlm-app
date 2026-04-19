@@ -1,4 +1,11 @@
 <div class="relative" x-data="{ expanded: true, showExplore: false }">
+    <!-- Vertical line segment -->
+    @if(!$isLast)
+        <div class="tree-vertical-line h-full"></div>
+    @else
+        <div class="tree-vertical-line h-[27px]"></div>
+    @endif
+
     <!-- Horizontal connector line -->
     <div class="tree-node-connector"></div>
 
@@ -52,11 +59,8 @@
             x-transition:enter="transition ease-out duration-200"
             x-transition:enter-start="opacity-0 -translate-y-2"
             x-transition:enter-end="opacity-100 translate-y-0"
-            class="relative pl-6 mt-6 space-y-6"
+            class="relative pl-12 mt-6 space-y-6"
         >
-            <!-- Vertical line for children -->
-            <div class="absolute left-[23px] top-0 bottom-0 w-px bg-gray-200 dark:bg-gray-800"></div>
-            
             @foreach($node['children'] as $child)
                 @include('genealogy.tree_node', ['node' => $child, 'isLast' => $loop->last])
             @endforeach
