@@ -51,7 +51,7 @@
             </div>
             <div class="mt-4 flex items-end justify-between">
                 <div>
-                    <h4 class="text-title-md font-bold text-black dark:text-white">${{ number_format($stats['revenue'], 2) }}</h4>
+                    <h4 class="text-title-md font-bold text-black dark:text-white">₹{{ number_format($stats['revenue'], 2) }}</h4>
                     <span class="text-sm font-medium text-success">Total Revenue</span>
                 </div>
             </div>
@@ -157,7 +157,7 @@
                                 <p class="text-xs">{{ $order->user?->email }}</p>
                             </td>
                             <td class="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
-                                <p class="text-black dark:text-white">${{ number_format($order->total_amount, 2) }}</p>
+                                <p class="text-black dark:text-white">₹{{ number_format($order->total_amount, 2) }}</p>
                             </td>
                             <td class="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
                                 <p class="text-black dark:text-white">{{ $order->created_at->format('d M, Y') }}</p>

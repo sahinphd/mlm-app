@@ -6,6 +6,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\Storage;
 
 class NewPaymentRequestNotification extends Notification
 {
@@ -38,10 +39,26 @@ class NewPaymentRequestNotification extends Notification
      */
     public function toArray(object $notifiable): array
     {
+        $currency = $this->getCurrency();
+
         return [
-            'message' => 'New wallet top-up request of ৳' . number_format($this->paymentRequest->amount, 2) . ' from ' . $this->paymentRequest->user->name,
+            'message' => 'New wallet top-up request of ' . $currency . ' ' . number_format($this->paymentRequest->amount, 2) . ' from ' . $this->paymentRequest->user->name,
             'payment_request_id' => $this->paymentRequest->id,
             'link' => route('payments.admin'),
         ];
+    }
+
+    /**
+     * Read currency from settings.json stored on local disk.
+     */
+    protected function getCurrency(): string
+    {
+        $file = 'settings.json';
+        if (!Storage::disk('local')->exists($file)) {
+            return 'INR';
+        }
+
+        $settings = json_decode(Storage::disk('local')->get($file), true);
+        return $settings['currency'] ?? 'INR';
     }
 }

@@ -10,6 +10,7 @@ use App\Services\MLMService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class PaymentManagementController extends Controller
 {
@@ -47,7 +48,14 @@ class PaymentManagementController extends Controller
             'rejected' => PaymentRequest::where('status', 'rejected')->count(),
         ];
 
-        return view('payments.admin', compact('requests', 'stats', 'status', 'q'));
+        $settingsFile = 'settings.json';
+        $settings = Storage::disk('local')->exists($settingsFile)
+            ? json_decode(Storage::disk('local')->get($settingsFile), true)
+            : [];
+
+        $currency = $settings['currency'] ?? 'INR';
+
+        return view('payments.admin', compact('requests', 'stats', 'status', 'q', 'currency'));
     }
 
     public function export(Request $request)

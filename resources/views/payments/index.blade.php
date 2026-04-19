@@ -1,6 +1,14 @@
 @extends('layouts.admin')
 
 @section('content')
+<?php
+    $settingsFile = 'settings.json';
+    $currency = 'INR';
+    if (Illuminate\Support\Facades\Storage::disk('local')->exists($settingsFile)) {
+        $s = json_decode(Illuminate\Support\Facades\Storage::disk('local')->get($settingsFile), true);
+        $currency = $s['currency'] ?? 'INR';
+    }
+?>
 <div class="max-w-2xl mx-auto">
     <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6 mb-6">
         <h2 class="mb-5 text-xl font-semibold text-gray-800 dark:text-white/90">Wallet Top-up (Manual)</h2>
@@ -60,6 +68,7 @@
 </div>
 
 <script>
+const CURRENCY = '{{ $currency }}';
 async function loadRequests(){
     const res = await fetch('/api/payment-requests', {credentials:'same-origin'});
     const json = await res.json();
@@ -84,7 +93,7 @@ async function loadRequests(){
         d.innerHTML = `
             <div class="flex items-center justify-between">
                 <div>
-                    <span class="text-sm font-semibold text-gray-800 dark:text-white/90">Amount: ৳${parseFloat(r.amount).toLocaleString()}</span>
+                    <span class="text-sm font-semibold text-gray-800 dark:text-white/90">Amount: ${CURRENCY}${parseFloat(r.amount).toLocaleString()}</span>
                     <p class="text-xs text-gray-500 dark:text-gray-400">${r.method || 'N/A'} ${r.reference ? ' - ' + r.reference : ''}</p>
                 </div>
                 <div class="px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColor}">

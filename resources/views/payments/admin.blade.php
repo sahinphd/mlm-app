@@ -105,7 +105,7 @@
                 <div class="mb-4 flex items-start justify-between">
                     <div>
                         <h4 class="mb-1 text-title-sm font-bold text-black dark:text-white">
-                            ৳{{ number_format((float) $r->amount, 2) }}
+                            {{ $currency }}{{ number_format((float) $r->amount, 2) }}
                         </h4>
                         <p class="text-sm font-medium">Requested by: <span class="text-black dark:text-white">{{ $r->user?->name }}</span></p>
                         <p class="text-xs">{{ $r->user?->email }} | {{ $r->user?->phone }}</p>
