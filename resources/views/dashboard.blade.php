@@ -61,111 +61,128 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
-        <!-- Team & Performance -->
-        <div class="lg:col-span-2 space-y-4 md:space-y-6">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div class="rounded-2xl border border-gray-100 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] flex items-center gap-4">
-                    <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-500/10">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                        </svg>
-                    </div>
-                    <div>
-                        <h4 class="text-sm font-medium text-gray-500">Personal BV</h4>
-                        <p class="text-xl font-bold text-gray-800 dark:text-white">{{ number_format($personalBv, 0) }} Points</p>
-                    </div>
-                </div>
-                <div class="rounded-2xl border border-gray-100 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] flex items-center gap-4">
-                    <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-50 text-purple-600 dark:bg-purple-500/10">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                        </svg>
-                    </div>
-                    <div>
-                        <h4 class="text-sm font-medium text-gray-500">Active Team</h4>
-                        <p class="text-xl font-bold text-gray-800 dark:text-white">{{ $activeReferrals }} / {{ $totalReferrals }}</p>
-                    </div>
-                </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
+        <div class="rounded-2xl border border-gray-100 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] flex items-center gap-4">
+            <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-500/10">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                </svg>
             </div>
-
-            @if(count($upcomingEmis) > 0)
-            <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-semibold text-gray-800 dark:text-white">Upcoming EMIs</h3>
-                    <a href="{{ route('credit.emis') }}" class="text-sm text-brand-500 hover:underline">Full Schedule</a>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm">
-                        <thead>
-                            <tr class="bg-gray-50 dark:bg-white/5 border-b border-gray-200 dark:border-gray-800">
-                                <th class="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">Due Date</th>
-                                <th class="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">Amount</th>
-                                <th class="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">Status</th>
-                                <th class="px-4 py-3 text-center font-medium text-gray-500 dark:text-gray-400">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-200 dark:divide-gray-800">
-                            @foreach($upcomingEmis as $emi)
-                            <tr>
-                                <td class="px-4 py-3 dark:text-gray-300">{{ \Carbon\Carbon::parse($emi->due_date)->format('M d, Y') }}</td>
-                                <td class="px-4 py-3 font-bold dark:text-white">₹{{ number_format($emi->installment_amount, 2) }}</td>
-                                <td class="px-4 py-3">
-                                    @if($emi->status === 'overdue')
-                                        <span class="px-2 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-600">Overdue</span>
-                                    @else
-                                        <span class="px-2 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-600">Pending</span>
-                                    @endif
-                                </td>
-                                <td class="px-4 py-3 text-center">
-                                    <form action="{{ route('credit.emis.pay', $emi->id) }}" method="POST" onsubmit="return confirm('Pay this EMI?')">
-                                        @csrf
-                                        <button type="submit" class="text-brand-600 hover:text-brand-700 font-medium">Pay Now</button>
-                                    </form>
-                                </td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
+            <div>
+                <h4 class="text-sm font-medium text-gray-500">Personal BV</h4>
+                <p class="text-xl font-bold text-gray-800 dark:text-white">{{ number_format($personalBv, 0) }} Points</p>
             </div>
-            @endif
         </div>
+        <div class="rounded-2xl border border-gray-100 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] flex items-center gap-4">
+            <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-50 text-purple-600 dark:bg-purple-500/10">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+            </div>
+            <div>
+                <h4 class="text-sm font-medium text-gray-500">Active Team</h4>
+                <p class="text-xl font-bold text-gray-800 dark:text-white">{{ $activeReferrals }} / {{ $totalReferrals }}</p>
+            </div>
+        </div>
+    </div>
 
-        <!-- Recent Activity -->
-        <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
-            <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Recent Activity</h3>
-            <div class="space-y-4">
-                @forelse($recentTransactions as $tx)
-                <div class="flex items-start gap-3">
-                    <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full {{ $tx->type === 'credit' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600' }} dark:bg-white/5">
-                        @if($tx->type === 'credit')
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                            </svg>
-                        @else
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                            </svg>
-                        @endif
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-sm font-medium text-gray-800 dark:text-white truncate">{{ $tx->description }}</p>
-                        <p class="text-xs text-gray-500">{{ $tx->created_at->diffForHumans() }}</p>
-                    </div>
-                    <div class="text-sm font-bold {{ $tx->type === 'credit' ? 'text-green-600' : 'text-red-600' }}">
-                        {{ $tx->type === 'credit' ? '+' : '-' }}₹{{ number_format($tx->amount, 2) }}
-                    </div>
-                </div>
-                @empty
-                <p class="text-sm text-gray-500 text-center py-4">No recent transactions.</p>
-                @endforelse
-            </div>
-            <div class="mt-6">
-                <a href="{{ route('wallet.history') }}" class="flex w-full justify-center rounded-lg border border-gray-200 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-800 dark:text-gray-400 dark:hover:bg-gray-800">
-                    View Wallet History
-                </a>
-            </div>
+    @if(count($upcomingEmis) > 0)
+    <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-800 dark:text-white">Upcoming EMIs</h3>
+            <a href="{{ route('credit.emis') }}" class="text-sm text-brand-500 hover:underline">Full Schedule</a>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="bg-gray-50 dark:bg-white/5 border-b border-gray-200 dark:border-gray-800">
+                        <th class="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">Due Date</th>
+                        <th class="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">Order #</th>
+                        <th class="px-4 py-3 text-right font-medium text-gray-500 dark:text-gray-400">Amount</th>
+                        <th class="px-4 py-3 text-center font-medium text-gray-500 dark:text-gray-400">Status</th>
+                        <th class="px-4 py-3 text-center font-medium text-gray-500 dark:text-gray-400">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200 dark:divide-gray-800">
+                    @foreach($upcomingEmis as $emi)
+                    <tr>
+                        <td class="px-4 py-3 dark:text-gray-300">{{ \Carbon\Carbon::parse($emi->due_date)->format('M d, Y') }}</td>
+                        <td class="px-4 py-3 dark:text-gray-300">#{{ $emi->order_id }}</td>
+                        <td class="px-4 py-3 text-right font-bold dark:text-white">₹{{ number_format($emi->installment_amount, 2) }}</td>
+                        <td class="px-4 py-3 text-center">
+                            @if($emi->status === 'overdue')
+                                <span class="px-2 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-600">Overdue</span>
+                            @else
+                                <span class="px-2 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-600">Pending</span>
+                            @endif
+                        </td>
+                        <td class="px-4 py-3 text-center">
+                            <form action="{{ route('credit.emis.pay', $emi->id) }}" method="POST" onsubmit="return confirm('Pay this EMI?')">
+                                @csrf
+                                <button type="submit" class="inline-flex items-center justify-center rounded-lg bg-brand-500 py-1.5 px-3 text-center text-xs font-medium text-white hover:bg-brand-600 transition">
+                                    Pay Now
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+    @endif
+
+    <!-- Recent Activity -->
+    <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-800 dark:text-white">Recent Activity</h3>
+            <a href="{{ route('wallet.history') }}" class="text-sm text-brand-500 hover:underline">View History</a>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="bg-gray-50 dark:bg-white/5 border-b border-gray-200 dark:border-gray-800">
+                        <th class="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">Date</th>
+                        <th class="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">Description</th>
+                        <th class="px-4 py-3 text-right font-medium text-gray-500 dark:text-gray-400">Amount</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200 dark:divide-gray-800">
+                    @forelse($recentTransactions as $tx)
+                    <tr>
+                        <td class="px-4 py-3 dark:text-gray-300 text-xs">
+                            {{ $tx->created_at->format('M d, Y') }}
+                            <span class="block text-[10px] text-gray-500">{{ $tx->created_at->diffForHumans() }}</span>
+                        </td>
+                        <td class="px-4 py-3">
+                            <div class="flex items-center gap-2">
+                                <div class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full {{ $tx->type === 'credit' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600' }} dark:bg-white/5">
+                                    @if($tx->type === 'credit')
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                                        </svg>
+                                    @else
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                                        </svg>
+                                    @endif
+                                </div>
+                                <span class="text-sm font-medium text-gray-800 dark:text-white truncate max-w-[200px] md:max-w-md">{{ $tx->description }}</span>
+                            </div>
+                        </td>
+                        <td class="px-4 py-3 text-right">
+                            <span class="text-sm font-bold {{ $tx->type === 'credit' ? 'text-green-600' : 'text-red-600' }}">
+                                {{ $tx->type === 'credit' ? '+' : '-' }}₹{{ number_format($tx->amount, 2) }}
+                            </span>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="3" class="px-4 py-8 text-center text-gray-500">No recent transactions.</td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
     </div>
 </div>

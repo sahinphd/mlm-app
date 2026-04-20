@@ -163,11 +163,50 @@ class MLMService
         });
     }
 
+    public function generateEmiSchedules($user, $order)
+    {
+        $settings = $this->getSettings();
+        $emiAmount = (float) ($settings['default_emi_amount'] ?? 500);
+        $interval = (int) ($settings['emi_frequency'] ?? 7);
+        $total = $order->total_amount;
+        
+        $remainingBalance = $total;
+        $i = 1;
+        
+        while ($remainingBalance > 0) {
+            $installment = min($remainingBalance, $emiAmount);
+            $due = \Illuminate\Support\Carbon::now()->addDays($interval * $i);
+            
+            \App\Models\EmiSchedule::create([
+                'user_id' => $user->id,
+                'order_id' => $order->id,
+                'total_amount' => $total,
+                'installment_amount' => $installment,
+                'interval_days' => $interval,
+                'due_date' => $due,
+                'status' => 'pending'
+            ]);
+            
+            $remainingBalance -= $installment;
+            $i++;
+        }
+    }
+
     public function getSettings()
     {
         $settingsFile = 'settings.json';
-        if (!Storage::disk('local')->exists($settingsFile)) {
+        if (!\Illuminate\Support\Facades\Storage::disk('local')->exists($settingsFile)) {
             return [
+                'site_name' => config('app.name', 'MLM App'),
+                'contact_email' => 'admin@example.com',
+                'currency' => 'INR',
+                'min_withdrawal' => 500,
+                'maintenance_mode' => 'off',
+                'registration_enabled' => 'on',
+                'enable_bv_commission' => 'on',
+                'default_emi_amount' => 500,
+                'emi_frequency' => 7,
+                'late_penalty_amount' => 80,
                 'joining_commission_level_1' => 100,
                 'joining_commission_level_2' => 50,
                 'joining_commission_level_3' => 30,
@@ -185,6 +224,6 @@ class MLMService
                 'order_commission_level_5' => 0.1,
             ];
         }
-        return json_decode(Storage::disk('local')->get($settingsFile), true);
+        return json_decode(\Illuminate\Support\Facades\Storage::disk('local')->get($settingsFile), true);
     }
 }

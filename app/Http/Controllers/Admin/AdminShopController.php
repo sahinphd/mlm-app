@@ -138,15 +138,7 @@ class AdminShopController extends Controller
             
             // EMI generation if paid via credit
             if($request->payment_method === 'credit_wallet'){
-                $installments = 4;
-                $interval = 7;
-                $inst_amount = round($total / $installments, 2);
-                $remaining = $total - ($inst_amount * ($installments - 1));
-                for($i=0; $i<$installments; $i++){
-                    $amt = ($i==($installments-1)) ? $remaining : $inst_amount;
-                    $due = Carbon::now()->addDays($interval * ($i+1));
-                    EmiSchedule::create(['user_id' => $targetUser->id, 'order_id' => $order->id, 'total_amount' => $total, 'installment_amount' => $amt, 'interval_days' => $interval, 'due_date' => $due, 'status' => 'pending']);
-                }
+                $this->mlmService->generateEmiSchedules($targetUser, $order);
             }
 
             // Commission distribution
