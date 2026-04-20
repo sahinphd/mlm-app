@@ -25,6 +25,11 @@ class User extends Authenticatable
         'role',
         'phone',
         'avatar',
+        'aadhaar_number',
+        'pan_number',
+        'address',
+        'nominee_name',
+        'nominee_relation',
     ];
 
     public function wallet()
