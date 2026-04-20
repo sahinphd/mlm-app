@@ -153,10 +153,15 @@ class UserController extends Controller
         if ($user->wallet) {
             $transactions = \App\Models\WalletTransaction::where('wallet_id', $user->wallet->id)
                 ->orderBy('created_at', 'desc')
-                ->paginate(20);
+                ->paginate(20, ['*'], 'tx_page');
         }
 
-        return view('admin.users_show', compact('user', 'transactions'));
+        $emis = \App\Models\EmiSchedule::where('user_id', $user->id)
+            ->with('order')
+            ->orderBy('due_date', 'asc')
+            ->get();
+
+        return view('admin.users_show', compact('user', 'transactions', 'emis'));
     }
 
     public function genealogy(User $user)

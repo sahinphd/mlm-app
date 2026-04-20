@@ -37,6 +37,11 @@ class User extends Authenticatable
         return $this->hasOne(CreditAccount::class);
     }
 
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
+
     public function referralRecord()
     {
         return $this->hasOne(Referral::class, 'user_id');
@@ -89,11 +94,12 @@ class User extends Authenticatable
     {
         if (empty($term)) return $query;
         $termSearch = "%{$term}%";
-        return $query->where(function($q) use ($termSearch, $term) {
-            $q->where('id', $term)
-              ->orWhere('name', 'like', $termSearch)
-              ->orWhere('email', 'like', $termSearch)
-              ->orWhere('phone', 'like', $termSearch);
+        $table = $this->getTable();
+        return $query->where(function($q) use ($termSearch, $term, $table) {
+            $q->where($table.'.id', $term)
+              ->orWhere($table.'.name', 'like', $termSearch)
+              ->orWhere($table.'.email', 'like', $termSearch)
+              ->orWhere($table.'.phone', 'like', $termSearch);
         });
     }
 

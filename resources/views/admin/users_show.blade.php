@@ -114,6 +114,81 @@
         </div>
     </div>
 
+    <!-- EMI Schedules -->
+    <div class="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark mb-6">
+        <div class="border-b border-stroke py-4 px-6.5 dark:border-strokedark flex justify-between items-center">
+            <h3 class="font-medium text-black dark:text-white">EMI Schedule History</h3>
+        </div>
+        <div class="p-6.5">
+            <div class="max-w-full overflow-x-auto">
+                <table class="w-full table-auto">
+                    <thead>
+                        <tr class="bg-gray-2 text-left dark:bg-meta-4">
+                            <th class="py-4 px-4 font-medium text-black dark:text-white">Order ID</th>
+                            <th class="py-4 px-4 font-medium text-black dark:text-white text-right">Amount</th>
+                            <th class="py-4 px-4 font-medium text-black dark:text-white">Due Date</th>
+                            <th class="py-4 px-4 font-medium text-black dark:text-white">Status</th>
+                            <th class="py-4 px-4 font-medium text-black dark:text-white text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($emis as $emi)
+                        <tr>
+                            <td class="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
+                                <a href="{{ route('admin.orders.show', $emi->order_id) }}" class="text-primary hover:underline">#{{ $emi->order_id }}</a>
+                            </td>
+                            <td class="border-b border-[#eee] py-5 px-4 dark:border-strokedark text-right">
+                                <p class="text-black dark:text-white font-bold">Rs.{{ number_format($emi->installment_amount, 2) }}</p>
+                            </td>
+                            <td class="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
+                                <p class="text-black dark:text-white">{{ \Carbon\Carbon::parse($emi->due_date)->format('d M Y') }}</p>
+                            </td>
+                            <td class="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
+                                @if($emi->status == 'paid')
+                                    <span class="inline-flex rounded-full bg-success bg-opacity-10 py-1 px-3 text-sm font-medium text-success">Paid</span>
+                                @elseif($emi->status == 'overdue')
+                                    <span class="inline-flex rounded-full bg-danger bg-opacity-10 py-1 px-3 text-sm font-medium text-danger">Overdue</span>
+                                @else
+                                    <span class="inline-flex rounded-full bg-warning bg-opacity-10 py-1 px-3 text-sm font-medium text-warning">Pending</span>
+                                @endif
+                            </td>
+                            <td class="border-b border-[#eee] py-5 px-4 dark:border-strokedark text-right">
+                                <button onclick="sendUserReminder({{ $emi->id }})" class="inline-flex items-center justify-center rounded bg-primary py-1.5 px-3 text-center text-xs font-medium text-white hover:bg-opacity-90" title="Send Push Notification">
+                                    Send Reminder
+                                </button>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="5" class="py-5 px-4 text-center">No EMI schedules found.</td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function sendUserReminder(emiId) {
+            if(!confirm('Send a push notification reminder to this user?')) return;
+
+            $.ajax({
+                url: `/admin/emis/${emiId}/remind`,
+                method: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function(res) {
+                    alert(res.message);
+                },
+                error: function(err) {
+                    alert('Error: ' + (err.responseJSON ? err.responseJSON.message : 'Unknown error'));
+                }
+            });
+        }
+    </script>
+
     <!-- Wallet Transactions -->
     <div class="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
         <div class="border-b border-stroke py-4 px-6.5 dark:border-strokedark flex justify-between items-center">

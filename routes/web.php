@@ -46,7 +46,29 @@ Route::middleware('auth')->group(function () {
             ]);
         }
 
-        return view('dashboard', ['page' => 'ecommerce', 'referralRecord' => $referralRecord]); 
+        $upcomingEmis = \App\Models\EmiSchedule::where('user_id', $user->id)
+            ->whereIn('status', ['pending', 'overdue'])
+            ->orderBy('due_date', 'asc')
+            ->take(5)
+            ->get();
+
+        $personalBv = $user->orders()->where('status', 'completed')->sum('total_bv');
+        $totalReferrals = $user->referredUsers()->count();
+        $activeReferrals = $user->referredUsers()->where('status', 'active')->count();
+        
+        $recentTransactions = \App\Models\WalletTransaction::whereHas('wallet', function($q) use ($user) {
+            $q->where('user_id', $user->id);
+        })->orderBy('created_at', 'desc')->take(5)->get();
+
+        return view('dashboard', [
+            'page' => 'ecommerce', 
+            'referralRecord' => $referralRecord,
+            'upcomingEmis' => $upcomingEmis,
+            'personalBv' => $personalBv,
+            'totalReferrals' => $totalReferrals,
+            'activeReferrals' => $activeReferrals,
+            'recentTransactions' => $recentTransactions
+        ]); 
     })->name('dashboard');
 
     Route::view('/payments', 'payments.index')->name('payments.index');
@@ -194,8 +216,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/admin/credit/history/data', [\App\Http\Controllers\Admin\AdminWalletHistoryController::class, 'creditData'])->name('admin.credit.history.data');
 
         Route::get('/admin/settings', [\App\Http\Controllers\Admin\SettingController::class, 'index'])->name('admin.settings');
-
         Route::post('/admin/settings', [\App\Http\Controllers\Admin\SettingController::class, 'update'])->name('admin.settings.update');
+
+        Route::get('/admin/emis', [\App\Http\Controllers\Admin\EmiManagementController::class, 'index'])->name('admin.emis.index');
+        Route::post('/admin/emis/{id}/remind', [\App\Http\Controllers\Admin\EmiManagementController::class, 'sendReminder'])->name('admin.emis.remind');
+
         Route::get('/admin/reports/export', [\App\Http\Controllers\Admin\ReportController::class, 'export'])->name('admin.reports.export');
     });
 

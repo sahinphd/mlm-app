@@ -17,7 +17,14 @@ Users cannot use the Credit Wallet until an admin approves them and sets a limit
 3. Set the **Credit Limit** (e.g., ₹5000) and change the status to **Approved**.
 4. The user can now select "Credit Wallet" during checkout.
 
-## 3. How the EMI Logic Works
+## 3. Global EMI Management
+Admins can monitor and manage all user installments from the **"User EMIs"** page in the sidebar.
+- **Global Table:** View every EMI across the entire system in a real-time data table.
+- **Filtering:** Filter the view by **Status** (Pending, Paid, Overdue) to focus on problematic accounts.
+- **Search:** Quickly find EMIs by **User Name**, **Email**, **Order ID**, or **EMI ID**.
+- **Manual Reminders:** Click the **"Send Reminder"** button to manually trigger a push notification and dashboard alert for any user regarding a specific installment.
+
+## 4. How the EMI Logic Works
 - **Auto-Generation:** When a user buys something via credit, the system calculates how many installments are needed based on your "Default EMI Amount".
 - **Example:** If a user buys a product for ₹1200 and your default EMI is ₹500:
     - Installment 1: ₹500 (Due in 7 days)
@@ -25,7 +32,7 @@ Users cannot use the Credit Wallet until an admin approves them and sets a limit
     - Installment 3: ₹200 (Due in 21 days)
 - **Repayment:** Users pay their EMIs from their **Main Wallet** via the "EMI Schedule" page in their dashboard.
 
-## 4. Automated Tasks (Cron Jobs)
+## 5. Automated Tasks (Cron Jobs)
 The system is designed to be "hands-off." The following tasks are scheduled to run daily:
 - **EMI Reminders:** Sends a Push Notification to users 2 days before an EMI is due.
 - **Penalty Application:** Automatically identifies overdue EMIs, changes status to "Overdue," and adds the late fee to the user's account.
@@ -43,7 +50,7 @@ php artisan emi:send-reminders
 php artisan emi:test-push {user_id}
 ```
 
-## 5. Push Notifications (FCM V1)
+## 6. Push Notifications (FCM V1)
 The system uses the latest **Firebase Cloud Messaging V1 API**.
 - **Events Notified:**
     - Upcoming EMI (2-day warning)
