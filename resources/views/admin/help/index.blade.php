@@ -37,6 +37,9 @@
                 </ol>
                 <h4 class="font-semibold text-black dark:text-white pt-2">Managing Balances</h4>
                 <p class="text-sm">You can view a user's Wallet and Credit history from their profile page to resolve balance disputes.</p>
+                
+                <h4 class="font-semibold text-black dark:text-white pt-2">Quick Shopping (ID Card Scan)</h4>
+                <p class="text-sm">In the <strong>Admin > Shop</strong> checkout page, you can scan a user's Digital ID Card barcode directly into the search box to instantly find and select that user for a quick purchase.</p>
             </div>
         </div>
 

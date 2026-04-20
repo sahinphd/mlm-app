@@ -99,7 +99,13 @@ class User extends Authenticatable
             $q->where($table.'.id', $term)
               ->orWhere($table.'.name', 'like', $termSearch)
               ->orWhere($table.'.email', 'like', $termSearch)
-              ->orWhere($table.'.phone', 'like', $termSearch);
+              ->orWhere($table.'.phone', 'like', $termSearch)
+              ->orWhereExists(function($q2) use ($term, $table) {
+                  $q2->select(\Illuminate\Support\Facades\DB::raw(1))
+                     ->from('referrals')
+                     ->whereColumn('referrals.user_id', $table.'.id')
+                     ->where('referrals.referral_code', $term);
+              });
         });
     }
 

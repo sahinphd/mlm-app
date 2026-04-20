@@ -30,4 +30,14 @@ class ProfileController extends Controller
 
         return redirect('/payments')->with('status', 'Profile updated. You can now request a wallet top-up.');
     }
+
+    public function idCard()
+    {
+        $user = Auth::user();
+        $user->load('referralRecord');
+        return view('profile.id_card', [
+            'user' => $user,
+            'page' => 'profile_id'
+        ]);
+    }
 }
