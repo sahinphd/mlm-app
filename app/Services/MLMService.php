@@ -99,6 +99,35 @@ class MLMService
         }
     }
 
+    public function reverseOrderCommissions($order)
+    {
+        DB::transaction(function () use ($order) {
+            $commissions = Commission::where('order_id', $order->id)->get();
+
+            foreach ($commissions as $comm) {
+                if ($comm->amount > 0) {
+                    $wallet = Wallet::where('user_id', $comm->user_id)->first();
+                    if ($wallet) {
+                        $wallet->earning_balance -= $comm->amount;
+                        $wallet->save();
+
+                        WalletTransaction::create([
+                            'wallet_id' => $wallet->id,
+                            'type' => 'debit',
+                            'source' => 'commission',
+                            'amount' => $comm->amount,
+                            'reference_id' => 'reversal:' . $comm->id,
+                            'description' => 'Commission reversal for Order #' . $order->id . ' (Status: ' . ucfirst($order->status) . ')'
+                        ]);
+                    }
+                }
+                // Mark commission as reversed by setting amount to negative or deleting? 
+                // Better to keep record but update amount or add a 'reversed' flag.
+                // For now, we will just subtract from wallet and log the transaction.
+            }
+        });
+    }
+
     protected function creditCommission($uplineId, $fromUserId, $orderId, $level, $amount, $type, $note = null)
     {
         DB::transaction(function () use ($uplineId, $fromUserId, $orderId, $level, $amount, $type, $note) {

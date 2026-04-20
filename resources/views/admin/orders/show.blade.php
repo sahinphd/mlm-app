@@ -89,8 +89,12 @@
                             <select name="status" class="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary">
                                 <option value="pending" {{ $order->status === 'pending' ? 'selected' : '' }}>Pending</option>
                                 <option value="processing" {{ $order->status === 'processing' ? 'selected' : '' }}>Processing</option>
+                                <option value="shipped" {{ $order->status === 'shipped' ? 'selected' : '' }}>Shipped</option>
+                                <option value="delivered" {{ $order->status === 'delivered' ? 'selected' : '' }}>Delivered</option>
                                 <option value="completed" {{ $order->status === 'completed' ? 'selected' : '' }}>Completed</option>
                                 <option value="cancelled" {{ $order->status === 'cancelled' ? 'selected' : '' }}>Cancelled</option>
+                                <option value="returned" {{ $order->status === 'returned' ? 'selected' : '' }}>Returned</option>
+                                <option value="failed" {{ $order->status === 'failed' ? 'selected' : '' }}>Failed</option>
                             </select>
                         </div>
                         <button type="submit" class="flex w-full justify-center rounded bg-primary p-3 font-medium text-gray transition hover:bg-opacity-90">

@@ -8,6 +8,13 @@ use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
+    protected $mlmService;
+
+    public function __construct(\App\Services\MLMService $mlmService)
+    {
+        $this->mlmService = $mlmService;
+    }
+
     public function index(Request $request)
     {
         $status = $request->query('status');
@@ -61,14 +68,23 @@ class OrderController extends Controller
     public function updateStatus(Request $request, Order $order)
     {
         $request->validate([
-            'status' => 'required|in:pending,completed,cancelled,processing'
+            'status' => 'required|in:pending,processing,shipped,delivered,completed,cancelled,returned,failed'
         ]);
 
-        $order->update(['status' => $request->status]);
+        $oldStatus = $order->status;
+        $newStatus = $request->status;
+
+        $order->update(['status' => $newStatus]);
+
+        // Logic for commission reversal
+        // If changing TO cancelled/returned FROM a status that was NOT already cancelled/returned
+        if (in_array($newStatus, ['cancelled', 'returned']) && !in_array($oldStatus, ['cancelled', 'returned'])) {
+            $this->mlmService->reverseOrderCommissions($order);
+        }
 
         // Notify User
         $order->user->notify(new \App\Notifications\OrderUpdateNotification($order));
 
-        return back()->with('success', 'Order status updated successfully.');
+        return back()->with('success', 'Order status updated successfully' . (in_array($newStatus, ['cancelled', 'returned']) ? ' and commissions reversed.' : '.'));
     }
 }
