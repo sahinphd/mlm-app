@@ -221,6 +221,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/admin/emis', [\App\Http\Controllers\Admin\EmiManagementController::class, 'index'])->name('admin.emis.index');
         Route::post('/admin/emis/{id}/remind', [\App\Http\Controllers\Admin\EmiManagementController::class, 'sendReminder'])->name('admin.emis.remind');
 
+        Route::get('/admin/help', [\App\Http\Controllers\Admin\HelpController::class, 'index'])->name('admin.help');
+
         Route::get('/admin/reports/export', [\App\Http\Controllers\Admin\ReportController::class, 'export'])->name('admin.reports.export');
     });
 

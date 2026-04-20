@@ -157,6 +157,18 @@
         <!-- Dark Mode Toggler -->
       </div>
 
+      <!-- Admin Help -->
+      @if(auth()->check() && auth()->user()->isAdmin())
+      <div class="mr-4">
+        <a href="{{ route('admin.help') }}" class="flex h-11 items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-4 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Help Guide
+        </a>
+      </div>
+      @endif
+
       <!-- User Area -->
       @auth
       <div
