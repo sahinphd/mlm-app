@@ -37,7 +37,14 @@ class SettingController extends Controller
             }
         }
 
-        $data = $request->except(['_token', 'logo', 'logo_dark', 'logo_icon', 'auth_logo']);
+        // Handle FCM Service Account JSON
+        if ($request->hasFile('fcm_service_account')) {
+            $file = $request->file('fcm_service_account');
+            $filename = 'fcm-service-account.json';
+            Storage::disk('local')->putFileAs('certs', $file, $filename);
+        }
+
+        $data = $request->except(['_token', 'logo', 'logo_dark', 'logo_icon', 'auth_logo', 'fcm_service_account']);
         
         // Handle checkboxes that might be missing if unchecked
         if (!$request->has('enable_bv_commission')) {
@@ -63,6 +70,11 @@ class SettingController extends Controller
                 'maintenance_mode' => 'off',
                 'registration_enabled' => 'on',
                 'enable_bv_commission' => 'on',
+                'default_emi_amount' => 500,
+                'emi_frequency' => 7, // days (weekly)
+                'late_penalty_amount' => 80,
+                'enable_push_notifications' => 'off',
+                'fcm_project_id' => '',
                 'joining_commission_level_1' => 100,
                 'joining_commission_level_2' => 50,
                 'joining_commission_level_3' => 30,

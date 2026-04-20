@@ -40,9 +40,17 @@ class NewPaymentRequestNotification extends Notification
     public function toArray(object $notifiable): array
     {
         $currency = $this->getCurrency();
+        $message = 'New wallet top-up request of ' . $currency . ' ' . number_format($this->paymentRequest->amount, 2) . ' from ' . $this->paymentRequest->user->name;
+
+        // Trigger push notification if enabled
+        $ns = new \App\Services\NotificationService();
+        $ns->sendPushNotification($notifiable->id, 'New Payment Request', $message, [
+            'type' => 'payment_request',
+            'request_id' => $this->paymentRequest->id
+        ]);
 
         return [
-            'message' => 'New wallet top-up request of ' . $currency . ' ' . number_format($this->paymentRequest->amount, 2) . ' from ' . $this->paymentRequest->user->name,
+            'message' => $message,
             'payment_request_id' => $this->paymentRequest->id,
             'link' => route('payments.admin'),
         ];

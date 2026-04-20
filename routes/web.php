@@ -63,6 +63,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/credit/history', [\App\Http\Controllers\WalletHistoryController::class, 'creditIndex'])->name('credit.history');
     Route::get('/credit/history/data', [\App\Http\Controllers\WalletHistoryController::class, 'creditData'])->name('credit.history.data');
 
+    Route::get('/credit/emis', [\App\Http\Controllers\EmiController::class, 'index'])->name('credit.emis');
+    Route::post('/credit/emis/{id}/pay', [\App\Http\Controllers\EmiController::class, 'payEmi'])->name('credit.emis.pay');
+    Route::post('/credit/penalties/{id}/pay', [\App\Http\Controllers\EmiController::class, 'payPenalty'])->name('credit.penalties.pay');
+
     Route::get('/shop', [\App\Http\Controllers\ShopController::class, 'index'])->name('shop.index');
     Route::get('/shop/checkout', [\App\Http\Controllers\ShopController::class, 'checkout'])->name('shop.checkout');
     Route::post('/shop/place-order', [\App\Http\Controllers\ShopController::class, 'placeOrder'])->name('shop.place-order');
@@ -86,6 +90,12 @@ Route::middleware('auth')->group(function () {
 
         Route::get('referrals/verify/{code}', [\App\Http\Controllers\Api\ReferralController::class, 'verify']);
         Route::get('referrals/me', [\App\Http\Controllers\Api\ReferralController::class, 'myReferral']);
+
+        Route::post('update-fcm-token', function(Request $request) {
+            $request->validate(['fcm_token' => 'required|string']);
+            auth()->user()->update(['fcm_token' => $request->fcm_token]);
+            return response()->json(['success' => true]);
+        });
 
         // Admin API routes
         Route::prefix('admin')->group(function() {

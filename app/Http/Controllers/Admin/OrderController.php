@@ -66,6 +66,9 @@ class OrderController extends Controller
 
         $order->update(['status' => $request->status]);
 
+        // Notify User
+        $order->user->notify(new \App\Notifications\OrderUpdateNotification($order));
+
         return back()->with('success', 'Order status updated successfully.');
     }
 }

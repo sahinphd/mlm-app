@@ -126,6 +126,9 @@ class ShopController extends Controller
 
             $order = Order::create(['user_id' => $user->id, 'total_amount' => $total, 'total_bv' => $total_bv, 'payment_method' => $request->payment_method, 'status' => 'completed']);
             
+            // Notify User
+            $user->notify(new \App\Notifications\OrderPlacedNotification($order));
+            
             if ($request->type === 'product') {
                 OrderItem::create(['order_id' => $order->id, 'product_id' => $item->id, 'quantity' => $quantity, 'price' => $item->price, 'bv' => $total_bv]);
                 $item->decrement('stock', $quantity);
@@ -135,14 +138,29 @@ class ShopController extends Controller
             
             // EMI generation if paid via credit
             if($request->payment_method === 'credit_wallet'){
-                $installments = 4; // Default
-                $interval = 7; // Default
-                $inst_amount = round($total / $installments, 2);
-                $remaining = $total - ($inst_amount * ($installments - 1));
-                for($i=0; $i<$installments; $i++){
-                    $amt = ($i==($installments-1)) ? $remaining : $inst_amount;
-                    $due = Carbon::now()->addDays($interval * ($i+1));
-                    EmiSchedule::create(['user_id' => $user->id, 'order_id' => $order->id, 'total_amount' => $total, 'installment_amount' => $amt, 'interval_days' => $interval, 'due_date' => $due, 'status' => 'pending']);
+                $settings = $this->mlmService->getSettings();
+                $emiAmount = (float) ($settings['default_emi_amount'] ?? 500);
+                $interval = (int) ($settings['emi_frequency'] ?? 7);
+                
+                $remainingBalance = $total;
+                $i = 1;
+                
+                while ($remainingBalance > 0) {
+                    $installment = min($remainingBalance, $emiAmount);
+                    $due = Carbon::now()->addDays($interval * $i);
+                    
+                    EmiSchedule::create([
+                        'user_id' => $user->id,
+                        'order_id' => $order->id,
+                        'total_amount' => $total,
+                        'installment_amount' => $installment,
+                        'interval_days' => $interval,
+                        'due_date' => $due,
+                        'status' => 'pending'
+                    ]);
+                    
+                    $remainingBalance -= $installment;
+                    $i++;
                 }
             }
 

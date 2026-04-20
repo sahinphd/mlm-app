@@ -263,6 +263,52 @@
                             <option value="off" {{ ($settings['enable_bv_commission'] ?? 'on') === 'off' ? 'selected' : '' }}>Disabled (Hide page from users)</option>
                         </select>
                     </div>
+
+                    <div class="border-b border-stroke py-4 dark:border-strokedark">
+                        <h3 class="font-medium text-black dark:text-white">EMI & Credit Settings</h3>
+                    </div>
+
+                    <div class="mt-5.5 grid grid-cols-1 gap-5.5 sm:grid-cols-3">
+                        <div>
+                            <label class="mb-3 block text-sm font-medium text-black dark:text-white">Default EMI Amount ({{ $settings['currency'] ?? 'INR' }})</label>
+                            <input type="number" name="default_emi_amount" value="{{ $settings['default_emi_amount'] ?? 500 }}" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
+                        </div>
+                        <div>
+                            <label class="mb-3 block text-sm font-medium text-black dark:text-white">EMI Frequency (Days)</label>
+                            <input type="number" name="emi_frequency" value="{{ $settings['emi_frequency'] ?? 7 }}" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
+                            <p class="mt-1 text-xs">7 = Weekly, 30 = Monthly</p>
+                        </div>
+                        <div>
+                            <label class="mb-3 block text-sm font-medium text-black dark:text-white">Late Penalty Amount ({{ $settings['currency'] ?? 'INR' }})</label>
+                            <input type="number" name="late_penalty_amount" value="{{ $settings['late_penalty_amount'] ?? 80 }}" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
+                        </div>
+                    </div>
+
+                    <div class="border-b border-stroke py-4 dark:border-strokedark">
+                        <h3 class="font-medium text-black dark:text-white">Push Notifications (FCM)</h3>
+                    </div>
+
+                    <div class="mt-5.5">
+                        <label class="mb-3 block text-sm font-medium text-black dark:text-white">Enable Push Notifications</label>
+                        <select name="enable_push_notifications" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
+                            <option value="on" {{ ($settings['enable_push_notifications'] ?? 'off') === 'on' ? 'selected' : '' }}>Enabled</option>
+                            <option value="off" {{ ($settings['enable_push_notifications'] ?? 'off') === 'off' ? 'selected' : '' }}>Disabled</option>
+                        </select>
+                    </div>
+
+                    <div class="mt-5.5 grid grid-cols-1 gap-5.5 sm:grid-cols-2">
+                        <div>
+                            <label class="mb-3 block text-sm font-medium text-black dark:text-white">FCM Project ID</label>
+                            <input type="text" name="fcm_project_id" value="{{ $settings['fcm_project_id'] ?? '' }}" placeholder="my-project-123" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
+                        </div>
+                        <div>
+                            <label class="mb-3 block text-sm font-medium text-black dark:text-white">FCM Service Account JSON</label>
+                            <input type="file" name="fcm_service_account" class="w-full cursor-pointer rounded-lg border-[1.5px] border-stroke bg-transparent font-medium outline-none transition file:mr-5 file:border-collapse file:cursor-pointer file:border-0 file:border-r file:border-solid file:border-stroke file:bg-whiter file:py-3 file:px-5 file:hover:bg-primary file:hover:bg-opacity-10 focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:file:border-form-strokedark dark:file:bg-white/5 dark:file:text-white dark:focus:border-primary">
+                            @if(\Illuminate\Support\Facades\Storage::disk('local')->exists('certs/fcm-service-account.json'))
+                                <p class="mt-1 text-xs text-green-500">Service account file exists.</p>
+                            @endif
+                        </div>
+                    </div>
                 </div>
             </div>
 

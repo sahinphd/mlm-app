@@ -157,6 +157,9 @@ class PaymentManagementController extends Controller
             if ($isFirstApproval) {
                 $this->mlmService->distributeJoiningCommissions($user->id);
             }
+
+            // Notify User
+            $user->notify(new \App\Notifications\PaymentUpdateNotification($paymentRequest));
         });
 
         return back()->with('success', 'Payment request approved. Account activated and commissions distributed if applicable.');
@@ -178,6 +181,9 @@ class PaymentManagementController extends Controller
         $paymentRequest->admin_note = $data['admin_note'] ?? null;
         $paymentRequest->processed_at = now();
         $paymentRequest->save();
+
+        // Notify User
+        $paymentRequest->user->notify(new \App\Notifications\PaymentUpdateNotification($paymentRequest));
 
         return back()->with('success', 'Payment request rejected.');
     }

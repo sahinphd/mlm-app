@@ -134,7 +134,7 @@ class MLMService
         });
     }
 
-    protected function getSettings()
+    public function getSettings()
     {
         $settingsFile = 'settings.json';
         if (!Storage::disk('local')->exists($settingsFile)) {
