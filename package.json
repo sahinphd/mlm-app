@@ -2,6 +2,9 @@
     "$schema": "https://www.schemastore.org/package.json",
     "private": true,
     "type": "module",
+    "name": "Duaredokandar",
+    "version": "1.0",
+    "author": {"name": "Sahin Ahmed","email": "care@mabia.in","website": "https://mabia.in"},
     "scripts": {
         "build": "vite build",
         "dev": "vite"
