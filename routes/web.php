@@ -87,6 +87,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/credit/history/data', [\App\Http\Controllers\WalletHistoryController::class, 'creditData'])->name('credit.history.data');
 
     Route::get('/credit/emis', [\App\Http\Controllers\EmiController::class, 'index'])->name('credit.emis');
+    Route::get('/credit/penalties/history', [\App\Http\Controllers\WalletHistoryController::class, 'penaltyIndex'])->name('credit.penalties.history');
+    Route::get('/credit/penalties/history/data', [\App\Http\Controllers\WalletHistoryController::class, 'penaltyData'])->name('credit.penalties.history.data');
     Route::post('/credit/emis/{id}/pay', [\App\Http\Controllers\EmiController::class, 'payEmi'])->name('credit.emis.pay');
     Route::post('/credit/penalties/{id}/pay', [\App\Http\Controllers\EmiController::class, 'payPenalty'])->name('credit.penalties.pay');
 
@@ -220,6 +222,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/admin/settings', [\App\Http\Controllers\Admin\SettingController::class, 'update'])->name('admin.settings.update');
 
         Route::get('/admin/emis', [\App\Http\Controllers\Admin\EmiManagementController::class, 'index'])->name('admin.emis.index');
+        Route::get('/admin/penalties/history', [\App\Http\Controllers\Admin\AdminWalletHistoryController::class, 'penaltyIndex'])->name('admin.penalties.history');
+        Route::get('/admin/penalties/history/data', [\App\Http\Controllers\Admin\AdminWalletHistoryController::class, 'penaltyData'])->name('admin.penalties.history.data');
         Route::post('/admin/emis/{id}/remind', [\App\Http\Controllers\Admin\EmiManagementController::class, 'sendReminder'])->name('admin.emis.remind');
 
         Route::get('/admin/help', [\App\Http\Controllers\Admin\HelpController::class, 'index'])->name('admin.help');

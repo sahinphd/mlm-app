@@ -76,7 +76,7 @@
                                     default => 'primary',
                                 };
                             @endphp
-                            <p class="inline-flex rounded-full bg-{{ $statusColor }} bg-opacity-10 py-1 px-3 text-sm font-medium text-{{ $statusColor }}">
+                            <p class="inline-flex rounded-full bg-{{ $statusColor }} bg-opacity-10 py-1 px-3 text-sm font-medium text-white dark:text-red-500">
                                 {{ ucfirst($order->status) }}
                             </p>
                         </td>
