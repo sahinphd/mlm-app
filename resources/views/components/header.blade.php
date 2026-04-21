@@ -115,7 +115,7 @@
           </div>
         </form>
       </div>
-8 
+
       <!-- Mobile Menu Toggle BTN -->
       <button
         class="block lg:hidden p-2 text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"

@@ -9,7 +9,7 @@
         @if($referralRecord)
         <div class="mb-6 p-4 bg-gray-50 dark:bg-white/5 rounded-xl inline-block text-left">
             <p class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Your Referral Link:</p>
-            <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-center justify-center gap-2">
                 <input type="text" id="refLinkInputDash" readonly value="{{ url('/register?ref=' . $referralRecord->referral_code) }}" class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded px-3 py-2 text-sm w-64">
                 <button onclick="copyRefLinkDash()" class="bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-4 py-2 rounded text-sm hover:bg-gray-300 dark:hover:bg-gray-700 transition">Copy</button>
                 <button onclick="shareRefLinkDash()" class="bg-brand-500 text-white px-4 py-2 rounded text-sm hover:bg-brand-600 transition flex items-center gap-2">
@@ -53,11 +53,27 @@
         </div>
         <div class="rounded-2xl border border-gray-100 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
             <h4 class="text-sm font-medium text-gray-500 mb-1">Approved Credit</h4>
-            <p class="text-2xl font-bold text-brand-600 dark:text-white">₹{{ number_format(auth()->user()->creditAccount?->credit_limit ?? 0, 2) }}</p>
+            <p class="text-2xl font-bold text-brand-600 dark:text-white">
+                @if(auth()->user()->creditAccount?->approval_status === 'pending')
+                    <span class="text-lg text-orange-500">Pending</span>
+                @elseif(auth()->user()->creditAccount?->approval_status === 'rejected')
+                    <span class="text-lg text-red-500">Rejected</span>
+                @else
+                    ₹{{ number_format(auth()->user()->creditAccount?->credit_limit ?? 0, 2) }}
+                @endif
+            </p>
         </div>
         <div class="rounded-2xl border border-gray-100 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
             <h4 class="text-sm font-medium text-gray-500 mb-1">Available Credit</h4>
-            <p class="text-2xl font-bold text-green-600 dark:text-white">₹{{ number_format(auth()->user()->creditAccount?->available_credit ?? 0, 2) }}</p>
+            <p class="text-2xl font-bold text-green-600 dark:text-white">
+                @if(auth()->user()->creditAccount?->approval_status === 'pending')
+                    <span class="text-lg text-orange-500">Pending</span>
+                @elseif(auth()->user()->creditAccount?->approval_status === 'rejected')
+                    <span class="text-lg text-red-500">Rejected</span>
+                @else
+                    ₹{{ number_format(auth()->user()->creditAccount?->available_credit ?? 0, 2) }}
+                @endif
+            </p>
         </div>
     </div>
 
@@ -142,43 +158,43 @@
             <table class="w-full text-sm">
                 <thead>
                     <tr class="bg-gray-50 dark:bg-white/5 border-b border-gray-200 dark:border-gray-800">
-                        <th class="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">Date</th>
-                        <th class="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">Description</th>
-                        <th class="px-4 py-3 text-right font-medium text-gray-500 dark:text-gray-400">Amount</th>
+                        <th class="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">Date</th>
+                        <th class="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">Description</th>
+                        <th class="px-2 py-2 sm:px-4 sm:py-3 text-right text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">Amount</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200 dark:divide-gray-800">
                     @forelse($recentTransactions as $tx)
                     <tr>
-                        <td class="px-4 py-3 dark:text-gray-300 text-xs">
+                        <td class="px-2 py-2 sm:px-4 sm:py-3 dark:text-gray-300 text-[10px] sm:text-xs whitespace-nowrap">
                             {{ $tx->created_at->format('M d, Y') }}
-                            <span class="block text-[10px] text-gray-500">{{ $tx->created_at->diffForHumans() }}</span>
+                            <span class="block text-[9px] sm:text-[10px] text-gray-500">{{ $tx->created_at->diffForHumans() }}</span>
                         </td>
-                        <td class="px-4 py-3">
-                            <div class="flex items-center gap-2">
-                                <div class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full {{ $tx->type === 'credit' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600' }} dark:bg-white/5">
+                        <td class="px-2 py-2 sm:px-4 sm:py-3">
+                            <div class="flex items-center gap-1.5 sm:gap-2">
+                                <div class="flex h-5 w-5 sm:h-6 sm:w-6 shrink-0 items-center justify-center rounded-full {{ $tx->type === 'credit' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600' }} dark:bg-white/5">
                                     @if($tx->type === 'credit')
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-2.5 w-2.5 sm:h-3 sm:w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
                                         </svg>
                                     @else
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-2.5 w-2.5 sm:h-3 sm:w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
                                         </svg>
                                     @endif
                                 </div>
-                                <span class="text-sm font-medium text-gray-800 dark:text-white truncate max-w-[200px] md:max-w-md">{{ $tx->description }}</span>
+                                <span class="text-xs sm:text-sm font-medium text-gray-800 dark:text-white truncate max-w-[120px] sm:max-w-[200px] md:max-w-md">{{ $tx->description }}</span>
                             </div>
                         </td>
-                        <td class="px-4 py-3 text-right">
-                            <span class="text-sm font-bold {{ $tx->type === 'credit' ? 'text-green-600' : 'text-red-600' }}">
+                        <td class="px-2 py-2 sm:px-4 sm:py-3 text-right whitespace-nowrap">
+                            <span class="text-xs sm:text-sm font-bold {{ $tx->type === 'credit' ? 'text-green-600' : 'text-red-600' }}">
                                 {{ $tx->type === 'credit' ? '+' : '-' }}₹{{ number_format($tx->amount, 2) }}
                             </span>
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="3" class="px-4 py-8 text-center text-gray-500">No recent transactions.</td>
+                        <td colspan="3" class="px-2 py-6 sm:px-4 sm:py-8 text-center text-xs sm:text-sm text-gray-500">No recent transactions.</td>
                     </tr>
                     @endforelse
                 </tbody>
