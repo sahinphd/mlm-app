@@ -50,7 +50,7 @@
                             <tfoot>
                                 <tr>
                                     <td colspan="3" class="py-5 px-4 text-right font-medium">Grand Total</td>
-                                    <td class="py-5 px-4 text-right text-title-sm font-bold text-primary">${{ number_format($order->total_amount, 2) }}</td>
+                                    <td class="py-5 px-4 text-right text-title-sm font-bold text-primary">₹{{ number_format($order->total_amount, 2) }}</td>
                                 </tr>
                             </tfoot>
                         </table>
