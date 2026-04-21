@@ -68,13 +68,15 @@
       <!-- Hamburger Toggle BTN -->
 
       <a href="{{ url('/') }}" class="lg:hidden">
-        <img class="dark:hidden" src="{{ asset('images/logo/logo.svg') }}" alt="Logo" />
+        <img class="h-8 dark:hidden" src="{{ asset('images/logo/logo.svg') }}" alt="Logo" />
         <img
           class="hidden dark:block"
           src="{{ asset('images/logo/logo-dark.svg') }}"
           alt="Logo"
         />
       </a>
+      <!-- spacer div to push the image to the left button area -->
+      <div class="flex-1 lg:hidden"></div>
 
       <div class="hidden lg:block">
         <form>
@@ -113,6 +115,16 @@
           </div>
         </form>
       </div>
+8 
+      <!-- Mobile Menu Toggle BTN -->
+      <button
+        class="block lg:hidden p-2 text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+        @click.stop="menuToggle = !menuToggle"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+        </svg>
+      </button>
     </div>
 
     <div

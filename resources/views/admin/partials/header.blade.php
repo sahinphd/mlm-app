@@ -8,7 +8,7 @@
 			</button>
 			<a href="/admin" class="flex items-center gap-2">
 				<img src="/images/logo/logo.svg" alt="Logo" class="h-8">
-				<span class="font-semibold text-lg">{{ config('app.name','MLM App') }}</span>
+				{{-- <span class="font-semibold text-lg">{{ config('app.name','MLM App') }}</span> --}}
 			</a>
 		</div>
 

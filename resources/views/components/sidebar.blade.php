@@ -17,12 +17,12 @@
         />
       </span>
 
-      <img
+      {{-- <img
         class="logo-icon"
         :class="sidebarToggle ? 'lg:block' : 'hidden'"
         src="{{ asset('images/logo/logo-icon.svg') }}"
         alt="Logo"
-      />
+      /> --}}
     </a>
   </div>
   <!-- SIDEBAR HEADER -->
