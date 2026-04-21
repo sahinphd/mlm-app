@@ -28,19 +28,74 @@
                 <label for="email" class="mb-2.5 block font-medium text-gray-700 dark:text-gray-300">
                     Recipient Email ID
                 </label>
-                <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    placeholder="Enter recipient's email address"
-                    value="{{ old('email') }}"
-                    class="w-full rounded-lg border border-gray-300 bg-transparent px-5 py-3 text-gray-800 outline-none transition focus:border-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white @error('email') border-red-500 @enderror"
-                    required
-                />
+                <div class="relative">
+                    <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        placeholder="Enter recipient's email address"
+                        value="{{ old('email') }}"
+                        class="w-full rounded-lg border border-gray-300 bg-transparent px-5 py-3 text-gray-800 outline-none transition focus:border-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white @error('email') border-red-500 @enderror"
+                        required
+                        autocomplete="off"
+                    />
+                    <div id="email-loader" class="absolute right-4 top-1/2 -translate-y-1/2 hidden">
+                        <svg class="animate-spin h-5 w-5 text-brand-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div id="recipient-name-wrapper" class="mt-2 hidden">
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">
+                        Recipient Name: <span id="recipient-name" class="text-brand-600 dark:text-brand-400 font-bold"></span>
+                    </p>
+                </div>
                 @error('email')
                     <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                 @enderror
             </div>
+
+            @push('scripts')
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const emailInput = document.getElementById('email');
+                    const nameWrapper = document.getElementById('recipient-name-wrapper');
+                    const nameSpan = document.getElementById('recipient-name');
+                    const loader = document.getElementById('email-loader');
+                    let timeout = null;
+
+                    emailInput.addEventListener('input', function() {
+                        clearTimeout(timeout);
+                        const email = this.value.trim();
+                        
+                        if (email.length < 5 || !email.includes('@')) {
+                            nameWrapper.classList.add('hidden');
+                            return;
+                        }
+
+                        timeout = setTimeout(() => {
+                            loader.classList.remove('hidden');
+                            fetch(`/api/users/verify-email/${encodeURIComponent(email)}`)
+                                .then(response => response.json())
+                                .then(data => {
+                                    loader.classList.add('hidden');
+                                    if (data.success) {
+                                        nameSpan.textContent = data.name;
+                                        nameWrapper.classList.remove('hidden');
+                                    } else {
+                                        nameWrapper.classList.add('hidden');
+                                    }
+                                })
+                                .catch(error => {
+                                    loader.classList.add('hidden');
+                                    nameWrapper.classList.add('hidden');
+                                });
+                        }, 500);
+                    });
+                });
+            </script>
+            @endpush
 
             <div>
                 <label for="amount" class="mb-2.5 block font-medium text-gray-700 dark:text-gray-300">

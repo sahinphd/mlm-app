@@ -117,6 +117,16 @@ Route::middleware('auth')->group(function () {
         Route::get('products/{id}', [\App\Http\Controllers\Api\ProductController::class, 'show']);
 
         Route::get('referrals/verify/{code}', [\App\Http\Controllers\Api\ReferralController::class, 'verify']);
+        Route::get('users/verify-email/{email}', function($email) {
+            $user = \App\Models\User::where('email', $email)->first();
+            if ($user) {
+                return response()->json([
+                    'success' => true,
+                    'name' => $user->name
+                ]);
+            }
+            return response()->json(['success' => false], 404);
+        });
         Route::get('referrals/me', [\App\Http\Controllers\Api\ReferralController::class, 'myReferral']);
 
         Route::post('update-fcm-token', function(Request $request) {
