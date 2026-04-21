@@ -39,7 +39,7 @@
             class="menu-group-title"
             :class="sidebarToggle ? 'lg:hidden' : ''"
           >
-            MENU
+            USER MENU
           </span>
 
           <svg
@@ -88,7 +88,7 @@
                 class="menu-item-text"
                 :class="sidebarToggle ? 'lg:hidden' : ''"
               >
-                Dashboard
+                CustomerDashboard
               </span>
             </a>
           </li>

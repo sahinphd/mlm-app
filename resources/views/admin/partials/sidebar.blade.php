@@ -21,7 +21,7 @@
 		<nav class="mt-5 py-4 px-4 lg:mt-9 lg:px-6">
 			<!-- Menu Group -->
 			<div>
-				<h3 class="mb-4 ml-4 text-sm font-semibold text-gray-400 uppercase">MENU</h3>
+				<h3 class="mb-4 ml-4 text-sm font-semibold text-gray-400 uppercase">ADMIN MENU</h3>
 
 				<ul class="mb-6 flex flex-col gap-1.5">
 					@php
