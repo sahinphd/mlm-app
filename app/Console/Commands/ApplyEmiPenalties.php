@@ -37,28 +37,56 @@ class ApplyEmiPenalties extends Command
 
         foreach ($overdueEmis as $emi) {
             \Illuminate\Support\Facades\DB::transaction(function () use ($emi, $penaltyAmount) {
+                // Check if penalty already exists for this EMI to avoid duplicates (Safety check)
+                $exists = \App\Models\Penalty::where('emi_schedule_id', $emi->id)->exists();
+                if ($exists) {
+                    // If penalty exists but EMI is still pending, just mark EMI as overdue and skip
+                    $emi->status = 'overdue';
+                    $emi->save();
+                    return;
+                }
+
                 // Update EMI status
                 $emi->status = 'overdue';
                 $emi->save();
 
-                // Check if penalty already exists for this EMI to avoid duplicates
-                $exists = \App\Models\Penalty::where('emi_schedule_id', $emi->id)->exists();
+                $user = \App\Models\User::find($emi->user_id);
+                $wallet = $user ? $user->wallet : null;
+                $status = 'unpaid';
 
-                if (!$exists) {
-                    $penalty = \App\Models\Penalty::create([
-                        'user_id' => $emi->user_id,
-                        'emi_schedule_id' => $emi->id,
+                // Automatic Deduction Logic
+                if ($wallet && $wallet->main_balance >= $penaltyAmount) {
+                    $wallet->main_balance -= $penaltyAmount;
+                    $wallet->save();
+
+                    \App\Models\WalletTransaction::create([
+                        'wallet_id' => $wallet->id,
+                        'type' => 'debit',
+                        'source' => 'penalty',
                         'amount' => $penaltyAmount,
-                        'status' => 'unpaid'
+                        'reference_id' => 'penalty:' . $emi->id,
+                        'description' => 'Auto-deducted Penalty for Overdue EMI #' . $emi->id
                     ]);
 
-                    // Send Notification
-                    $user = \App\Models\User::find($emi->user_id);
-                    if ($user) {
-                        $user->notify(new \App\Notifications\PenaltyLeviedNotification($penalty));
-                    }
+                    $status = 'paid';
+                }
 
-                    $this->line("Applied penalty of {$penaltyAmount} to User #{$emi->user_id} for EMI #{$emi->id}");
+                $penalty = \App\Models\Penalty::create([
+                    'user_id' => $emi->user_id,
+                    'emi_schedule_id' => $emi->id,
+                    'amount' => $penaltyAmount,
+                    'status' => $status
+                ]);
+
+                // Send Notification
+                if ($user) {
+                    $user->notify(new \App\Notifications\PenaltyLeviedNotification($penalty));
+                }
+
+                if ($status === 'paid') {
+                    $this->line("Auto-deducted penalty of {$penaltyAmount} from User #{$emi->user_id} for EMI #{$emi->id}");
+                } else {
+                    $this->line("Applied unpaid penalty of {$penaltyAmount} to User #{$emi->user_id} (Insufficient Balance)");
                 }
             });
         }
