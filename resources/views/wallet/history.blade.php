@@ -28,9 +28,31 @@
 
 @section('content')
 <div class="grid grid-cols-1 gap-4 md:gap-6">
+    @if(session('success'))
+        <div class="rounded-lg bg-green-50 p-4 text-sm text-green-600 dark:bg-green-500/10 dark:text-green-400">
+            {{ session('success') }}
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="rounded-lg bg-red-50 p-4 text-sm text-red-600 dark:bg-red-500/10 dark:text-red-400">
+            {{ session('error') }}
+        </div>
+    @endif
+
     <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6 text-center">
-        <h2 class="mb-3 text-2xl font-semibold text-gray-800 dark:text-white/90">Wallet History</h2>
-        <p class="mb-6 text-gray-500 dark:text-gray-400">View all your wallet transactions, including credits and debits.</p>
+        <div class="flex flex-col md:flex-row justify-between items-center mb-6">
+            <div class="text-left mb-4 md:mb-0">
+                <h2 class="text-2xl font-semibold text-gray-800 dark:text-white/90">Wallet History</h2>
+                <p class="text-gray-500 dark:text-gray-400">View all your wallet transactions, including credits and debits.</p>
+            </div>
+            <a href="{{ route('wallet.transfer') }}" class="flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                </svg>
+                Transfer Balance
+            </a>
+        </div>
         
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
             <div class="rounded-2xl border border-gray-100 bg-brand-50/50 p-5 dark:border-gray-800 dark:bg-white/[0.03]">
