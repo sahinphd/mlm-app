@@ -87,6 +87,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/credit/history/data', [\App\Http\Controllers\WalletHistoryController::class, 'creditData'])->name('credit.history.data');
 
     Route::get('/credit/emis', [\App\Http\Controllers\EmiController::class, 'index'])->name('credit.emis');
+    Route::get('/credit/emis/data', [\App\Http\Controllers\EmiController::class, 'emiData'])->name('credit.emis.data');
     Route::get('/credit/penalties/history', [\App\Http\Controllers\WalletHistoryController::class, 'penaltyIndex'])->name('credit.penalties.history');
     Route::get('/credit/penalties/history/data', [\App\Http\Controllers\WalletHistoryController::class, 'penaltyData'])->name('credit.penalties.history.data');
     Route::post('/credit/emis/{id}/pay', [\App\Http\Controllers\EmiController::class, 'payEmi'])->name('credit.emis.pay');

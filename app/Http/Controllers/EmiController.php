@@ -16,19 +16,89 @@ class EmiController extends Controller
 {
     public function index()
     {
-        $user = Auth::user();
-        $emis = EmiSchedule::where('user_id', $user->id)
-            ->orderBy('due_date', 'asc')
-            ->paginate(15, ['*'], 'emis');
-            
-        $penalties = Penalty::where('user_id', $user->id)
-            ->orderBy('created_at', 'desc')
-            ->paginate(15, ['*'], 'penalties');
-
         return view('credit.emis', [
-            'emis' => $emis,
-            'penalties' => $penalties,
             'page' => 'emi_schedule'
+        ]);
+    }
+
+    public function emiData(Request $request)
+    {
+        $user = Auth::user();
+        $query = EmiSchedule::where('user_id', $user->id);
+
+        // Total count
+        $totalData = $query->count();
+        $totalFiltered = $totalData;
+
+        // Search
+        if ($search = $request->input('search.value')) {
+            $query->where(function($q) use ($search) {
+                $q->where('id', 'LIKE', "%{$search}%")
+                  ->orWhere('order_id', 'LIKE', "%{$search}%")
+                  ->orWhere('status', 'LIKE', "%{$search}%");
+            });
+            $totalFiltered = $query->count();
+        }
+
+        // Filters
+        if ($orderId = $request->input('order_id')) {
+            $query->where('order_id', $orderId);
+        }
+        if ($emiId = $request->input('emi_id')) {
+            $query->where('id', $emiId);
+        }
+        if ($startDate = $request->input('start_date')) {
+            $query->whereDate('due_date', '>=', $startDate);
+        }
+        if ($endDate = $request->input('end_date')) {
+            $query->whereDate('due_date', '<=', $endDate);
+        }
+
+        $totalFiltered = $query->count();
+
+        // Sorting
+        $columns = ['due_date', 'order_id', 'installment_amount', 'status', 'id'];
+        $orderColumnIndex = $request->input('order.0.column', 0);
+        $orderDir = $request->input('order.0.dir', 'asc');
+        $orderColumn = $columns[$orderColumnIndex] ?? 'due_date';
+        $query->orderBy($orderColumn, $orderDir);
+
+        // Pagination
+        $start = $request->input('start', 0);
+        $length = $request->input('length', 10);
+        $emis = $query->skip($start)->take($length)->get();
+
+        $data = [];
+        foreach ($emis as $emi) {
+            $statusHtml = '';
+            if ($emi->status === 'paid') {
+                $statusHtml = '<span class="px-2 py-1 rounded-full text-xs font-semibold bg-green-50 text-green-600 dark:bg-green-500/10 dark:text-green-400">Paid</span>';
+            } elseif ($emi->status === 'overdue') {
+                $statusHtml = '<span class="px-2 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400">Overdue</span>';
+            } else {
+                $statusHtml = '<span class="px-2 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">Pending</span>';
+            }
+
+            $actionHtml = '-';
+            if ($emi->status !== 'paid') {
+                $actionHtml = '<form action="'.route('credit.emis.pay', $emi->id).'" method="POST" onsubmit="return confirm(\'Are you sure you want to pay this EMI from your main wallet?\')">' . csrf_field() . '<button type="submit" class="inline-flex items-center justify-center rounded-lg bg-primary py-1 px-3 text-center text-xs font-medium text-white hover:bg-opacity-90">Pay Now</button></form>';
+            }
+
+            $data[] = [
+                'due_date' => \Carbon\Carbon::parse($emi->due_date)->format('M d, Y'),
+                'order_id' => '#' . $emi->order_id,
+                'amount' => '₹' . number_format($emi->installment_amount, 2),
+                'status' => $statusHtml,
+                'action' => $actionHtml,
+                'emi_id' => 'EMI #' . $emi->id
+            ];
+        }
+
+        return response()->json([
+            "draw"            => intval($request->input('draw')),
+            "recordsTotal"    => intval($totalData),
+            "recordsFiltered" => intval($totalFiltered),
+            "data"            => $data
         ]);
     }
 
