@@ -37,10 +37,10 @@ class UserController extends Controller
         $userId = $request->query('user_id');
         
         if ($userId) {
-            $user = User::with('referralRecord')->find($userId);
+            $user = User::with(['referralRecord'])->withCount('referredUsers')->find($userId);
         } else {
             // Default to the first user (the root of the system)
-            $user = User::with('referralRecord')->orderBy('id', 'asc')->first();
+            $user = User::with(['referralRecord'])->withCount('referredUsers')->orderBy('id', 'asc')->first();
         }
 
         return view('admin.genealogy.genealogy', compact('user'));
@@ -167,13 +167,31 @@ class UserController extends Controller
     public function genealogy(User $user)
     {
         $this->ensureAdmin();
-        $user->load(['referralRecord']);
-        
-        // We'll build a tree structure. 
-        // For simplicity in the view, we can just pass the user and use a recursive partial or 
-        // a frontend library. Let's use a recursive approach in the view.
+        $user->load(['referralRecord'])->loadCount('referredUsers');
         
         return view('admin.genealogy.users_genealogy', compact('user'));
+    }
+
+    public function getGenealogyChildren(User $user)
+    {
+        $this->ensureAdmin();
+        $children = $user->referredUsers()->with(['referralRecord'])->withCount('referredUsers')->get();
+        
+        if ($children->isEmpty()) {
+            return '';
+        }
+
+        $html = '<ul>';
+        foreach ($children as $child) {
+            $html .= view('admin.partials.genealogy_node', [
+                'user' => $child, 
+                'isRoot' => false,
+                'depth' => 1 // Reset depth for children being loaded
+            ])->render();
+        }
+        $html .= '</ul>';
+
+        return response($html);
     }
 
     public function update(Request $request, User $user)

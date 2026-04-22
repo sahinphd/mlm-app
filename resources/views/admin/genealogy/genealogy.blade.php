@@ -40,7 +40,7 @@
             
             <div class="genealogy-container overflow-auto p-4 bg-gray-50 dark:bg-meta-4 rounded-sm border border-stroke dark:border-strokedark">
                 <ul class="genealogy-tree">
-                    @include('admin.partials.genealogy_node', ['user' => $user, 'isRoot' => true])
+                    @include('admin.partials.genealogy_node', ['user' => $user, 'isRoot' => true, 'depth' => 1])
                 </ul>
             </div>
         @else
@@ -85,13 +85,13 @@
     }
     /* Vertical line for last child */
     .genealogy-tree li:last-child::before {
-        height: 25px;
+        height: 31px;
     }
     /* Horizontal line */
     .genealogy-tree li::after {
         content: "";
         position: absolute;
-        top: 25px;
+        top: 31px;
         left: 0;
         border-top: 2px solid #cbd5e1;
         height: 2px;
@@ -101,58 +101,20 @@
         border-top-color: #334155;
     }
     .genealogy-node {
-        display: inline-flex;
-        align-items: center;
-        gap: 12px;
-        padding: 10px 16px;
-        background: white;
-        border: 1px solid #e2e8f0;
-        border-radius: 8px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        transition: all 0.2s;
-        min-width: 200px;
+        min-width: 250px;
     }
-    .dark .genealogy-node {
-        background: #1a222c;
-        border-color: #2e3a47;
+    .genealogy-toggle svg {
+        transition: transform 0.2s;
     }
-    .genealogy-node:hover {
-        border-color: #3c50e0;
-        box-shadow: 0 10px 15px -3px rgba(60, 80, 224, 0.15);
-        transform: translateY(-1px);
-    }
-    .genealogy-node img {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 2px solid #e2e8f0;
-    }
-    .dark .genealogy-node img {
-        border-color: #2e3a47;
-    }
-    .genealogy-info {
-        display: flex;
-        flex-direction: column;
-        line-height: 1.4;
-    }
-    .genealogy-name {
-        font-weight: 700;
-        color: #1c2434;
-        font-size: 14px;
-    }
-    .dark .genealogy-name {
-        color: white;
-    }
-    .genealogy-meta {
-        font-size: 11px;
-        color: #64748b;
+    .rotate-90 {
+        transform: rotate(90deg);
     }
 </style>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     $(document).ready(function() {
+        // Search Logic
         const $input = $('#user_search');
         const $results = $('#search_results');
         let timeout = null;
@@ -203,6 +165,37 @@
         $(document).on('click', function(e) {
             if (!$(e.target).closest('#user_search').length && !$(e.target).closest('#search_results').length) {
                 $results.hide();
+            }
+        });
+
+        // Genealogy Toggle/Load Logic
+        $(document).on('click', '.genealogy-toggle', function() {
+            const $btn = $(this);
+            const $item = $btn.closest('.genealogy-item');
+            const $container = $item.find('> .children-container');
+            const userId = $item.data('user-id');
+            const isLoaded = $btn.attr('data-loaded') === 'true';
+
+            if (!isLoaded) {
+                // Load via AJAX
+                $btn.find('svg').addClass('animate-spin');
+                $.ajax({
+                    url: `/admin/users/${userId}/genealogy-children`,
+                    method: 'GET',
+                    success: function(html) {
+                        $container.html(html).removeClass('hidden');
+                        $btn.attr('data-loaded', 'true');
+                        $btn.find('svg').removeClass('animate-spin').addClass('rotate-90');
+                    },
+                    error: function() {
+                        alert('Failed to load children.');
+                        $btn.find('svg').removeClass('animate-spin');
+                    }
+                });
+            } else {
+                // Just toggle visibility
+                $container.toggleClass('hidden');
+                $btn.find('svg').toggleClass('rotate-90');
             }
         });
     });

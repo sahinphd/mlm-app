@@ -14,13 +14,14 @@
     <div class="rounded-sm border border-stroke bg-white p-7 shadow-default dark:border-strokedark dark:bg-boxdark">
         <div class="genealogy-container overflow-auto p-4 bg-gray-50 dark:bg-meta-4 rounded-sm border border-stroke dark:border-strokedark">
             <ul class="genealogy-tree">
-                @include('admin.partials.genealogy_node', ['user' => $user, 'isRoot' => true])
+                @include('admin.partials.genealogy_node', ['user' => $user, 'isRoot' => true, 'depth' => 1])
             </ul>
         </div>
     </div>
 </div>
 
 <style>
+    /* Genealogy Tree Styles */
     .genealogy-tree, .genealogy-tree ul {
         list-style-type: none;
         margin: 0;
@@ -28,75 +29,87 @@
         position: relative;
     }
     .genealogy-tree ul {
-        margin-left: 20px;
+        margin-left: 30px;
     }
     .genealogy-tree li {
         margin: 0;
-        padding: 10px 0 10px 20px;
+        padding: 15px 0 15px 30px;
         position: relative;
     }
+    /* Vertical line */
     .genealogy-tree li::before {
         content: "";
         position: absolute;
         top: 0;
         left: 0;
-        border-left: 1px solid #ccc;
+        border-left: 2px solid #cbd5e1;
         height: 100%;
-        width: 1px;
+        width: 2px;
     }
+    .dark .genealogy-tree li::before {
+        border-left-color: #334155;
+    }
+    /* Vertical line for last child */
     .genealogy-tree li:last-child::before {
-        height: 20px;
+        height: 31px;
     }
+    /* Horizontal line */
     .genealogy-tree li::after {
         content: "";
         position: absolute;
-        top: 20px;
+        top: 31px;
         left: 0;
-        border-top: 1px solid #ccc;
-        height: 1px;
-        width: 20px;
+        border-top: 2px solid #cbd5e1;
+        height: 2px;
+        width: 30px;
+    }
+    .dark .genealogy-tree li::after {
+        border-top-color: #334155;
     }
     .genealogy-node {
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-        padding: 8px 12px;
-        background: white;
-        border: 1px solid #eee;
-        border-radius: 6px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        transition: all 0.2s;
+        min-width: 250px;
     }
-    .dark .genealogy-node {
-        background: #1a222c;
-        border-color: #2e3a47;
+    .genealogy-toggle svg {
+        transition: transform 0.2s;
     }
-    .genealogy-node:hover {
-        border-color: #3c50e0;
-        box-shadow: 0 4px 6px rgba(60, 80, 224, 0.1);
-    }
-    .genealogy-node img {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        object-fit: cover;
-    }
-    .genealogy-info {
-        display: flex;
-        flex-col: column;
-        line-height: 1.2;
-    }
-    .genealogy-name {
-        font-weight: 600;
-        color: #1c2434;
-        font-size: 14px;
-    }
-    .dark .genealogy-name {
-        color: white;
-    }
-    .genealogy-meta {
-        font-size: 11px;
-        color: #64748b;
+    .rotate-90 {
+        transform: rotate(90deg);
     }
 </style>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function() {
+        // Genealogy Toggle/Load Logic
+        $(document).on('click', '.genealogy-toggle', function() {
+            const $btn = $(this);
+            const $item = $btn.closest('.genealogy-item');
+            const $container = $item.find('> .children-container');
+            const userId = $item.data('user-id');
+            const isLoaded = $btn.attr('data-loaded') === 'true';
+
+            if (!isLoaded) {
+                // Load via AJAX
+                $btn.find('svg').addClass('animate-spin');
+                $.ajax({
+                    url: `/admin/users/${userId}/genealogy-children`,
+                    method: 'GET',
+                    success: function(html) {
+                        $container.html(html).removeClass('hidden');
+                        $btn.attr('data-loaded', 'true');
+                        $btn.find('svg').removeClass('animate-spin').addClass('rotate-90');
+                    },
+                    error: function() {
+                        alert('Failed to load children.');
+                        $btn.find('svg').removeClass('animate-spin');
+                    }
+                });
+            } else {
+                // Just toggle visibility
+                $container.toggleClass('hidden');
+                $btn.find('svg').toggleClass('rotate-90');
+            }
+        });
+    });
+</script>
 @endsection

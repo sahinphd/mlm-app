@@ -184,6 +184,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/admin/users/store', [\App\Http\Controllers\Admin\UserController::class, 'store'])->name('admin.users.store');
         Route::get('/admin/users/{user}', [\App\Http\Controllers\Admin\UserController::class, 'show'])->name('admin.users.show');
         Route::get('/admin/users/{user}/genealogy', [\App\Http\Controllers\Admin\UserController::class, 'genealogy'])->name('admin.users.genealogy');
+        Route::get('/admin/users/{user}/genealogy-children', [\App\Http\Controllers\Admin\UserController::class, 'getGenealogyChildren'])->name('admin.users.genealogy.children');
         Route::get('/admin/users/{user}/edit', [\App\Http\Controllers\Admin\UserController::class, 'edit'])->name('admin.users.edit');
         Route::post('/admin/users/{user}', [\App\Http\Controllers\Admin\UserController::class, 'update'])->name('admin.users.update');
         Route::delete('/admin/users/{user}', [\App\Http\Controllers\Admin\UserController::class, 'destroy'])->name('admin.users.destroy');
