@@ -1,7 +1,5 @@
-<div x-show="sidebarToggle" @click="sidebarToggle = false" class="fixed inset-0 z-50 bg-black/50 lg:hidden" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"></div>
-
 <aside :class="sidebarToggle ? 'translate-x-0' : '-translate-x-full'"
-	class="fixed left-0 top-0 z-999 flex h-screen w-72 flex-col overflow-y-hidden bg-white border-r dark:bg-gray-900 dark:border-gray-800 duration-300 ease-linear lg:static lg:translate-x-0">
+	class="fixed left-0 top-0 z-50 flex h-screen w-72 flex-col overflow-y-hidden bg-white border-r dark:bg-gray-900 dark:border-gray-800 duration-300 ease-linear lg:static lg:translate-x-0">
 	<!-- SIDEBAR HEADER -->
 	<div class="flex items-center justify-between gap-2 px-6 py-5.5 lg:py-6.5">
 		<a href="/admin" class="flex items-center gap-2">

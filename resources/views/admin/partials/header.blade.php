@@ -1,4 +1,4 @@
-<header class="sticky top-0 w-full border-b bg-white dark:bg-gray-900" :class="sidebarToggle ? 'z-40' : 'z-50'">
+<header class="sticky top-0 z-50 w-full border-b bg-white dark:bg-gray-900">
 	<div class="flex items-center justify-between px-4 py-3 lg:px-6">
 		<div class="flex items-center gap-3">
 			<button @click.prevent="sidebarToggle = !sidebarToggle" class="p-2 rounded-lg border lg:hidden">
