@@ -1,3 +1,4 @@
+{{-- index page for users --}}
 <!doctype html>
 <html lang="en">
     <head>
