@@ -52,7 +52,7 @@ class NewPaymentRequestNotification extends Notification
         return [
             'message' => $message,
             'payment_request_id' => $this->paymentRequest->id,
-            'link' => route('payments.admin'),
+            'link' => route('admin.payments'),
         ];
     }
 

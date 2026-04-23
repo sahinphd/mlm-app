@@ -9,10 +9,10 @@
         </h2>
 
         <div class="flex items-center gap-3">
-            <a href="{{ route('payments.admin.export', ['type' => 'csv', 'status' => $status, 'q' => $q]) }}" class="inline-flex items-center justify-center rounded-md border border-stroke py-2 px-6 text-center font-medium text-black hover:bg-opacity-90 dark:border-strokedark dark:text-white lg:px-8 xl:px-10">
+            <a href="{{ route('admin.payments.export', ['type' => 'csv', 'status' => $status, 'q' => $q]) }}" class="inline-flex items-center justify-center rounded-md border border-stroke py-2 px-6 text-center font-medium text-black hover:bg-opacity-90 dark:border-strokedark dark:text-white lg:px-8 xl:px-10">
                 Export CSV
             </a>
-            <a href="{{ route('payments.admin.export', ['type' => 'pdf', 'status' => $status, 'q' => $q]) }}" class="inline-flex items-center justify-center rounded-md bg-black py-2 px-6 text-center font-medium text-white hover:bg-opacity-90 lg:px-8 xl:px-10">
+            <a href="{{ route('admin.payments.export', ['type' => 'pdf', 'status' => $status, 'q' => $q]) }}" class="inline-flex items-center justify-center rounded-md bg-black py-2 px-6 text-center font-medium text-white hover:bg-opacity-90 lg:px-8 xl:px-10">
                 Export PDF
             </a>
         </div>
@@ -64,7 +64,7 @@
 
     <!-- Filter -->
     <div class="rounded-sm border border-stroke bg-white px-5 pt-6 pb-2.5 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 mb-6">
-        <form method="GET" action="{{ route('payments.admin') }}">
+        <form method="GET" action="{{ route('admin.payments') }}">
             <div class="flex flex-wrap items-center gap-4">
                 <div class="flex-1 min-w-[200px]">
                     <input type="text" name="q" value="{{ $q }}" placeholder="Search by user, email, method..." class="w-full rounded border-[1.5px] border-stroke bg-transparent py-2 px-5 font-medium outline-none transition focus:border-primary active:border-primary dark:border-form-strokedark dark:bg-form-input">
@@ -81,7 +81,7 @@
                     Filter
                 </button>
                 @if($status || $q)
-                    <a href="{{ route('payments.admin') }}" class="flex justify-center rounded border border-stroke py-2 px-6 font-medium text-black hover:shadow-1 dark:border-strokedark dark:text-white transition">
+                    <a href="{{ route('admin.payments') }}" class="flex justify-center rounded border border-stroke py-2 px-6 font-medium text-black hover:shadow-1 dark:border-strokedark dark:text-white transition">
                         Reset
                     </a>
                 @endif
@@ -132,14 +132,14 @@
 
                 @if($canProcess)
                     <div class="mt-4 flex flex-col gap-3">
-                        <form method="POST" action="{{ route('payments.admin.approve', $r) }}">
+                        <form method="POST" action="{{ route('admin.payments.approve', $r) }}">
                             @csrf
                             <input type="text" name="admin_note" placeholder="Approval note..." class="mb-2 w-full rounded border border-stroke bg-transparent py-2 px-4 text-sm outline-none focus:border-primary dark:border-strokedark">
                             <button type="submit" class="w-full rounded bg-success py-2 text-sm font-medium text-white hover:bg-opacity-90 transition">
                                 Approve & Recharge
                             </button>
                         </form>
-                        <form method="POST" action="{{ route('payments.admin.reject', $r) }}">
+                        <form method="POST" action="{{ route('admin.payments.reject', $r) }}">
                             @csrf
                             <input type="text" name="admin_note" placeholder="Rejection reason..." class="mb-2 w-full rounded border border-stroke bg-transparent py-2 px-4 text-sm outline-none focus:border-primary dark:border-strokedark">
                             <button type="submit" class="w-full rounded bg-danger py-2 text-sm font-medium text-white hover:bg-opacity-90 transition">
@@ -154,7 +154,7 @@
                             <p class="mt-1 text-xs italic">Note: {{ $r->admin_note }}</p>
                         @endif
                         @if($r->status === 'rejected')
-                            <form method="POST" action="{{ route('payments.admin.reopen', $r) }}" class="mt-2 text-right">
+                            <form method="POST" action="{{ route('admin.payments.reopen', $r) }}" class="mt-2 text-right">
                                 @csrf
                                 <button type="submit" class="text-xs text-primary underline hover:text-opacity-80">Reopen Request</button>
                             </form>

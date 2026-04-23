@@ -216,10 +216,11 @@ Route::middleware('auth')->group(function () {
         Route::post('/admin/shop/place-order', [\App\Http\Controllers\Admin\AdminShopController::class, 'placeOrder'])->name('admin.shop.place-order');
 
         // Admin Payments
-        Route::get('/admin/payments', [\App\Http\Controllers\Admin\PaymentManagementController::class, 'index'])->name('payments.admin');
-        Route::post('/admin/payments/{paymentRequest}/approve', [\App\Http\Controllers\Admin\PaymentManagementController::class, 'approve'])->name('payments.admin.approve');
-        Route::post('/admin/payments/{paymentRequest}/reject', [\App\Http\Controllers\Admin\PaymentManagementController::class, 'reject'])->name('payments.admin.reject');
-        Route::get('/admin/payments/export', [\App\Http\Controllers\Admin\PaymentManagementController::class, 'export'])->name('payments.admin.export');
+        Route::get('/admin/payments', [\App\Http\Controllers\Admin\PaymentManagementController::class, 'index'])->name('admin.payments');
+        Route::post('/admin/payments/{paymentRequest}/approve', [\App\Http\Controllers\Admin\PaymentManagementController::class, 'approve'])->name('admin.payments.approve');
+        Route::post('/admin/payments/{paymentRequest}/reject', [\App\Http\Controllers\Admin\PaymentManagementController::class, 'reject'])->name('admin.payments.reject');
+        Route::post('/admin/payments/{paymentRequest}/reopen', [\App\Http\Controllers\Admin\PaymentManagementController::class, 'reopen'])->name('admin.payments.reopen');
+        Route::get('/admin/payments/export', [\App\Http\Controllers\Admin\PaymentManagementController::class, 'export'])->name('admin.payments.export');
 
         // Admin Commissions & Settings
         Route::get('/admin/commissions', [\App\Http\Controllers\CommissionController::class, 'adminIndex'])->name('admin.commissions');
