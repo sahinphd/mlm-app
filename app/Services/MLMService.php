@@ -108,13 +108,19 @@ class MLMService
                 if ($comm->amount > 0) {
                     $wallet = Wallet::where('user_id', $comm->user_id)->first();
                     if ($wallet) {
-                        $wallet->earning_balance -= $comm->amount;
+                        // Deduct from the appropriate balance based on commission type
+                        if ($comm->type === 'bv') {
+                            $wallet->earning_balance -= $comm->amount;
+                        } else {
+                            // joining or repurchase
+                            $wallet->main_balance -= $comm->amount;
+                        }
                         $wallet->save();
 
                         WalletTransaction::create([
                             'wallet_id' => $wallet->id,
                             'type' => 'debit',
-                            'source' => 'commission',
+                            'source' => $comm->type,
                             'amount' => $comm->amount,
                             'reference_id' => 'reversal:' . $comm->id,
                             'description' => 'Commission reversal for Order #' . $order->id . ' (Status: ' . ucfirst($order->status) . ')'
@@ -148,13 +154,19 @@ class MLMService
                     ['main_balance' => 0, 'earning_balance' => 0, 'credit_balance' => 0]
                 );
 
-                $wallet->earning_balance += $amount;
+                // Add to the appropriate balance based on commission type
+                if ($type === 'bv') {
+                    $wallet->earning_balance += $amount;
+                } else {
+                    // joining or repurchase
+                    $wallet->main_balance += $amount;
+                }
                 $wallet->save();
 
                 WalletTransaction::create([
                     'wallet_id' => $wallet->id,
                     'type' => 'credit',
-                    'source' => 'commission',
+                    'source' => $type, // Use joining, repurchase, or bv
                     'amount' => $amount,
                     'reference_id' => 'commission:' . $comm->id,
                     'description' => ucfirst($type) . ' commission (Level ' . $level . ') from Order/User #' . ($orderId ?? $fromUserId)

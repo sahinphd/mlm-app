@@ -14,8 +14,8 @@
   <!-- SIDEBAR HEADER -->
   <div class="flex items-center justify-between gap-2 pt-8 pb-10">
     <a href="{{ url('/') }}">
-      {{-- <img class="dark:hidden mt-8" src="{{ asset('images/logo/logo.svg') }}" alt="Logo" />
-      <img class="hidden dark:block" src="{{ asset('images/logo/logo-dark.svg') }}" alt="Logo" /> --}}.
+      <img class="dark:hidden mt-8" src="{{ asset('images/logo/logo.svg') }}" alt="Logo" />
+      {{--<img class="hidden dark:block mt-8" src="{{ asset('images/logo/logo-dark.svg') }}" alt="Logo" /> --}}.
     </a>
   </div>
 

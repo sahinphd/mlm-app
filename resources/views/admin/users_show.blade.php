@@ -36,7 +36,7 @@
             <div class="mt-4 flex items-end justify-between">
                 <div>
                     <h4 class="text-title-md font-bold text-black dark:text-white text-success">Rs.{{ number_format($user->wallet->earning_balance ?? 0, 2) }}</h4>
-                    <span class="text-sm font-medium text-success">Earning Balance</span>
+                    <span class="text-sm font-medium text-success">BV Earnings</span>
                 </div>
             </div>
         </div>

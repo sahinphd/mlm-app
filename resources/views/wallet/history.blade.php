@@ -54,18 +54,18 @@
             </a>
         </div>
         
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-5xl mx-auto">
             <div class="rounded-2xl border border-gray-100 bg-brand-50/50 p-5 dark:border-gray-800 dark:bg-white/[0.03]">
                 <h4 class="text-sm font-medium text-gray-500 mb-1">Main Balance</h4>
                 <p class="text-2xl font-bold text-brand-600 dark:text-white">₹{{ number_format($wallet->main_balance ?? 0, 2) }}</p>
             </div>
-            <div class="rounded-2xl border border-gray-100 bg-green-50/50 p-5 dark:border-gray-800 dark:bg-white/[0.03]">
-                <h4 class="text-sm font-medium text-gray-500 mb-1">Earning Balance</h4>
-                <p class="text-2xl font-bold text-green-600 dark:text-white">₹{{ number_format($wallet->earning_balance ?? 0, 2) }}</p>
+            <div class="rounded-2xl border border-gray-100 bg-blue-50/50 p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+                <h4 class="text-sm font-medium text-gray-500 mb-1">Joining Earnings</h4>
+                <p class="text-2xl font-bold text-blue-600 dark:text-white">₹{{ number_format($joiningEarnings ?? 0, 2) }}</p>
             </div>
-            <div class="rounded-2xl border border-gray-100 bg-purple-50/50 p-5 dark:border-gray-800 dark:bg-white/[0.03]">
-                <h4 class="text-sm font-medium text-gray-500 mb-1">Credit Balance</h4>
-                <p class="text-2xl font-bold text-purple-600 dark:text-white">₹{{ number_format($wallet->credit_balance ?? 0, 2) }}</p>
+            <div class="rounded-2xl border border-gray-100 bg-orange-50/50 p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+                <h4 class="text-sm font-medium text-gray-500 mb-1">Repurchase Earnings</h4>
+                <p class="text-2xl font-bold text-orange-600 dark:text-white">₹{{ number_format($repurchaseEarnings ?? 0, 2) }}</p>
             </div>
         </div>
     </div>

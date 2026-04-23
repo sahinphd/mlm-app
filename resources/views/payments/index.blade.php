@@ -67,6 +67,8 @@
     </div>
 </div>
 
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 const CURRENCY = '{{ $currency }}';
 async function loadRequests(){
@@ -118,19 +120,53 @@ document.getElementById('payment-form').addEventListener('submit', async (e)=>{
     e.preventDefault();
     const data = new FormData(e.target);
     const body = {amount: data.get('amount'), method: data.get('method'), reference: data.get('reference')};
-    const res = await fetch('/api/payment-requests', {
-        method:'POST', 
-        credentials:'same-origin', 
-        headers:{
-            'Content-Type':'application/json',
-            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-        }, 
-        body:JSON.stringify(body)
-    });
-    if(res.ok){ alert('Request created'); e.target.reset(); loadRequests(); }
-    else { const j=await res.json(); alert(j.message||'Error'); }
+    
+    const submitBtn = document.getElementById('submit-btn');
+    const originalText = submitBtn.innerText;
+    submitBtn.disabled = true;
+    submitBtn.innerText = 'Processing...';
+
+    try {
+        const res = await fetch('/api/payment-requests', {
+            method:'POST', 
+            credentials:'same-origin', 
+            headers:{
+                'Content-Type':'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            }, 
+            body:JSON.stringify(body)
+        });
+
+        if(res.ok){ 
+            Swal.fire({
+                icon: 'success',
+                title: 'Request Created',
+                text: 'Your payment top-up request has been submitted successfully.',
+                confirmButtonColor: '#3085d6',
+            });
+            e.target.reset(); 
+            loadRequests(); 
+        } else { 
+            const j = await res.json(); 
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: j.message || 'Something went wrong!',
+            });
+        }
+    } catch (error) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Connection Error',
+            text: 'Could not connect to the server. Please try again later.',
+        });
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerText = originalText;
+    }
 });
 
 loadRequests();
 </script>
+@endpush
 @endsection

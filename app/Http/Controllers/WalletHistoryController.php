@@ -20,9 +20,16 @@ class WalletHistoryController extends Controller
             'credit_balance' => 0,
         ]);
 
+        // Calculate earnings from different commission types
+        // Since Joining and Repurchase are now in main_balance, and BV is in earning_balance
+        $joiningEarnings = \App\Models\Commission::where('user_id', $user->id)->where('type', 'joining')->sum('amount');
+        $repurchaseEarnings = \App\Models\Commission::where('user_id', $user->id)->where('type', 'repurchase')->sum('amount');
+
         return view('wallet.history', [
             'page' => 'wallet_history',
-            'wallet' => $wallet
+            'wallet' => $wallet,
+            'joiningEarnings' => $joiningEarnings,
+            'repurchaseEarnings' => $repurchaseEarnings,
         ]);
     }
 
@@ -49,7 +56,7 @@ class WalletHistoryController extends Controller
         }
 
         // Sorting
-        $columns = ['created_at', 'type', 'source', 'amount', 'description', 'created_at'];
+        $columns = ['created_at', 'type', 'source', 'amount', 'description'];
         $orderColumnIndex = $request->input('order.0.column', 0);
         $orderDir = $request->input('order.0.dir', 'desc');
         $orderColumn = $columns[$orderColumnIndex] ?? 'created_at';
@@ -121,7 +128,7 @@ class WalletHistoryController extends Controller
         }
 
         // Sorting
-        $columns = ['created_at', 'type', 'source', 'amount', 'description', 'created_at'];
+        $columns = ['created_at', 'type', 'source', 'amount', 'description'];
         $orderColumnIndex = $request->input('order.0.column', 0);
         $orderDir = $request->input('order.0.dir', 'desc');
         $orderColumn = $columns[$orderColumnIndex] ?? 'created_at';

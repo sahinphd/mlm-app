@@ -48,7 +48,7 @@
             <p class="text-2xl font-bold text-gray-800 dark:text-white">₹{{ number_format(auth()->user()->wallet?->main_balance ?? 0, 2) }}</p>
         </div>
         <div class="rounded-2xl border border-gray-100 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
-            <h4 class="text-sm font-medium text-gray-500 mb-1">Total Earnings</h4>
+            <h4 class="text-sm font-medium text-gray-500 mb-1">BV Earnings</h4>
             <p class="text-2xl font-bold text-gray-800 dark:text-white">₹{{ number_format(auth()->user()->wallet?->earning_balance ?? 0, 2) }}</p>
         </div>
         <div class="rounded-2xl border border-gray-100 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
