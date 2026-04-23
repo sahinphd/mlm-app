@@ -71,16 +71,26 @@
 </head>
 
 <body
-    x-data="{ page: 'ecommerce', loaded: true, darkMode: false, stickyMenu: false, sidebarToggle: false, scrollTop: false }"
+    x-data="{ 
+        page: 'ecommerce', 
+        loaded: true, 
+        darkMode: false, 
+        stickyMenu: false, 
+        sidebarToggle: false, 
+        menuToggle: false, 
+        dropdownOpen: false,
+        scrollTop: false 
+    }"
     x-init="
         darkMode = JSON.parse(localStorage.getItem('darkMode')) ?? false;
         $watch('darkMode', value => localStorage.setItem('darkMode', JSON.stringify(value)))
     "
     :class="{ 'dark bg-gray-900': darkMode === true }"
+    translate="no"
 >
 
 <!-- ===== Page Wrapper Start ===== -->
-<div class="flex h-screen overflow-hidden">
+<div class="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-900">
 
     <!-- Sidebar -->
     <x-sidebar />
@@ -104,7 +114,7 @@
 
 
 <!-- ===== Google Translate Widget ===== -->
-<div id="google_translate_wrapper" class="bg-white dark:bg-gray-800 shadow-lg border dark:border-gray-700">
+<div id="google_translate_wrapper" class="bg-white dark:bg-gray-800 shadow-lg border dark:border-gray-700 z-[9999] fixed bottom-5 right-5 rounded-lg p-2">
     <div id="google_translate_element"></div>
 </div>
 
