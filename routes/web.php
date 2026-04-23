@@ -28,6 +28,8 @@ Route::post('/register', [\App\Http\Controllers\Auth\RegisterController::class, 
 Route::post('/login', [\App\Http\Controllers\Auth\LoginController::class, 'login'])->name('login');
 Route::post('/logout', [\App\Http\Controllers\Auth\LoginController::class, 'logout'])->name('logout');
 
+// Contact endpoint removed — mailing reverted
+
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', function(){ 
         $user = \App\Models\User::find(Auth::id());
