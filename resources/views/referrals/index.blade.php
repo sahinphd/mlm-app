@@ -6,13 +6,13 @@
         <h2 class="mb-3 text-2xl font-semibold text-gray-800 dark:text-white/90">Referral Program</h2>
         <p class="mb-6 text-gray-500 dark:text-gray-400">Invite your friends and earn commissions when they join and make purchases.</p>
         
-        @if($referralRecord)
-        <div class="mb-6 p-4 bg-gray-50 dark:bg-white/5 rounded-xl inline-block">
+       @if($referralRecord)
+        <div class="mb-6 p-4 bg-gray-50 dark:bg-white/5 rounded-xl inline-block text-left">
             <p class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Your Referral Link:</p>
-            <div class="flex items-center gap-2">
-                <input type="text" id="refLinkInput" readonly value="{{ url('/register?ref=' . $referralRecord->referral_code) }}" class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded px-3 py-2 text-sm w-64">
-                <button onclick="copyRefLink()" class="bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-4 py-2 rounded text-sm hover:bg-gray-300 dark:hover:bg-gray-700 transition">Copy</button>
-                <button onclick="shareRefLink()" class="bg-brand-500 text-white px-4 py-2 rounded text-sm hover:bg-brand-600 transition flex items-center gap-2">
+            <div class="flex flex-wrap items-center justify-center gap-2">
+                <input type="text" id="refLinkInputDash" readonly value="{{ url('/register?ref=' . $referralRecord->referral_code) }}" class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded px-3 py-2 text-sm w-64">
+                <button onclick="copyRefLinkDash()" class="bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-4 py-2 rounded text-sm hover:bg-gray-300 dark:hover:bg-gray-700 transition">Copy</button>
+                <button onclick="shareRefLinkDash()" class="bg-brand-500 text-white px-4 py-2 rounded text-sm hover:bg-brand-600 transition flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
                     </svg>
