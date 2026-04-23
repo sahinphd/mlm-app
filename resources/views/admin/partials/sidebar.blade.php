@@ -66,8 +66,8 @@
 			@endif
 
 			{{-- USER SECTION (Always visible) --}}
-			<div>
-				<h3 class="mb-4 ml-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">{{ auth()->user()->isAdmin() ? 'My Personal Account' : 'User Menu' }}</h3>
+			<div class="bg-dark bg-opacity-20">
+				<h3 class="mb-4 ml-0 text-[10px] font-bold bg-warning bg-opacity-10 rounded-xl p-3 text-info uppercase tracking-widest">{{ auth()->user()->isAdmin() ? 'My Personal Account (User)' : 'User Menu' }}</h3>
 				<ul class="mb-6 flex flex-col gap-1">
 					@include('admin.partials.user_links')
 				</ul>
