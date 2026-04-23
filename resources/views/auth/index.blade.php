@@ -167,7 +167,7 @@
 
     <!-- UPI QR SECTION – reads from env('APP_QR_CODE') -->
     @php
-        $upiId = env('APP_QR_CODE', 'sahin@ybl');
+        $upiId = env('APP_QR_CODE', 'sahinahmed.com@ybl');
         $qrUrl = 'https://quickchart.io/qr?text=upi%3A%2F%2Fpay%3Fpa%3D' . urlencode($upiId) . '%26pn%3DDuare%20Dokandar%26cu%3DINR&size=160&margin=2';
     @endphp
 
