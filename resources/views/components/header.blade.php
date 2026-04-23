@@ -1,5 +1,5 @@
 <header
-  class="sticky top-0 z-[99999] flex w-full border-gray-200 bg-white lg:border-b dark:border-gray-800 dark:bg-gray-900"
+  class="sticky top-0 z-40 flex w-full border-gray-200 bg-white lg:border-b dark:border-gray-800 dark:bg-gray-900"
 >
   <div
     class="flex grow flex-col items-center justify-between lg:flex-row lg:px-6"
@@ -9,8 +9,7 @@
     >
       <!-- Hamburger Toggle BTN -->
       <button
-        :class="sidebarToggle ? 'lg:bg-transparent dark:lg:bg-transparent bg-gray-100 dark:bg-gray-800' : ''"
-        class="z-99999 flex h-10 w-10 items-center justify-center rounded-lg border-gray-200 text-gray-500 lg:h-11 lg:w-11 lg:border dark:border-gray-800 dark:text-gray-400"
+        class="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 text-gray-500 lg:h-11 lg:w-11 dark:border-gray-800 dark:text-gray-400"
         @click.stop="sidebarToggle = !sidebarToggle"
       >
         <svg
@@ -111,7 +110,8 @@
     </div>
 
     <div
-      :class="menuToggle ? 'flex' : 'hidden'"
+      x-show="menuToggle || window.innerWidth >= 1024"
+      x-cloak
       class="shadow-theme-md w-full items-center justify-between gap-4 px-5 py-4 lg:flex lg:justify-end lg:px-0 lg:shadow-none"
     >
       <div class="2xsm:gap-3 flex items-center gap-2">
@@ -203,7 +203,8 @@
         <!-- Dropdown Start -->
         <div
           x-show="dropdownOpen"
-          class="shadow-theme-lg dark:bg-gray-dark absolute right-0 mt-[17px] flex w-[260px] flex-col rounded-2xl border border-gray-200 bg-white p-3 dark:border-gray-800"
+          x-cloak
+          class="shadow-theme-lg dark:bg-gray-dark absolute right-0 mt-[17px] flex w-[260px] flex-col rounded-2xl border border-gray-200 bg-white p-3 dark:border-gray-800 z-[999]"
         >
           <div>
             <span
