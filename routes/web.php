@@ -8,7 +8,7 @@ use App\Http\Controllers\Api\Admin\PaymentApprovalController;
 
 Route::get('/', function (Request $request) {
     if (Auth::check()) {
-        return Auth::user()->isAdmin() ? redirect('/admin') : redirect('/dashboard');
+        return Auth::user()->role === 'admin' ? redirect('/admin') : redirect('/dashboard');
     }
     return view('auth.index');
 });
@@ -30,7 +30,7 @@ Route::post('/logout', [\App\Http\Controllers\Auth\LoginController::class, 'logo
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', function(){ 
-        $user = auth()->user();
+        $user = \App\Models\User::find(Auth::id());
         $referralRecord = $user->referralRecord;
 
         if (!$referralRecord) {
@@ -131,7 +131,9 @@ Route::middleware('auth')->group(function () {
 
         Route::post('update-fcm-token', function(Request $request) {
             $request->validate(['fcm_token' => 'required|string']);
-            auth()->user()->update(['fcm_token' => $request->fcm_token]);
+            $user = \App\Models\User::find(Auth::id());
+            $user->fcm_token = $request->fcm_token;
+            $user->save();
             return response()->json(['success' => true]);
         });
 
@@ -248,11 +250,12 @@ Route::middleware('auth')->group(function () {
 
     // Notifications
     Route::get('/notifications', function(){
-        $notes = auth()->user()->notifications()->orderBy('created_at','desc')->paginate(20);
+        $user = \App\Models\User::find(Auth::id());
+        $notes = $user->notifications()->orderBy('created_at','desc')->paginate(20);
         return view('notifications.index', compact('notes'));
     })->name('notifications.index');
     Route::post('/notifications/{id}/read', function($id){
-        $note = auth()->user()->notifications()->where('id',$id)->first();
+        $note = \App\Models\User::find(Auth::id())->notifications()->where('id',$id)->first();
         if ($note) $note->markAsRead();
         return back();
     })->name('notifications.read');
