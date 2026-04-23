@@ -65,12 +65,19 @@
                   Phone Number<span class="text-error-500">*</span>
                 </label>
                 <div class="flex gap-2">
-                    <select name="country" required class="dark:bg-dark-900 h-11 w-32 rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                    <select name="country" required class="dark:bg-dark-900 h-11 w-20 rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
                         <option value="+91" selected>India (+91)</option>
-                        <option value="+1">USA (+1)</option>
+                        <option value="+880">BD (+880)</option>
                         <option value="+44">UK (+44)</option>
                         <option value="+61">AUS (+61)</option>
-                        <option value="+92">PAK (+92)</option>
+                        <option value="+1">USA (+1)</option>
+                        <option value="+971">UAE (+971)</option>
+                        <option value="+92">PK (+92)</option>
+                        <option value="+977">NP (+977)</option>
+                        <option value="+966">KW (+966)</option>
+
+
+
                     </select>
                     <input
                       type="tel"
@@ -78,7 +85,7 @@
                       value="{{ old('phone') }}"
                       required
                       placeholder="8123456789"
-                      class="dark:bg-dark-900 h-11 flex-1 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+                      class="dark:bg-dark-900 h-11 W-inline flex-1 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
                     />
                 </div>
                 @error('phone')
