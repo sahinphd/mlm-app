@@ -93,16 +93,16 @@
 <div class="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-900">
 
     <!-- Sidebar -->
-    <x-sidebar />
+    @include('admin.partials.sidebar')
 
     <!-- Content Area -->
     <div class="relative flex flex-col flex-1 overflow-x-hidden overflow-y-auto">
 
         <!-- Header -->
-        <x-header />
+        @include('admin.partials.header')
 
         <!-- Main Content -->
-        <main>
+        <main class="flex-1">
             <div class="p-4 mx-auto max-w-screen-2xl md:p-6">
                 @yield('content')
             </div>

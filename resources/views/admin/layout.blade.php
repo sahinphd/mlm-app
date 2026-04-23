@@ -11,11 +11,21 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
   </head>
   <body
-    x-data="{ page: 'admin', 'loaded': true, 'darkMode': false, 'stickyMenu': false, 'sidebarToggle': false, 'scrollTop': false }"
+    x-data="{ 
+        page: 'admin', 
+        loaded: true, 
+        darkMode: false, 
+        stickyMenu: false, 
+        sidebarToggle: false, 
+        menuToggle: false, 
+        dropdownOpen: false,
+        scrollTop: false 
+    }"
     x-init="
-         darkMode = JSON.parse(localStorage.getItem('darkMode'));
+         darkMode = JSON.parse(localStorage.getItem('darkMode')) ?? false;
          $watch('darkMode', value => localStorage.setItem('darkMode', JSON.stringify(value)))"
     :class="{'dark bg-gray-900': darkMode === true}"
+    translate="no"
   >
     <!-- ===== Page Wrapper Start ===== -->
     <div class="flex h-screen overflow-hidden">
