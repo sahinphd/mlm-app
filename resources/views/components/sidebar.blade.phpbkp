@@ -9,7 +9,7 @@
   >
     <a href="{{ url('/') }}">
       <span class="logo" :class="sidebarToggle ? 'hidden' : ''">
-        <img class="dark:hidden mt-8" src="{{ asset('images/logo/logo.svg') }}" alt="Logo" />
+        <img class="dark:hidden" src="{{ asset('images/logo/logo.svg') }}" alt="Logo" />
         <img
           class="hidden dark:block"
           src="{{ asset('images/logo/logo-dark.svg') }}"
