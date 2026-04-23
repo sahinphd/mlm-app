@@ -232,6 +232,8 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/admin/wallet/history', [\App\Http\Controllers\Admin\AdminWalletHistoryController::class, 'walletIndex'])->name('admin.wallet.history');
         Route::get('/admin/wallet/history/data', [\App\Http\Controllers\Admin\AdminWalletHistoryController::class, 'walletData'])->name('admin.wallet.history.data');
+        Route::get('/admin/wallet/transfer', [\App\Http\Controllers\Admin\AdminWalletHistoryController::class, 'transferIndex'])->name('admin.wallet.transfer');
+        Route::post('/admin/wallet/transfer', [\App\Http\Controllers\Admin\AdminWalletHistoryController::class, 'transferProcess'])->name('admin.wallet.transfer.post');
         Route::get('/admin/credit/history', [\App\Http\Controllers\Admin\AdminWalletHistoryController::class, 'creditIndex'])->name('admin.credit.history');
         Route::get('/admin/credit/history/data', [\App\Http\Controllers\Admin\AdminWalletHistoryController::class, 'creditData'])->name('admin.credit.history.data');
 

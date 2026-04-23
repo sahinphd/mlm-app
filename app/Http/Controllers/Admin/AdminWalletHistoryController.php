@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\WalletTransaction;
 use App\Models\CreditTransaction;
 use App\Models\User;
+use App\Models\Wallet;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class AdminWalletHistoryController extends Controller
 {
@@ -278,5 +280,65 @@ class AdminWalletHistoryController extends Controller
             "recordsFiltered" => intval($totalFiltered),
             "data"            => $data
         ]);
+    }
+
+    public function transferIndex()
+    {
+        $this->ensureAdmin();
+        $admin = Auth::user();
+        return view('admin.wallet.transfer', compact('admin'));
+    }
+
+    public function transferProcess(Request $request)
+    {
+        $this->ensureAdmin();
+        $request->validate([
+            'recipient_email' => 'required|email|exists:users,email',
+            'amount' => 'required|numeric|min:1',
+            'description' => 'nullable|string|max:255',
+        ]);
+
+        $sender = Auth::user();
+        $recipient = User::where('email', $request->recipient_email)->first();
+
+        if ($sender->id === $recipient->id) {
+            return back()->withErrors(['recipient_email' => 'You cannot transfer balance to yourself.'])->withInput();
+        }
+
+        $senderWallet = $sender->wallet ?? $sender->wallet()->create(['main_balance' => 0, 'earning_balance' => 0, 'credit_balance' => 0]);
+        $recipientWallet = $recipient->wallet ?? $recipient->wallet()->create(['main_balance' => 0, 'earning_balance' => 0, 'credit_balance' => 0]);
+
+        if ($senderWallet->main_balance < $request->amount) {
+            return back()->withErrors(['amount' => 'Sender has insufficient main balance.'])->withInput();
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $senderWallet->decrement('main_balance', $request->amount);
+            $recipientWallet->increment('main_balance', $request->amount);
+
+            WalletTransaction::create([
+                'wallet_id' => $senderWallet->id,
+                'type' => 'debit',
+                'source' => 'transfer',
+                'amount' => $request->amount,
+                'description' => "Transferred to {$recipient->email} by Admin. " . ($request->description ?? ''),
+            ]);
+
+            WalletTransaction::create([
+                'wallet_id' => $recipientWallet->id,
+                'type' => 'credit',
+                'source' => 'transfer',
+                'amount' => $request->amount,
+                'description' => "Received from {$sender->email} via Admin transfer. " . ($request->description ?? ''),
+            ]);
+
+            DB::commit();
+            return redirect()->route('admin.wallet.history')->with('success', 'Balance transferred successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withErrors(['error' => 'Error: ' . $e->getMessage()])->withInput();
+        }
     }
 }
