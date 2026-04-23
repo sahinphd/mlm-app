@@ -3,7 +3,7 @@
     "private": true,
     "type": "module",
     "name": "duaredokandar",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "description": "Duaredokandar is a high-quality, open-source, and free Tailwind CSS admin template that is perfect for creating data-rich backends, powerful web applications and dashboard-admin projects.",
     "main": "index.js",
     "keywords": [],
