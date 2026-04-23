@@ -12,17 +12,17 @@
 >
 
   <!-- SIDEBAR HEADER -->
-  <div class="flex items-center justify-between gap-2 pt-8 pb-7">
+  <div class="flex items-center justify-between gap-2 pt-8 pb-10">
     <a href="{{ url('/') }}">
-      <img class="dark:hidden mt-8" src="{{ asset('images/logo/logo.svg') }}" alt="Logo" />
-      <img class="hidden dark:block" src="{{ asset('images/logo/logo-dark.svg') }}" alt="Logo" />
+      {{-- <img class="dark:hidden mt-8" src="{{ asset('images/logo/logo.svg') }}" alt="Logo" />
+      <img class="hidden dark:block" src="{{ asset('images/logo/logo-dark.svg') }}" alt="Logo" /> --}}.
     </a>
   </div>
 
   <!-- Sidebar Menu -->
   <div class="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
     <nav>
-      <div>
+      <div class="mt-4">
         <h3 class="mb-4 text-xs uppercase text-gray-400">USER MENU</h3>
 
         <ul class="flex flex-col gap-4 mb-6">
