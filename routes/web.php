@@ -16,7 +16,7 @@ Route::get('/', function (Request $request) {
 // public auth pages
 Route::get('/register', function(){ return view('auth.register'); })->name('register.view');
 Route::get('/login', function(){ return view('auth.login'); })->name('login.view');
-Route::get('/forgot-password', function(){ return view('auth.forgot-password'); })->name('password.request');
+// Route::get('/forgot-password', function(){ return view('auth.forgot-password'); })->name('password.request');
 
 // Password reset (forgot password)
 Route::get('/password/forgot', [\App\Http\Controllers\Auth\PasswordResetController::class, 'showLinkRequestForm'])->name('password.request');
