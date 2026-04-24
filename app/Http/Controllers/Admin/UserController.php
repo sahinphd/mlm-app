@@ -322,6 +322,7 @@ class UserController extends Controller
             'password' => 'required|string|min:6',
             'role' => 'required|string|in:user,admin',
             'status' => 'required|string|in:active,pending,blocked',
+            'parent_id' => 'nullable|exists:users,id',
         ]);
 
         $requestedRole = $data['role'];
@@ -340,23 +341,31 @@ class UserController extends Controller
         $u->status = $data['status'];
         $u->save();
 
-        // create a simple referral code entry (minimally)
-        try {
-            $code = \Illuminate\Support\Str::upper(\Illuminate\Support\Str::random(6));
-            while (\Illuminate\Support\Facades\DB::table('referrals')->where('referral_code', $code)->exists()) {
-                $code = \Illuminate\Support\Str::upper(\Illuminate\Support\Str::random(6));
+        // Handle referral linkage
+        $parentId = $data['parent_id'] ?? null;
+        $parentLevel = 0;
+
+        if ($parentId) {
+            $parentRef = \App\Models\Referral::where('user_id', $parentId)->first();
+            if ($parentRef) {
+                $parentLevel = (int) $parentRef->level_depth;
             }
-            \Illuminate\Support\Facades\DB::table('referrals')->insert([
-                'user_id' => $u->id,
-                'parent_id' => null,
-                'referral_code' => $code,
-                'level_depth' => 0,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        } catch (\Throwable $e) {
-            // non-fatal
         }
+
+        // generate a referral code for the new user
+        $newCode = \Illuminate\Support\Str::upper(\Illuminate\Support\Str::random(6));
+        while (\Illuminate\Support\Facades\DB::table('referrals')->where('referral_code', $newCode)->exists()) {
+            $newCode = \Illuminate\Support\Str::upper(\Illuminate\Support\Str::random(6));
+        }
+
+        \Illuminate\Support\Facades\DB::table('referrals')->insert([
+            'user_id' => $u->id,
+            'parent_id' => $parentId,
+            'referral_code' => $newCode,
+            'level_depth' => $parentId ? ($parentLevel + 1) : 0,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
 
         return redirect()->route('admin.users')->with('success', 'User created successfully');
     }
@@ -368,7 +377,7 @@ class UserController extends Controller
         $term = $request->query('q');
         $users = User::search($term)
             ->where('status', 'active')
-            ->with(['wallet', 'creditAccount'])
+            ->with(['wallet', 'creditAccount', 'referralRecord'])
             ->orderBy('name')
             ->take(10)
             ->get();
@@ -380,6 +389,7 @@ class UserController extends Controller
                 'name' => $u->name,
                 'email' => $u->email,
                 'phone' => $u->phone,
+                'referral_code' => $u->referralRecord->referral_code ?? 'N/A',
                 'wallet_balance' => $u->wallet ? (float)$u->wallet->main_balance : 0,
                 'credit_limit' => $u->creditAccount ? (float)$u->creditAccount->available_credit : 0,
                 'credit_approved' => $u->creditAccount ? ($u->creditAccount->approval_status === 'approved') : false,
