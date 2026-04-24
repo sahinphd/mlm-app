@@ -31,6 +31,14 @@ class UserController extends Controller
         return view('admin.users');
     }
 
+    public function kycIndex(Request $request)
+    {
+        $this->ensureAdmin();
+        $status = $request->query('status', 'pending');
+        $users = User::where('kyc_status', $status)->orderBy('updated_at', 'desc')->paginate(25);
+        return view('admin.kyc_index', compact('users', 'status'));
+    }
+
     public function genealogyIndex(Request $request)
     {
         $this->ensureAdmin();
@@ -207,15 +215,30 @@ class UserController extends Controller
             'password' => 'nullable|string|min:6',
             'credit_limit' => 'nullable|numeric|min:0',
             'credit_approval' => 'nullable|string|in:pending,approved,rejected',
+            'kyc_status' => 'nullable|string|in:unfilled,pending,approved,rejected',
+            'kyc_notes' => 'nullable|string',
             'avatar' => 'nullable|image|max:10',
         ]);
 
         $oldStatus = $user->status;
+        $oldKycStatus = $user->kyc_status;
+
         $user->name = $data['name'];
         $user->email = $data['email'];
-        $user->phone = $data['phone'];
+
+        if (array_key_exists('phone', $data)) {
+            $user->phone = $data['phone'];
+        }
+
         $user->role = $data['role'];
         $user->status = $data['status'];
+
+        if (array_key_exists('kyc_status', $data)) {
+            $user->kyc_status = $data['kyc_status'];
+        }
+        if (array_key_exists('kyc_notes', $data)) {
+            $user->kyc_notes = $data['kyc_notes'];
+        }
 
         if ($request->hasFile('avatar')) {
             $file = $request->file('avatar');
@@ -245,14 +268,23 @@ class UserController extends Controller
             }
             $ca->save();
 
-            // Trigger commission if credit is approved for the first time
-            if ($oldCreditStatus !== 'approved' && $ca->approval_status === 'approved') {
+            // Trigger commission if credit is approved for the first time AND status is active
+            if ($oldCreditStatus !== 'approved' && $ca->approval_status === 'approved' && $user->status === 'active') {
                 $this->mlmService->distributeJoiningCommissions($user->id);
             }
         }
 
+        // Trigger commission if status changed to active AND credit is already approved
         if ($oldStatus === 'pending' && $user->status === 'active') {
-            $this->mlmService->distributeJoiningCommissions($user->id);
+            $ca = \App\Models\CreditAccount::where('user_id', $user->id)->first();
+            if ($ca && $ca->approval_status === 'approved') {
+                $this->mlmService->distributeJoiningCommissions($user->id);
+            }
+        }
+
+        // Notify user of KYC change (Optional, but good practice)
+        if ($oldKycStatus !== $user->kyc_status) {
+            // Notification logic here if needed
         }
 
         return redirect()->route('admin.users')->with('success', 'User updated successfully');

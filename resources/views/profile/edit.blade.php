@@ -15,7 +15,31 @@
     </div>
 
     <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6 shadow-sm">
-        <h3 class="mb-5 text-lg font-semibold text-gray-800 dark:text-white/90">Complete Your KYC & Profile Details</h3>
+        <div class="mb-6 flex items-center justify-between border-b border-gray-100 pb-5 dark:border-gray-800">
+            <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">Complete Your KYC & Profile Details</h3>
+            
+            <div class="flex items-center gap-2">
+                <span class="text-xs font-medium text-gray-500 uppercase">Status:</span>
+                @php
+                    $statusClasses = [
+                        'unfilled' => 'bg-gray-100 text-gray-600',
+                        'pending' => 'bg-warning-50 text-warning-600',
+                        'approved' => 'bg-success-50 text-success-600',
+                        'rejected' => 'bg-error-50 text-error-600',
+                    ];
+                    $statusClass = $statusClasses[$user->kyc_status] ?? 'bg-gray-100 text-gray-600';
+                @endphp
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold {{ $statusClass }}">
+                    {{ strtoupper($user->kyc_status) }}
+                </span>
+            </div>
+        </div>
+
+        @if($user->kyc_notes)
+            <div class="mb-6 p-4 rounded-lg bg-info-50 text-info-600 border border-info-100 text-sm">
+                <strong>Admin Note:</strong> {{ $user->kyc_notes }}
+            </div>
+        @endif
 
         @if(session('status'))
             <div class="mb-6 p-4 rounded-lg bg-success-50 text-success-600 border border-success-100 flex items-center gap-3">
@@ -36,8 +60,13 @@
             </div>
         @endif
 
+        @php
+            $isLocked = in_array($user->kyc_status, ['pending', 'approved']);
+        @endphp
+
         <form method="POST" action="{{ route('profile.update') }}" enctype="multipart/form-data" class="space-y-6">
             @csrf
+            <input type="hidden" name="submit_kyc" id="submit_kyc_flag" value="0">
             
             <!-- Avatar Section -->
             <div class="flex flex-col sm:flex-row items-center gap-6 pb-6 border-b border-gray-100 dark:border-gray-800">
@@ -57,7 +86,9 @@
                 <div class="flex-1 text-center sm:text-left">
                     <h4 class="font-medium text-gray-800 dark:text-white">Profile Photo</h4>
                     <p class="text-xs text-gray-500 mb-3">Update your profile picture. Max 1MB (JPG, PNG).</p>
-                    <input type="file" name="avatar" accept="image/*" class="text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 cursor-pointer" onchange="previewImage(event)"/>
+                    @if(!$isLocked)
+                        <input type="file" name="avatar" accept="image/*" class="text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 cursor-pointer" onchange="previewImage(event)"/>
+                    @endif
                 </div>
             </div>
 
@@ -68,17 +99,17 @@
                     
                     <div>
                         <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Full Name<span class="text-error-500">*</span></label>
-                        <input type="text" name="name" value="{{ old('name', $user->name) }}" required class="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:text-white/90" />
+                        <input type="text" name="name" value="{{ old('name', $user->name) }}" required {{ $isLocked ? 'disabled' : '' }} class="disabled:bg-gray-50 dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:text-white/90" />
                     </div>
 
                     <div>
                         <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Phone Number<span class="text-error-500">*</span></label>
-                        <input type="text" name="phone" value="{{ old('phone', $user->phone) }}" required class="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:text-white/90" />
+                        <input type="text" name="phone" value="{{ old('phone', $user->phone) }}" required {{ $isLocked ? 'disabled' : '' }} class="disabled:bg-gray-50 dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:text-white/90" />
                     </div>
 
                     <div>
                         <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Full Address</label>
-                        <textarea name="address" rows="3" class="dark:bg-dark-900 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:text-white/90">{{ old('address', $user->address) }}</textarea>
+                        <textarea name="address" rows="3" {{ $isLocked ? 'disabled' : '' }} class="disabled:bg-gray-50 dark:bg-dark-900 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:text-white/90">{{ old('address', $user->address) }}</textarea>
                     </div>
                 </div>
 
@@ -88,32 +119,43 @@
 
                     <div>
                         <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Aadhaar Number</label>
-                        <input type="text" name="aadhaar_number" value="{{ old('aadhaar_number', $user->aadhaar_number) }}" placeholder="12-digit Aadhaar" class="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:text-white/90" />
+                        <input type="text" name="aadhaar_number" value="{{ old('aadhaar_number', $user->aadhaar_number) }}" placeholder="12-digit Aadhaar" {{ $isLocked ? 'disabled' : '' }} class="disabled:bg-gray-50 dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:text-white/90" />
                     </div>
 
                     <div>
                         <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">PAN Number</label>
-                        <input type="text" name="pan_number" value="{{ old('pan_number', $user->pan_number) }}" placeholder="PAN Number" class="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:text-white/90" />
+                        <input type="text" name="pan_number" value="{{ old('pan_number', $user->pan_number) }}" placeholder="PAN Number" {{ $isLocked ? 'disabled' : '' }} class="disabled:bg-gray-50 dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:text-white/90" />
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Nominee Name</label>
-                            <input type="text" name="nominee_name" value="{{ old('nominee_name', $user->nominee_name) }}" class="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:text-white/90" />
+                            <input type="text" name="nominee_name" value="{{ old('nominee_name', $user->nominee_name) }}" {{ $isLocked ? 'disabled' : '' }} class="disabled:bg-gray-50 dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:text-white/90" />
                         </div>
                         <div>
                             <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Relation</label>
-                            <input type="text" name="nominee_relation" value="{{ old('nominee_relation', $user->nominee_relation) }}" placeholder="e.g. Spouse, Son" class="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:text-white/90" />
+                            <input type="text" name="nominee_relation" value="{{ old('nominee_relation', $user->nominee_relation) }}" placeholder="e.g. Spouse, Son" {{ $isLocked ? 'disabled' : '' }} class="disabled:bg-gray-50 dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:text-white/90" />
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="pt-4">
-                <button type="submit" class="flex items-center justify-center w-full px-5 py-3 text-sm font-medium text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600">
-                    Update Profile & KYC
-                </button>
-            </div>
+            @if(!$isLocked)
+                <div class="pt-4 flex flex-col sm:flex-row gap-4">
+                    <button type="submit" onclick="document.getElementById('submit_kyc_flag').value='0'" class="flex-1 flex items-center justify-center px-5 py-3 text-sm font-medium text-brand-700 transition rounded-lg bg-brand-50 border border-brand-200 hover:bg-brand-100">
+                        Save Draft
+                    </button>
+                    <button type="submit" onclick="document.getElementById('submit_kyc_flag').value='1'" class="flex-1 flex items-center justify-center px-5 py-3 text-sm font-medium text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600">
+                        Submit for KYC Approval
+                    </button>
+                </div>
+            @else
+                <div class="pt-4">
+                    <div class="p-4 rounded-lg bg-gray-50 border border-gray-200 text-center text-sm text-gray-500">
+                        Your profile is currently locked for review. You cannot make any changes.
+                    </div>
+                </div>
+            @endif
         </form>
     </div>
 </div>

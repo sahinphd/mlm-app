@@ -23,6 +23,14 @@ class PaymentRequestController extends Controller
     public function store(Request $request)
     {
         $user = Auth::user();
+
+        if ($user->role !== 'admin' && $user->kyc_status !== 'approved') {
+            return response()->json([
+                'message' => 'Profile KYC must be approved before you can request a payment deposit.',
+                'kyc_status' => $user->kyc_status
+            ], 403);
+        }
+
         $data = $request->validate([
             'amount' => 'required|numeric|min:1',
             'method' => 'nullable|string',

@@ -75,6 +75,40 @@
                 </div>
 
                 <div class="mb-5.5 border-t border-stroke pt-5.5 dark:border-strokedark">
+                    <h4 class="mb-4 text-lg font-semibold text-black dark:text-white">KYC Management</h4>
+                    <div class="flex flex-col gap-5.5 sm:flex-row">
+                        <div class="w-full sm:w-1/2">
+                            <label class="mb-3 block text-sm font-medium text-black dark:text-white">KYC Approval Status</label>
+                            <select name="kyc_status" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
+                                <option value="unfilled" {{ old('kyc_status', $user->kyc_status) === 'unfilled' ? 'selected' : '' }}>Unfilled</option>
+                                <option value="pending" {{ old('kyc_status', $user->kyc_status) === 'pending' ? 'selected' : '' }}>Pending (Needs Review)</option>
+                                <option value="approved" {{ old('kyc_status', $user->kyc_status) === 'approved' ? 'selected' : '' }}>Approved</option>
+                                <option value="rejected" {{ old('kyc_status', $user->kyc_status) === 'rejected' ? 'selected' : '' }}>Rejected</option>
+                            </select>
+                            @error('kyc_status') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                        </div>
+                        <div class="w-full sm:w-1/2">
+                            <label class="mb-3 block text-sm font-medium text-black dark:text-white">KYC Notes (visible to user)</label>
+                            <textarea name="kyc_notes" rows="1" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">{{ old('kyc_notes', $user->kyc_notes) }}</textarea>
+                            @error('kyc_notes') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                        </div>
+                    </div>
+
+                    @if($user->kyc_status !== 'unfilled')
+                    <div class="mt-4 p-4 bg-gray-50 dark:bg-meta-4 rounded-lg border border-stroke dark:border-strokedark">
+                        <h5 class="text-sm font-bold mb-3 uppercase tracking-wider text-gray-500">Submitted Details</h5>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                            <div><span class="font-medium">Aadhaar:</span> {{ $user->aadhaar_number ?: 'Not provided' }}</div>
+                            <div><span class="font-medium">PAN:</span> {{ $user->pan_number ?: 'Not provided' }}</div>
+                            <div class="md:col-span-2"><span class="font-medium">Address:</span> {{ $user->address ?: 'Not provided' }}</div>
+                            <div><span class="font-medium">Nominee:</span> {{ $user->nominee_name ?: 'Not provided' }}</div>
+                            <div><span class="font-medium">Relation:</span> {{ $user->nominee_relation ?: 'Not provided' }}</div>
+                        </div>
+                    </div>
+                    @endif
+                </div>
+
+                <div class="mb-5.5 border-t border-stroke pt-5.5 dark:border-strokedark">
                     <h4 class="mb-4 text-lg font-semibold text-black dark:text-white">Credit Management</h4>
                     <div class="flex flex-col gap-5.5 sm:flex-row">
                         <div class="w-full sm:w-1/2">

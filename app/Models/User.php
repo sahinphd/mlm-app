@@ -30,6 +30,8 @@ class User extends Authenticatable
         'address',
         'nominee_name',
         'nominee_relation',
+        'kyc_status',
+        'kyc_notes',
     ];
 
     public function wallet()

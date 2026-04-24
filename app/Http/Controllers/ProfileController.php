@@ -20,6 +20,12 @@ class ProfileController extends Controller
     public function update(Request $request)
     {
         $user = Auth::user();
+
+        // Lock profile if KYC is pending or approved
+        if (in_array($user->kyc_status, ['pending', 'approved'])) {
+            return redirect()->back()->withErrors(['kyc' => 'Your profile is locked as KYC is ' . $user->kyc_status . '.']);
+        }
+
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'phone' => 'required|string|max:50',
@@ -29,6 +35,7 @@ class ProfileController extends Controller
             'nominee_name' => 'nullable|string|max:255',
             'nominee_relation' => 'nullable|string|max:255',
             'avatar' => 'nullable|image|max:1024', // 1MB Max
+            'submit_kyc' => 'nullable|boolean',
         ]);
 
         $user->name = $data['name'];
@@ -52,9 +59,20 @@ class ProfileController extends Controller
             $user->avatar = 'images/user/' . $filename;
         }
 
+        // Check if user wants to submit for KYC
+        if ($request->boolean('submit_kyc')) {
+            // Validate all required fields for KYC
+            if (empty($user->aadhaar_number) || empty($user->pan_number) || empty($user->address) || empty($user->nominee_name) || empty($user->nominee_relation)) {
+                return redirect()->back()->withErrors(['kyc' => 'Please fill all KYC and Nominee details before submitting for approval.'])->withInput();
+            }
+            $user->kyc_status = 'pending';
+        }
+
         $user->save();
 
-        return redirect()->back()->with('status', 'Profile updated successfully.');
+        $message = $user->kyc_status === 'pending' ? 'Profile submitted for KYC approval and is now locked.' : 'Profile draft saved successfully.';
+
+        return redirect()->back()->with('status', $message);
     }
 
     public function idCard()

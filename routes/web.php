@@ -181,6 +181,7 @@ Route::middleware('auth')->group(function () {
 
         // Admin Users
         Route::get('/admin/users', [\App\Http\Controllers\Admin\UserController::class, 'index'])->name('admin.users');
+        Route::get('/admin/kyc', [\App\Http\Controllers\Admin\UserController::class, 'kycIndex'])->name('admin.kyc.index');
         Route::get('/admin/genealogy', [\App\Http\Controllers\Admin\UserController::class, 'genealogyIndex'])->name('admin.genealogy.genealogy');
         Route::get('/admin/users/search', [\App\Http\Controllers\Admin\UserController::class, 'searchUsers'])->name('admin.users.search');
         Route::get('/admin/users/data', [\App\Http\Controllers\Admin\UserController::class, 'data'])->name('admin.users.data');
