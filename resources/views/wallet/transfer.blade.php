@@ -11,11 +11,11 @@
         <div class="mb-8 flex justify-center">
             <div class="rounded-2xl border border-brand-100 bg-brand-50/50 p-6 dark:border-gray-800 dark:bg-white/[0.03] text-center w-full max-w-sm">
                 <h4 class="text-sm font-medium text-gray-500 mb-2 uppercase tracking-wider">Available Main Balance</h4>
-                <p class="text-3xl font-bold text-brand-600 dark:text-white">₹{{ number_format($wallet->main_balance ?? 0, 2) }}</p>
+                <p class="text-3xl font-bold text-brand-600 dark:text-white">₹<span id="display-main-balance">{{ number_format($wallet->main_balance ?? 0, 2) }}</span></p>
             </div>
         </div>
 
-        <form action="{{ route('wallet.transfer.post') }}" method="POST" class="space-y-6">
+        <form id="transfer-form" action="{{ route('wallet.transfer.post') }}" method="POST" class="space-y-6">
             @csrf
 
             @if($errors->has('error'))
@@ -156,7 +156,7 @@
 
             timeout = setTimeout(() => {
                 loader.classList.remove('hidden');
-                fetch(`{{ route('wallet.user.search') }}?q=${encodeURIComponent(query)}`)
+                fetch(`/wallet/user-search?q=${encodeURIComponent(query)}`)
                     .then(response => response.json())
                     .then(data => {
                         loader.classList.add('hidden');
@@ -221,16 +221,12 @@
                 title: 'Transfer Complete',
                 text: "{{ session('success') }}",
                 confirmButtonColor: '#3085d6',
-                allowOutsideClick: false
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    window.location.href = "{{ route('wallet.transfer') }}";
-                }
             });
         @endif
     });
 
     function handleTransferSubmit() {
+        const form = document.getElementById('transfer-form');
         const amount = document.getElementById('amount').value;
         const userId = document.getElementById('user_id_hidden').value;
         const recipientName = document.getElementById('recipient-display-name').textContent;
@@ -279,10 +275,48 @@
             showCancelButton: true,
             confirmButtonColor: '#3085d6',
             cancelButtonColor: '#d33',
-            confirmButtonText: 'Yes, transfer now!'
+            confirmButtonText: 'Yes, transfer now!',
+            showLoaderOnConfirm: true,
+            preConfirm: () => {
+                const formData = new FormData(form);
+                return fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('input[name=\"_token\"]').value
+                    },
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(json => { 
+                            throw new Error(json.message || 'Transfer failed'); 
+                        });
+                    }
+                    return response.json();
+                })
+                .catch(error => {
+                    Swal.showValidationMessage(`Request failed: ${error.message}`);
+                });
+            },
+            allowOutsideClick: () => !Swal.isLoading()
         }).then((result) => {
-            if (result.isConfirmed) {
-                document.querySelector('form').submit();
+            if (result.isConfirmed && result.value && result.value.success) {
+                // Update balance display
+                document.getElementById('display-main-balance').textContent = result.value.new_balance;
+                
+                // Clear form
+                form.reset();
+                document.getElementById('user_id_hidden').value = '';
+                document.getElementById('email_hidden').value = '';
+                document.getElementById('recipient-info-wrapper').classList.add('hidden');
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Transfer Complete',
+                    text: result.value.message,
+                    confirmButtonColor: '#3085d6',
+                });
             }
         });
     }

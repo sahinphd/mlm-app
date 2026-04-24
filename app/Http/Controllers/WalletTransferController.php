@@ -82,9 +82,23 @@ class WalletTransferController extends Controller
 
             DB::commit();
 
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Balance transferred successfully to ' . $recipient->name,
+                    'new_balance' => number_format($senderWallet->main_balance, 2)
+                ]);
+            }
+
             return redirect()->route('wallet.transfer')->with('success', 'Balance transferred successfully to ' . $recipient->name);
         } catch (\Exception $e) {
             DB::rollBack();
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'An error occurred: ' . $e->getMessage()
+                ], 500);
+            }
             return back()->withErrors(['error' => 'An error occurred during transfer: ' . $e->getMessage()])->withInput();
         }
     }
