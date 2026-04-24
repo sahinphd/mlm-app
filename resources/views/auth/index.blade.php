@@ -165,10 +165,16 @@
         </div>
     </section>
 
-    <!-- UPI QR SECTION – reads from env('APP_QR_CODE') -->
+    <!-- UPI QR SECTION – reads from env('APP_QR_CODE') or custom settings -->
     @php
-        $upiId = env('APP_QR_CODE', 'sahinahmed.com@ybl');
-        $qrUrl = 'https://quickchart.io/qr?text=upi%3A%2F%2Fpay%3Fpa%3D' . urlencode($upiId) . '%26pn%3DDuare%20Dokandar%26cu%3DINR&size=160&margin=2';
+        $useCustomQr = ($systemSettings['use_custom_qr'] ?? 'off') === 'on';
+        if ($useCustomQr && !empty($systemSettings['payment_qr_path'])) {
+            $upiId = $systemSettings['custom_upi_id'] ?? env('APP_QR_CODE', 'sahinahmed.com@ybl');
+            $qrUrl = asset($systemSettings['payment_qr_path']);
+        } else {
+            $upiId = env('APP_QR_CODE', 'sahinahmed.com@ybl');
+            $qrUrl = 'https://quickchart.io/qr?text=upi%3A%2F%2Fpay%3Fpa%3D' . urlencode($upiId) . '%26pn%3DDuare%20Dokandar%26cu%3DINR&size=160&margin=2';
+        }
     @endphp
 
     <div class="w-full px-4 sm:px-6 lg:px-8 py-12">

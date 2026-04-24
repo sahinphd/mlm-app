@@ -44,11 +44,30 @@ class SettingController extends Controller
             Storage::disk('local')->putFileAs('certs', $file, $filename);
         }
 
-        $data = $request->except(['_token', 'logo', 'logo_dark', 'logo_icon', 'auth_logo', 'fcm_service_account']);
+        // Handle Payment QR Upload
+        if ($request->hasFile('payment_qr_code')) {
+            $file = $request->file('payment_qr_code');
+            $filename = 'custom-qr.' . $file->getClientOriginalExtension();
+            $path = public_path('images/payments');
+            if (!File::isDirectory($path)) {
+                File::makeDirectory($path, 0777, true, true);
+            }
+            $file->move($path, $filename);
+            
+            // We'll store the extension to know what file to look for, 
+            // but for simplicity let's stick to a fixed name 'custom-qr.png' if it's an image.
+            // Or just save the path in settings.
+            $request->merge(['payment_qr_path' => 'images/payments/' . $filename]);
+        }
+
+        $data = $request->except(['_token', 'logo', 'logo_dark', 'logo_icon', 'auth_logo', 'fcm_service_account', 'payment_qr_code']);
         
         // Handle checkboxes that might be missing if unchecked
         if (!$request->has('enable_bv_commission')) {
             $data['enable_bv_commission'] = 'off';
+        }
+        if (!$request->has('use_custom_qr')) {
+            $data['use_custom_qr'] = 'off';
         }
 
         $settings = $this->getSettings();
