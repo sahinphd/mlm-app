@@ -133,9 +133,9 @@
                             @endif
                         </td>
                         <td class="px-4 py-3 text-center">
-                            <form action="{{ route('credit.emis.pay', $emi->id) }}" method="POST" onsubmit="return confirm('Pay this EMI?')">
+                            <form id="pay-emi-{{ $emi->id }}" action="{{ route('credit.emis.pay', $emi->id) }}" method="POST" class="inline">
                                 @csrf
-                                <button type="submit" class="inline-flex items-center justify-center rounded-lg bg-brand-500 py-1.5 px-3 text-center text-xs font-medium text-white hover:bg-brand-600 transition">
+                                <button type="button" onclick="confirmPayment({{ $emi->id }})" class="inline-flex items-center justify-center rounded-lg bg-brand-500 py-1.5 px-3 text-center text-xs font-medium text-white hover:bg-brand-600 transition">
                                     Pay Now
                                 </button>
                             </form>
@@ -204,12 +204,38 @@
 </div>
 
 <script>
+function confirmPayment(emiId) {
+    Swal.fire({
+        title: 'Pay this EMI?',
+        text: "The amount will be deducted from your wallet.",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, pay it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('pay-emi-' + emiId).submit();
+        }
+    });
+}
+
 function copyRefLinkDash() {
     const copyText = document.getElementById('refLinkInputDash');
     copyText.select();
     copyText.setSelectionRange(0, 99999);
     navigator.clipboard.writeText(copyText.value);
-    alert("Referral link copied!");
+    
+    Swal.fire({
+        icon: 'success',
+        title: 'Copied!',
+        text: 'Referral link copied to clipboard.',
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true
+    });
 }
 
 async function shareRefLinkDash() {
@@ -224,11 +250,14 @@ async function shareRefLinkDash() {
             await navigator.share(shareData);
         } else {
             copyRefLinkDash();
-            alert("Share API not supported. Referral link copied to clipboard!");
         }
     } catch (err) {
         console.log('Error sharing:', err);
     }
 }
 </script>
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+@endpush
 @endsection

@@ -291,7 +291,16 @@
 <script>
     function copyUPI(upiId) {
         navigator.clipboard.writeText(upiId);
-        alert("UPI ID " + upiId + " copied!");
+        Swal.fire({
+            icon: 'success',
+            title: 'Copied!',
+            text: 'UPI ID ' + upiId + ' copied to clipboard.',
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true
+        });
     }
 
     document.addEventListener('DOMContentLoaded', function () {
@@ -318,7 +327,11 @@
         const email = document.getElementById('contact_email').value.trim();
         const message = document.getElementById('contact_message').value.trim();
         if (!name || !email || !message) {
-            alert('Please fill name, email and message.');
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'Please fill name, email and message.',
+            });
             return;
         }
 
@@ -331,9 +344,21 @@
         window.open(waUrl, '_blank');
 
         // Optional UX: show confirmation to user
-        alert('Opening WhatsApp to send your message to the admin.');
+        Swal.fire({
+            icon: 'info',
+            title: 'Redirecting...',
+            text: 'Opening WhatsApp to send your message to the admin.',
+            timer: 2000,
+            timerProgressBar: true,
+            showConfirmButton: false
+        });
+        
         // Clear form
         e.target.reset();
     }
 </script>
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+@endpush
 @endsection

@@ -73,7 +73,17 @@ function copyRefLink() {
     copyText.select();
     copyText.setSelectionRange(0, 99999);
     navigator.clipboard.writeText(copyText.value);
-    alert("Referral link copied!");
+    
+    Swal.fire({
+        icon: 'success',
+        title: 'Copied!',
+        text: 'Referral link copied to clipboard.',
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true
+    });
 }
 
 async function shareRefLink() {
@@ -88,11 +98,14 @@ async function shareRefLink() {
             await navigator.share(shareData);
         } else {
             copyRefLink();
-            alert("Share API not supported. Referral link copied to clipboard!");
         }
     } catch (err) {
         console.log('Error sharing:', err);
     }
 }
 </script>
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+@endpush
 @endsection

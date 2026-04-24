@@ -244,10 +244,10 @@
                         </div>
                     </div>
                     <div class="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-md">
-                        <form id="contactForm" onsubmit="event.preventDefault(); alert('Thank you! Our team will contact you shortly.');">
-                            <div class="mb-4"><input type="text" placeholder="Your name" required class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500"></div>
-                            <div class="mb-4"><input type="email" placeholder="Email address" required class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white"></div>
-                            <div class="mb-4"><textarea rows="3" placeholder="Your message" class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 resize-none"></textarea></div>
+                        <form id="contactForm" onsubmit="handleContactSubmit(event)">
+                            <div class="mb-4"><input id="contact_name" type="text" placeholder="Your name" required class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500"></div>
+                            <div class="mb-4"><input id="contact_email" type="email" placeholder="Email address" required class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white"></div>
+                            <div class="mb-4"><textarea id="contact_message" rows="3" placeholder="Your message" class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 resize-none"></textarea></div>
                             <button class="w-full py-3 bg-brand-600 text-white font-semibold rounded-xl hover:bg-brand-700 transition">Send Message <i class="fas fa-paper-plane ml-2"></i></button>
                         </form>
                     </div>
@@ -296,10 +296,45 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         function copyUPI() {
             navigator.clipboard.writeText("sahin@ybl");
-            alert("UPI ID sahin@ybl copied!");
+            Swal.fire({
+                icon: 'success',
+                title: 'Copied!',
+                text: 'UPI ID sahin@ybl copied to clipboard.',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true
+            });
+        }
+
+        function handleContactSubmit(e) {
+            e.preventDefault();
+            const name = document.getElementById('contact_name').value.trim();
+            const email = document.getElementById('contact_email').value.trim();
+            const message = document.getElementById('contact_message').value.trim();
+            
+            if (!name || !email || !message) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'Please fill name, email and message.',
+                });
+                return;
+            }
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Thank you!',
+                text: 'Our team will contact you shortly.',
+                confirmButtonColor: '#3085d6',
+            }).then(() => {
+                e.target.reset();
+            });
         }
     </script>
 </body>

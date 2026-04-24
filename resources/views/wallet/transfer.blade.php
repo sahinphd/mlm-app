@@ -140,8 +140,8 @@
 
             <div class="pt-4">
                 <button
-                    type="submit"
-                    onclick="return confirm('Are you sure you want to transfer this amount? This action cannot be undone.')"
+                    type="button"
+                    onclick="handleTransferSubmit()"
                     class="flex w-full justify-center rounded-lg bg-brand-500 p-3 font-medium text-white transition hover:bg-brand-600"
                 >
                     Confirm Transfer
@@ -156,4 +156,43 @@
         </form>
     </div>
 </div>
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    function handleTransferSubmit() {
+        const amount = document.getElementById('amount').value;
+        const email = document.getElementById('email').value;
+        const recipientName = document.getElementById('recipient-name').textContent;
+        
+        if (!amount || !email) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Required Fields',
+                text: 'Please fill in both the recipient email and the amount.',
+            });
+            return;
+        }
+
+        let confirmText = `Are you sure you want to transfer ₹${parseFloat(amount).toFixed(2)} to ${email}?`;
+        if (recipientName) {
+            confirmText = `Are you sure you want to transfer ₹${parseFloat(amount).toFixed(2)} to ${recipientName} (${email})?`;
+        }
+
+        Swal.fire({
+            title: 'Confirm Transfer',
+            text: confirmText + " This action cannot be undone.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, transfer now!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.querySelector('form').submit();
+            }
+        });
+    }
+</script>
+@endpush
 @endsection
