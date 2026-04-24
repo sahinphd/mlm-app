@@ -132,6 +132,27 @@
 
 <!-- IMPORTANT: Always HTTPS -->
 <script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    window.confirmSubmit = function(event, title, text) {
+        event.preventDefault();
+        const form = event.target;
+        Swal.fire({
+            title: title || 'Are you sure?',
+            text: text || "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, proceed!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                form.submit();
+            }
+        });
+        return false;
+    }
+</script>
 
 @stack('scripts')
 

@@ -130,23 +130,45 @@
         });
 
         function sendReminder(emiId) {
-            if(!confirm('Send a push notification reminder to this user?')) return;
-
-            $.ajax({
-                url: `/admin/emis/${emiId}/remind`,
-                method: 'POST',
-                data: {
-                    _token: '{{ csrf_token() }}'
-                },
-                success: function(res) {
-                    alert(res.message);
-                },
-                error: function(err) {
-                    alert('Error: ' + (err.responseJSON ? err.responseJSON.message : 'Unknown error'));
+            Swal.fire({
+                title: 'Send Reminder?',
+                text: "Send a push notification reminder to this user?",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, send it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: `/admin/emis/${emiId}/remind`,
+                        method: 'POST',
+                        data: {
+                            _token: '{{ csrf_token() }}'
+                        },
+                        success: function(res) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success',
+                                text: res.message
+                            });
+                        },
+                        error: function(err) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Error: ' + (err.responseJSON ? err.responseJSON.message : 'Unknown error')
+                            });
+                        }
+                    });
                 }
             });
         }
     </script>
+
+    @push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    @endpush
 
     <div class="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
         <div class="max-w-full overflow-x-auto">

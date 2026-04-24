@@ -100,7 +100,11 @@
                         $btn.find('svg').removeClass('animate-spin').addClass('rotate-90');
                     },
                     error: function() {
-                        alert('Failed to load children.');
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Failed to load children.'
+                        });
                         $btn.find('svg').removeClass('animate-spin');
                     }
                 });
@@ -112,4 +116,8 @@
         });
     });
 </script>
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+@endpush
 @endsection

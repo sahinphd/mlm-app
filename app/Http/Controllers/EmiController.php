@@ -81,7 +81,7 @@ class EmiController extends Controller
 
             $actionHtml = '-';
             if ($emi->status !== 'paid') {
-                $actionHtml = '<form action="'.route('credit.emis.pay', $emi->id).'" method="POST" onsubmit="return confirm(\'Are you sure you want to pay this EMI from your main wallet?\')">' . csrf_field() . '<button type="submit" class="inline-flex items-center justify-center rounded-lg bg-primary py-1 px-3 text-center text-xs font-medium text-white hover:bg-opacity-90">Pay Now</button></form>';
+                $actionHtml = '<form action="'.route('credit.emis.pay', $emi->id).'" method="POST" onsubmit="return confirmSubmit(event, \'Pay this EMI?\', \'Are you sure you want to pay this EMI from your main wallet?\')">' . csrf_field() . '<button type="submit" class="inline-flex items-center justify-center rounded-lg bg-primary py-1 px-3 text-center text-xs font-medium text-white hover:bg-opacity-90">Pay Now</button></form>';
             }
 
             $data[] = [

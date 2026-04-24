@@ -216,7 +216,7 @@ class WalletHistoryController extends Controller
                     : '<span class="px-2 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400">Unpaid</span>',
                 'emi' => 'EMI #' . $p->emi_schedule_id,
                 'action' => $p->status === 'unpaid' 
-                    ? '<form action="'.route('credit.penalties.pay', $p->id).'" method="POST" onsubmit="return confirm(\'Pay this penalty?\')">' . csrf_field() . '<button type="submit" class="text-xs text-brand-500 hover:underline">Pay Now</button></form>'
+                    ? '<form action="'.route('credit.penalties.pay', $p->id).'" method="POST" onsubmit="return confirmSubmit(event, \'Pay this penalty?\', \'Are you sure you want to pay this penalty from your wallet?\')">' . csrf_field() . '<button type="submit" class="text-xs text-brand-500 hover:underline">Pay Now</button></form>'
                     : '-',
             ];
         }
