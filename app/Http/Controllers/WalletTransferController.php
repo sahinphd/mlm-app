@@ -29,13 +29,18 @@ class WalletTransferController extends Controller
     public function transfer(Request $request)
     {
         $request->validate([
-            'email' => 'required|email|exists:users,email',
+            'email' => 'required_without:user_id|nullable|email',
+            'user_id' => 'required_without:email|nullable|exists:users,id',
             'amount' => 'required|numeric|min:1',
             'remarks' => 'nullable|string|max:255',
         ]);
 
         $sender = Auth::user();
-        $recipient = User::where('email', $request->email)->first();
+        if ($request->user_id) {
+            $recipient = User::find($request->user_id);
+        } else {
+            $recipient = User::where('email', $request->email)->first();
+        }
 
         if ($recipient->id === $sender->id) {
             return back()->withErrors(['email' => 'You cannot transfer balance to yourself.'])->withInput();
@@ -63,7 +68,7 @@ class WalletTransferController extends Controller
                 'type' => 'debit',
                 'source' => 'transfer',
                 'amount' => $request->amount,
-                'description' => "Transferred to {$recipient->email}. Remarks: " . ($request->remarks ?? 'N/A'),
+                'description' => "Transferred to {$recipient->name} ({$recipient->email}). Remarks: " . ($request->remarks ?? 'N/A'),
             ]);
 
             // Record transaction for recipient
@@ -72,15 +77,35 @@ class WalletTransferController extends Controller
                 'type' => 'credit',
                 'source' => 'transfer',
                 'amount' => $request->amount,
-                'description' => "Received from {$sender->email}. Remarks: " . ($request->remarks ?? 'N/A'),
+                'description' => "Received from {$sender->name} ({$sender->email}). Remarks: " . ($request->remarks ?? 'N/A'),
             ]);
 
             DB::commit();
 
-            return redirect()->route('wallet.history')->with('success', 'Balance transferred successfully.');
+            return redirect()->route('wallet.transfer')->with('success', 'Balance transferred successfully to ' . $recipient->name);
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->withErrors(['error' => 'An error occurred during transfer: ' . $e->getMessage()])->withInput();
         }
+    }
+
+    public function search(Request $request)
+    {
+        $term = $request->query('q');
+        if (empty($term)) return response()->json([]);
+
+        $users = User::where('status', 'active')
+            ->where('id', '!=', Auth::id())
+            ->where(function($query) use ($term) {
+                $query->where('name', 'LIKE', "%{$term}%")
+                    ->orWhere('email', 'LIKE', "%{$term}%")
+                    ->orWhere('phone', 'LIKE', "%{$term}%")
+                    ->orWhere('id', 'LIKE', "%{$term}%");
+            })
+            ->orderBy('name')
+            ->take(10)
+            ->get(['id', 'name', 'email', 'phone']);
+
+        return response()->json($users);
     }
 }

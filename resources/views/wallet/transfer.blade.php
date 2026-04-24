@@ -25,77 +25,49 @@
             @endif
 
             <div>
-                <label for="email" class="mb-2.5 block font-medium text-gray-700 dark:text-gray-300">
-                    Recipient Email ID
+                <label for="user_search" class="mb-2.5 block font-medium text-gray-700 dark:text-gray-300">
+                    Recipient (Search by Name, ID, Phone or Email)
                 </label>
                 <div class="relative">
                     <input
-                        type="email"
-                        id="email"
-                        name="email"
-                        placeholder="Enter recipient's email address"
-                        value="{{ old('email') }}"
-                        class="w-full rounded-lg border border-gray-300 bg-transparent px-5 py-3 text-gray-800 outline-none transition focus:border-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white @error('email') border-red-500 @enderror"
-                        required
+                        type="text"
+                        id="user_search"
+                        placeholder="Type to search recipient..."
+                        class="w-full rounded-lg border border-gray-300 bg-transparent px-5 py-3 text-gray-800 outline-none transition focus:border-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
                         autocomplete="off"
                     />
-                    <div id="email-loader" class="absolute right-4 top-1/2 -translate-y-1/2 hidden">
+                    <input type="hidden" name="user_id" id="user_id_hidden">
+                    <input type="hidden" name="email" id="email_hidden">
+                    
+                    <div id="search-loader" class="absolute right-4 top-1/2 -translate-y-1/2 hidden">
                         <svg class="animate-spin h-5 w-5 text-brand-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
                     </div>
+
+                    <div id="search-results" class="absolute z-50 w-full bg-white dark:bg-boxdark border border-stroke dark:border-strokedark rounded-b shadow-lg hidden max-h-60 overflow-y-auto mt-1">
+                    </div>
                 </div>
-                <div id="recipient-name-wrapper" class="mt-2 hidden">
-                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">
-                        Recipient Name: <span id="recipient-name" class="text-brand-600 dark:text-brand-400 font-bold"></span>
-                    </p>
+                
+                <div id="recipient-info-wrapper" class="mt-3 p-4 rounded-xl bg-brand-50/50 dark:bg-white/5 border border-brand-100 dark:border-gray-800 hidden">
+                    <div class="flex items-center gap-3">
+                        <div class="h-10 w-10 rounded-full bg-brand-500 flex items-center justify-center text-white font-bold" id="recipient-initial">
+                        </div>
+                        <div>
+                            <p class="text-sm font-bold text-gray-800 dark:text-white" id="recipient-display-name"></p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400" id="recipient-display-meta"></p>
+                        </div>
+                    </div>
                 </div>
+
                 @error('email')
                     <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                 @enderror
+                @error('user_id')
+                    <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                @enderror
             </div>
-
-            @push('scripts')
-            <script>
-                document.addEventListener('DOMContentLoaded', function() {
-                    const emailInput = document.getElementById('email');
-                    const nameWrapper = document.getElementById('recipient-name-wrapper');
-                    const nameSpan = document.getElementById('recipient-name');
-                    const loader = document.getElementById('email-loader');
-                    let timeout = null;
-
-                    emailInput.addEventListener('input', function() {
-                        clearTimeout(timeout);
-                        const email = this.value.trim();
-                        
-                        if (email.length < 5 || !email.includes('@')) {
-                            nameWrapper.classList.add('hidden');
-                            return;
-                        }
-
-                        timeout = setTimeout(() => {
-                            loader.classList.remove('hidden');
-                            fetch(`/api/users/verify-email/${encodeURIComponent(email)}`)
-                                .then(response => response.json())
-                                .then(data => {
-                                    loader.classList.add('hidden');
-                                    if (data.success) {
-                                        nameSpan.textContent = data.name;
-                                        nameWrapper.classList.remove('hidden');
-                                    } else {
-                                        nameWrapper.classList.add('hidden');
-                                    }
-                                })
-                                .catch(error => {
-                                    loader.classList.add('hidden');
-                                    nameWrapper.classList.add('hidden');
-                                });
-                        }, 500);
-                    });
-                });
-            </script>
-            @endpush
 
             <div>
                 <label for="amount" class="mb-2.5 block font-medium text-gray-700 dark:text-gray-300">
@@ -160,28 +132,149 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('user_search');
+        const resultsContainer = document.getElementById('search-results');
+        const loader = document.getElementById('search-loader');
+        const userIdHidden = document.getElementById('user_id_hidden');
+        const emailHidden = document.getElementById('email_hidden');
+        const infoWrapper = document.getElementById('recipient-info-wrapper');
+        const displayName = document.getElementById('recipient-display-name');
+        const displayMeta = document.getElementById('recipient-display-meta');
+        const displayInitial = document.getElementById('recipient-initial');
+        
+        let timeout = null;
+
+        searchInput.addEventListener('input', function() {
+            clearTimeout(timeout);
+            const query = this.value.trim();
+            
+            if (query.length < 2) {
+                resultsContainer.classList.add('hidden');
+                return;
+            }
+
+            timeout = setTimeout(() => {
+                loader.classList.remove('hidden');
+                fetch(`{{ route('wallet.user.search') }}?q=${encodeURIComponent(query)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        loader.classList.add('hidden');
+                        let html = '';
+                        if (data.length > 0) {
+                            data.forEach(user => {
+                                // escape single quotes in name for the onclick attribute
+                                const escapedName = user.name.replace(/'/g, "\\'");
+                                html += `
+                                    <div class="p-3 hover:bg-gray-100 dark:hover:bg-meta-4 cursor-pointer border-b border-stroke dark:border-strokedark last:border-0" 
+                                         onclick="selectRecipient(${user.id}, '${escapedName}', '${user.email}', '${user.phone || ''}')">
+                                        <div class="flex justify-between items-center mb-1">
+                                            <span class="font-bold text-black dark:text-white text-sm">${user.name}</span>
+                                            <span class="text-[10px] bg-gray-200 dark:bg-meta-4 px-1.5 rounded text-gray-600 dark:text-gray-400">ID: ${user.id}</span>
+                                        </div>
+                                        <div class="text-xs text-gray-500 flex flex-col">
+                                            <span>${user.email}</span>
+                                            ${user.phone ? `<span class="text-gray-400">${user.phone}</span>` : ''}
+                                        </div>
+                                    </div>`;
+                            });
+                            resultsContainer.innerHTML = html;
+                            resultsContainer.classList.remove('hidden');
+                        } else {
+                            resultsContainer.innerHTML = '<div class="p-4 text-center text-sm text-gray-500">No users found</div>';
+                            resultsContainer.classList.remove('hidden');
+                        }
+                    })
+                    .catch(error => {
+                        loader.classList.add('hidden');
+                        console.error('Search error:', error);
+                    });
+            }, 300);
+        });
+
+        // Close results when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!searchInput.contains(e.target) && !resultsContainer.contains(e.target)) {
+                resultsContainer.classList.add('hidden');
+            }
+        });
+
+        window.selectRecipient = function(id, name, email, phone) {
+            userIdHidden.value = id;
+            emailHidden.value = email;
+            searchInput.value = '';
+            resultsContainer.classList.add('hidden');
+            
+            displayName.textContent = name;
+            displayMeta.textContent = `${email} ${phone ? '| ' + phone : ''}`;
+            displayInitial.textContent = name.charAt(0).toUpperCase();
+            infoWrapper.classList.remove('hidden');
+            
+            // Scroll to recipient info
+            infoWrapper.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        };
+
+        // Show success message if present
+        @if(session('success'))
+            Swal.fire({
+                icon: 'success',
+                title: 'Transfer Complete',
+                text: "{{ session('success') }}",
+                confirmButtonColor: '#3085d6',
+                allowOutsideClick: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = "{{ route('wallet.transfer') }}";
+                }
+            });
+        @endif
+    });
+
     function handleTransferSubmit() {
         const amount = document.getElementById('amount').value;
-        const email = document.getElementById('email').value;
-        const recipientName = document.getElementById('recipient-name').textContent;
+        const userId = document.getElementById('user_id_hidden').value;
+        const recipientName = document.getElementById('recipient-display-name').textContent;
+        const recipientMeta = document.getElementById('recipient-display-meta').textContent;
         
-        if (!amount || !email) {
+        if (!amount || !userId) {
             Swal.fire({
                 icon: 'error',
-                title: 'Required Fields',
-                text: 'Please fill in both the recipient email and the amount.',
+                title: 'Recipient Required',
+                text: 'Please search and select a recipient before proceeding.',
             });
             return;
         }
 
-        let confirmText = `Are you sure you want to transfer ₹${parseFloat(amount).toFixed(2)} to ${email}?`;
-        if (recipientName) {
-            confirmText = `Are you sure you want to transfer ₹${parseFloat(amount).toFixed(2)} to ${recipientName} (${email})?`;
+        if (amount < 1) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Invalid Amount',
+                text: 'Minimum transfer amount is ₹1.00',
+            });
+            return;
         }
 
         Swal.fire({
             title: 'Confirm Transfer',
-            text: confirmText + " This action cannot be undone.",
+            html: `
+                <div class="text-center p-2">
+                    <p class="mb-4">Are you sure you want to transfer balance?</p>
+                    <div class="bg-gray-50 dark:bg-meta-4 p-4 rounded-lg border border-stroke dark:border-strokedark mb-4">
+                        <p class="text-2xl font-bold text-brand-600 mb-1">₹${parseFloat(amount).toFixed(2)}</p>
+                        <p class="text-sm text-gray-500">Amount</p>
+                    </div>
+                    <div class="flex items-center gap-3 text-left bg-brand-50/30 dark:bg-white/5 p-3 rounded-lg border border-brand-100 dark:border-gray-800">
+                        <div class="h-10 w-10 rounded-full bg-brand-500 flex items-center justify-center text-white font-bold">
+                            ${recipientName.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                            <p class="text-sm font-bold text-gray-800 dark:text-white">${recipientName}</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">${recipientMeta}</p>
+                        </div>
+                    </div>
+                    <p class="mt-4 text-xs text-red-500 italic">This action cannot be undone.</p>
+                </div>
+            `,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#3085d6',

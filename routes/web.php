@@ -87,6 +87,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/wallet/history/data', [\App\Http\Controllers\WalletHistoryController::class, 'walletData'])->name('wallet.history.data');
     Route::get('/wallet/transfer', [\App\Http\Controllers\WalletTransferController::class, 'index'])->name('wallet.transfer');
     Route::post('/wallet/transfer', [\App\Http\Controllers\WalletTransferController::class, 'transfer'])->name('wallet.transfer.post');
+    Route::get('/wallet/user-search', [\App\Http\Controllers\WalletTransferController::class, 'search'])->name('wallet.user.search');
     Route::get('/credit/history', [\App\Http\Controllers\WalletHistoryController::class, 'creditIndex'])->name('credit.history');
     Route::get('/credit/history/data', [\App\Http\Controllers\WalletHistoryController::class, 'creditData'])->name('credit.history.data');
 
