@@ -39,12 +39,12 @@
 
         .goog-te-gadget .goog-te-combo {
             margin: 0 !important;
-            padding: 4px 8px !important;
-            border-radius: 6px !important;
+            padding: 2px 4px !important;
+            border-radius: 4px !important;
             border: 1px solid #d1d5db !important;
             background-color: #fff !important;
             color: #111827 !important;
-            font-size: 12px !important;
+            font-size: 11px !important;
             outline: none !important;
             cursor: pointer !important;
         }
@@ -62,8 +62,8 @@
             bottom: 20px;
             right: 20px;
             z-index: 9999;
-            border-radius: 8px;
-            padding: 6px;
+            border-radius: 6px;
+            padding: 4px;
         }
     </style>
 

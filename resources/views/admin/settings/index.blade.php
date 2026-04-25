@@ -89,6 +89,17 @@
                             </label>
                         </div>
                     </div>
+
+                    <div class="mb-5.5">
+                        <label class="mb-3 block text-sm font-medium text-black dark:text-white">Default Order Status (for users)</label>
+                        <select name="default_order_status" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
+                            <option value="pending" {{ ($settings['default_order_status'] ?? 'processing') === 'pending' ? 'selected' : '' }}>Pending</option>
+                            <option value="processing" {{ ($settings['default_order_status'] ?? 'processing') === 'processing' ? 'selected' : '' }}>Processing</option>
+                            <option value="shipped" {{ ($settings['default_order_status'] ?? 'processing') === 'shipped' ? 'selected' : '' }}>Shipped</option>
+                            <option value="completed" {{ ($settings['default_order_status'] ?? 'processing') === 'completed' ? 'selected' : '' }}>Completed</option>
+                        </select>
+                        <p class="mt-2 text-xs text-gray-500">Commissions are only distributed when the order is marked as 'completed'.</p>
+                    </div>
                 </div>
             </div>
 

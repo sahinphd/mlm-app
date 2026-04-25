@@ -52,6 +52,8 @@ class OrderController extends Controller
         $stats = [
             'total' => Order::count(),
             'pending' => Order::where('status', 'pending')->count(),
+            'processing' => Order::where('status', 'processing')->count(),
+            'shipped' => Order::where('status', 'shipped')->count(),
             'completed' => Order::where('status', 'completed')->count(),
             'revenue' => Order::where('status', 'completed')->sum('total_amount'),
         ];
@@ -76,15 +78,24 @@ class OrderController extends Controller
 
         $order->update(['status' => $newStatus]);
 
+        // Logic for commission distribution when marked as completed
+        if ($newStatus === 'completed' && $oldStatus !== 'completed') {
+            // Check if commissions already exist for this order to prevent duplicates
+            $commissionsExist = \App\Models\Commission::where('order_id', $order->id)->exists();
+            if (!$commissionsExist) {
+                $this->mlmService->distributeOrderCommissions($order);
+            }
+        }
+
         // Logic for commission reversal
-        // If changing TO cancelled/returned FROM a status that was NOT already cancelled/returned
-        if (in_array($newStatus, ['cancelled', 'returned']) && !in_array($oldStatus, ['cancelled', 'returned'])) {
+        // If changing TO cancelled/returned FROM completed (commissions were already distributed)
+        if (in_array($newStatus, ['cancelled', 'returned']) && $oldStatus === 'completed') {
             $this->mlmService->reverseOrderCommissions($order);
         }
 
         // Notify User
         $order->user->notify(new \App\Notifications\OrderUpdateNotification($order));
 
-        return back()->with('success', 'Order status updated successfully' . (in_array($newStatus, ['cancelled', 'returned']) ? ' and commissions reversed.' : '.'));
+        return back()->with('success', 'Order status updated successfully.');
     }
 }

@@ -37,7 +37,7 @@
 					<span class="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-bold leading-none text-white bg-red-600 rounded-full transform translate-x-1/3 -translate-y-1/3">{{ auth()->user()->unreadNotifications->count() }}</span>
 					@endif
 				</button>
-				<div x-show="menuToggle" x-cloak class="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl z-50 overflow-hidden">
+				<div x-show="menuToggle" x-cloak class="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl z-50 overflow-hidden">
 					<div class="p-4 border-b dark:border-gray-700 bg-gray-50 dark:bg-white/5">
 						<p class="font-bold text-sm text-gray-800 dark:text-white">Notifications</p>
 					</div>

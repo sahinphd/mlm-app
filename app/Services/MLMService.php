@@ -216,6 +216,7 @@ class MLMService
                 'maintenance_mode' => 'off',
                 'registration_enabled' => 'on',
                 'enable_bv_commission' => 'on',
+                'default_order_status' => 'processing',
                 'default_emi_amount' => 500,
                 'emi_frequency' => 7,
                 'late_penalty_amount' => 80,

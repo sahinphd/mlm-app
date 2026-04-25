@@ -124,7 +124,16 @@ class ShopController extends Controller
                 WalletTransaction::create(['wallet_id' => $wallet->id, 'type' => 'debit', 'source' => 'purchase', 'amount' => $total, 'description' => 'Order paid using credit: ' . $name]);
             }
 
-            $order = Order::create(['user_id' => $user->id, 'total_amount' => $total, 'total_bv' => $total_bv, 'payment_method' => $request->payment_method, 'status' => 'completed']);
+            $settings = $this->mlmService->getSettings();
+            $defaultStatus = $settings['default_order_status'] ?? 'processing';
+
+            $order = Order::create([
+                'user_id' => $user->id, 
+                'total_amount' => $total, 
+                'total_bv' => $total_bv, 
+                'payment_method' => $request->payment_method, 
+                'status' => $defaultStatus
+            ]);
             
             // Notify User
             $user->notify(new \App\Notifications\OrderPlacedNotification($order));
@@ -141,8 +150,10 @@ class ShopController extends Controller
                 $this->mlmService->generateEmiSchedules($user, $order);
             }
 
-            // Commission distribution
-            $this->mlmService->distributeOrderCommissions($order);
+            // Commission distribution ONLY if status is completed
+            if ($order->status === 'completed') {
+                $this->mlmService->distributeOrderCommissions($order);
+            }
             
             return redirect()->route('dashboard')->with('success', 'Order placed successfully!');
         });

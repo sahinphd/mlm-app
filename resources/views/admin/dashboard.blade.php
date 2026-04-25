@@ -63,10 +63,10 @@
       <div class="bg-white rounded shadow p-4">
         <div class="flex items-center justify-between">
           <h3 class="text-sm text-gray-500">Signups</h3>
-          <div class="flex items-center gap-2">
-            <input id="startDate" type="date" class="border rounded px-2 py-1 text-sm" />
-            <input id="endDate" type="date" class="border rounded px-2 py-1 text-sm" />
-            <button id="applyRange" class="bg-blue-600 text-white px-3 py-1 rounded text-sm">Apply</button>
+          <div class="flex-inline items-center gap-2">
+            <input id="startDate" type="date" class="border rounded px-1 py-1 text-xs" />
+            <input id="endDate" type="date" class="border rounded px-1 py-1 text-xs" />
+            <button id="applyRange" class="bg-blue-600 text-white px-2 py-1 rounded text-xs">Apply</button>
           </div>
         </div>
         <div class="mt-3">

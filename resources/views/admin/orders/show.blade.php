@@ -42,7 +42,7 @@
                                             <p class="text-black dark:text-white">{{ $item->quantity }}</p>
                                         </td>
                                         <td class="border-b border-[#eee] py-5 px-4 dark:border-strokedark text-right">
-                                            <p class="text-black dark:text-white font-bold">${{ number_format($item->price * $item->quantity, 2) }}</p>
+                                            <p class="text-black dark:text-white font-bold">₹{{ number_format($item->price * $item->quantity, 2) }}</p>
                                         </td>
                                     </tr>
                                 @endforeach
@@ -91,7 +91,7 @@
                                 <option value="processing" {{ $order->status === 'processing' ? 'selected' : '' }}>Processing</option>
                                 <option value="shipped" {{ $order->status === 'shipped' ? 'selected' : '' }}>Shipped</option>
                                 <option value="delivered" {{ $order->status === 'delivered' ? 'selected' : '' }}>Delivered</option>
-                                <option value="completed" {{ $order->status === 'completed' ? 'selected' : '' }}>Completed</option>
+                                <option value="completed" {{ $order->status === 'completed' ? 'selected' : '' }}><span class="text-warning bg-success">Completed</span></option>
                                 <option value="cancelled" {{ $order->status === 'cancelled' ? 'selected' : '' }}>Cancelled</option>
                                 <option value="returned" {{ $order->status === 'returned' ? 'selected' : '' }}>Returned</option>
                                 <option value="failed" {{ $order->status === 'failed' ? 'selected' : '' }}>Failed</option>

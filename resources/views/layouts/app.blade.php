@@ -24,12 +24,12 @@
             .goog-te-gadget span { display: none !important; }
             .goog-te-gadget .goog-te-combo {
                 margin: 0 !important;
-                padding: 4px 8px !important;
-                border-radius: 6px !important;
+                padding: 2px 4px !important;
+                border-radius: 4px !important;
                 border: 1px solid #d1d5db !important;
                 background-color: #fff !important;
                 color: #111827 !important;
-                font-size: 12px !important;
+                font-size: 11px !important;
                 outline: none !important;
                 cursor: pointer !important;
             }
@@ -62,7 +62,7 @@
         </main>
 
         <!-- ===== Google Translate Widget ===== -->
-        <div id="google_translate_wrapper" class="bg-white shadow-lg border z-[9999] fixed bottom-5 right-5 rounded-lg p-2">
+        <div id="google_translate_wrapper" class="bg-white shadow-lg border z-[9999] fixed bottom-5 right-5 rounded-lg p-1">
             <div id="google_translate_element"></div>
         </div>
 

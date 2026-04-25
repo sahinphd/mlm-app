@@ -122,9 +122,7 @@ class AdminShopController extends Controller
                 $wallet = Wallet::firstOrCreate(['user_id' => $targetUser->id], ['main_balance' => 0, 'earning_balance' => 0, 'credit_balance' => 0]);
                 WalletTransaction::create(['wallet_id' => $wallet->id, 'type' => 'debit', 'source' => 'purchase', 'amount' => $total, 'description' => 'Admin Order paid using credit: ' . $name]);
             } else {
-                // manual_cash -> no wallet deduction, just record the transaction source as manual
-                $wallet = Wallet::firstOrCreate(['user_id' => $targetUser->id], ['main_balance' => 0, 'earning_balance' => 0, 'credit_balance' => 0]);
-                WalletTransaction::create(['wallet_id' => $wallet->id, 'type' => 'debit', 'source' => 'purchase', 'amount' => $total, 'description' => 'Admin Order (Cash): ' . $name]);
+                // manual_cash -> No wallet deduction, no wallet transaction record
             }
 
             $order = Order::create(['user_id' => $targetUser->id, 'total_amount' => $total, 'total_bv' => $total_bv, 'payment_method' => $request->payment_method, 'status' => 'completed']);
@@ -141,8 +139,10 @@ class AdminShopController extends Controller
                 $this->mlmService->generateEmiSchedules($targetUser, $order);
             }
 
-            // Commission distribution
-            $this->mlmService->distributeOrderCommissions($order);
+            // Commission distribution (Skip if manual_cash)
+            if ($request->payment_method !== 'manual_cash') {
+                $this->mlmService->distributeOrderCommissions($order);
+            }
             
             return redirect()->route('admin.orders')->with('success', 'Order placed successfully for user ' . $targetUser->name);
         });
