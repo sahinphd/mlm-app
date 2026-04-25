@@ -147,6 +147,12 @@
                                         'pending' => 'bg-warning text-white',
                                         'cancelled' => 'bg-danger text-white',
                                         'processing' => 'bg-primary text-white',
+                                        'shipped' => 'bg-primary text-white',
+                                        'returned' => 'bg-danger text-white',
+                                        'refunded' => 'bg-danger text-white',
+                                        'failed' => 'bg-danger text-white',
+                                        
+
                                         default => 'bg-gray text-white'
                                     };
                                 @endphp

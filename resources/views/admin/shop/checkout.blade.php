@@ -110,16 +110,16 @@
                     </div>
                     <div class="p-6.5">
                         <div class="flex flex-col gap-4">
-                            <label class="flex cursor-pointer select-none items-center gap-4 rounded border border-stroke p-4 dark:border-strokedark">
-                                <input type="radio" name="payment_method" value="manual_cash" checked class="h-5 w-5">
+                            {{-- <label class="flex cursor-pointer select-none items-center gap-4 rounded border border-stroke p-4 dark:border-strokedark">
+                                <input type="radio" name="payment_method" value="manual_cash"  class="h-5 w-5">
                                 <div class="flex flex-col">
                                     <span class="font-medium text-black dark:text-white">Manual Cash</span>
                                     <span class="text-sm">Payment collected manually</span>
                                 </div>
-                            </label>
+                            </label> --}}
                             
                             <label class="flex cursor-pointer select-none items-center gap-4 rounded border border-stroke p-4 dark:border-strokedark">
-                                <input type="radio" name="payment_method" value="main_wallet" class="h-5 w-5">
+                                <input type="radio" name="payment_method" checked value="main_wallet" class="h-5 w-5">
                                 <div class="flex flex-col">
                                     <span class="font-medium text-black dark:text-white">User Main Wallet</span>
                                     <span class="text-sm">Deduct from user's balance</span>
