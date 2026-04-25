@@ -160,10 +160,11 @@
 
                                     @if($user->phone)
                                         @php
+                                            $appName = config('app.name', 'MLM App');
                                             if($emi->status === 'paid') {
-                                                $message = "Hello " . ($user->name ?? 'User') . ",\n\nThank you! Your EMI installment of ₹" . number_format($emi->installment_amount, 2) . " for Order #" . $emi->order_id . " has been successfully paid.\n\nWe appreciate your timely payment!\n\nRegards.";
+                                                $message = "Hello " . ($user->name ?? 'User') . ",\n\nThank you! Your EMI installment of ₹" . number_format($emi->installment_amount, 2) . " for Order #" . $emi->order_id . " has been successfully paid.\n\nWe appreciate your timely payment!\n\nRegards,\nTeam " . $appName;
                                             } else {
-                                                $message = "Hello " . ($user->name ?? 'User') . ",\n\nThis is a reminder for your EMI installment of ₹" . number_format($emi->installment_amount, 2) . " for Order #" . $emi->order_id . ".\n\nDue Date: " . \Carbon\Carbon::parse($emi->due_date)->format('d M Y') . ".\n\nPlease ensure to make the payment on time to avoid penalties.\n\nThank you!";
+                                                $message = "Hello " . ($user->name ?? 'User') . ",\n\nThis is a reminder from " . $appName . " for your EMI installment of ₹" . number_format($emi->installment_amount, 2) . " for Order #" . $emi->order_id . ".\n\nDue Date: " . \Carbon\Carbon::parse($emi->due_date)->format('d M Y') . ".\n\nPlease ensure to make the payment on time to avoid penalties.\n\nThank you!";
                                             }
 
                                             $phone = preg_replace('/[^0-9]/', '', $user->phone);
