@@ -10,6 +10,30 @@
         @else
             @vite(['resources/css/app.css', 'resources/js/app.js'])
         @endif
+
+        <style>
+            /* ===== Google Translate Fix ===== */
+            .goog-te-banner-frame.skiptranslate,
+            body > .skiptranslate {
+                display: none !important;
+            }
+            html { margin-top: 0 !important; }
+            body { top: 0 !important; }
+            .goog-logo-link { display: none !important; }
+            .goog-te-gadget { font-size: 0 !important; color: transparent !important; }
+            .goog-te-gadget span { display: none !important; }
+            .goog-te-gadget .goog-te-combo {
+                margin: 0 !important;
+                padding: 4px 8px !important;
+                border-radius: 6px !important;
+                border: 1px solid #d1d5db !important;
+                background-color: #fff !important;
+                color: #111827 !important;
+                font-size: 12px !important;
+                outline: none !important;
+                cursor: pointer !important;
+            }
+        </style>
     </head>
     <body class="bg-gray-100 min-h-screen">
         <nav class="bg-white shadow p-4">
@@ -36,6 +60,23 @@
         <main class="max-w-4xl mx-auto p-4">
             @yield('content')
         </main>
+
+        <!-- ===== Google Translate Widget ===== -->
+        <div id="google_translate_wrapper" class="bg-white shadow-lg border z-[9999] fixed bottom-5 right-5 rounded-lg p-2">
+            <div id="google_translate_element"></div>
+        </div>
+
+        <script>
+            function googleTranslateElementInit() {
+                new google.translate.TranslateElement({
+                    pageLanguage: 'en',
+                    includedLanguages: 'en,bn,hi',
+                    autoDisplay: false
+                }, 'google_translate_element');
+            }
+        </script>
+        <script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
         @stack('scripts')
     </body>
 </html>
