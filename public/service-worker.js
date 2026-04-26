@@ -56,6 +56,9 @@ self.addEventListener("fetch", event => {
     const request = event.request;
     const url = new URL(request.url);
 
+    // ONLY handle http and https schemes (ignores chrome-extension, data, etc.)
+    if (!url.protocol.startsWith("http")) return;
+
     // Ignore non-GET requests (important for Laravel forms, POST APIs)
     if (request.method !== "GET") return;
 
@@ -80,15 +83,15 @@ self.addEventListener("fetch", event => {
             fetch(request)
                 .then(networkResponse => {
                     // Only cache successful GET responses that are not redirects and don't have sensitive headers
-                    if (networkResponse.ok && networkResponse.status === 200) {
+                    if (networkResponse && networkResponse.ok && networkResponse.status === 200) {
                         const cacheControl = networkResponse.headers.get("Cache-Control");
                         const hasSetCookie = networkResponse.headers.has("Set-Cookie");
                         
-                        // Don't cache if no-store is present or if it sets cookies (though SW usually can't see Set-Cookie)
+                        // Don't cache if no-store is present or if it sets cookies
                         if (!hasSetCookie && (!cacheControl || !cacheControl.includes("no-store"))) {
                             const responseClone = networkResponse.clone();
                             caches.open(DYNAMIC_CACHE).then(cache => {
-                                cache.put(request, responseClone);
+                                cache.put(request, responseClone).catch(err => console.warn("Cache put failed:", err));
                             });
                         }
                     }
@@ -110,13 +113,16 @@ self.addEventListener("fetch", event => {
                 }
 
                 return fetch(request).then(networkResponse => {
-                    if (networkResponse.ok) {
+                    if (networkResponse && networkResponse.ok) {
                         const responseClone = networkResponse.clone();
                         caches.open(DYNAMIC_CACHE).then(cache => {
-                            cache.put(request, responseClone);
+                            cache.put(request, responseClone).catch(err => console.warn("Cache put failed:", err));
                         });
                     }
                     return networkResponse;
+                }).catch(err => {
+                    // Return a 404 response if both network and cache fail for an asset
+                    return new Response("Asset not found", { status: 404, statusText: "Not Found" });
                 });
             })
         );
