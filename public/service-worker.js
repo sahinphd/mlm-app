@@ -59,22 +59,39 @@ self.addEventListener("fetch", event => {
     // Ignore non-GET requests (important for Laravel forms, POST APIs)
     if (request.method !== "GET") return;
 
-    // Ignore admin panel
-    if (url.pathname.startsWith("/admin")) return;
+    // Bypassing cache for specific routes that need fresh sessions/CSRF
+    if (
+        url.pathname.startsWith("/admin") ||
+        url.pathname.startsWith("/login") ||
+        url.pathname.startsWith("/register") ||
+        url.pathname.startsWith("/logout") ||
+        url.pathname.startsWith("/password") ||
+        url.pathname.startsWith("/api")
+    ) {
+        return;
+    }
 
     // Detect if request is for an HTML page
     const isHtml = request.headers.get("accept") && request.headers.get("accept").includes("text/html");
 
     if (isHtml) {
         // NETWORK FIRST strategy for HTML pages
-        // This ensures cookies (sessions) and CSRF tokens are always fresh.
         event.respondWith(
             fetch(request)
                 .then(networkResponse => {
-                    const responseClone = networkResponse.clone();
-                    caches.open(DYNAMIC_CACHE).then(cache => {
-                        cache.put(request, responseClone);
-                    });
+                    // Only cache successful GET responses that are not redirects and don't have sensitive headers
+                    if (networkResponse.ok && networkResponse.status === 200) {
+                        const cacheControl = networkResponse.headers.get("Cache-Control");
+                        const hasSetCookie = networkResponse.headers.has("Set-Cookie");
+                        
+                        // Don't cache if no-store is present or if it sets cookies (though SW usually can't see Set-Cookie)
+                        if (!hasSetCookie && (!cacheControl || !cacheControl.includes("no-store"))) {
+                            const responseClone = networkResponse.clone();
+                            caches.open(DYNAMIC_CACHE).then(cache => {
+                                cache.put(request, responseClone);
+                            });
+                        }
+                    }
                     return networkResponse;
                 })
                 .catch(() => {
@@ -93,12 +110,28 @@ self.addEventListener("fetch", event => {
                 }
 
                 return fetch(request).then(networkResponse => {
-                    const responseClone = networkResponse.clone();
-                    caches.open(DYNAMIC_CACHE).then(cache => {
-                        cache.put(request, responseClone);
-                    });
+                    if (networkResponse.ok) {
+                        const responseClone = networkResponse.clone();
+                        caches.open(DYNAMIC_CACHE).then(cache => {
+                            cache.put(request, responseClone);
+                        });
+                    }
                     return networkResponse;
                 });
+            })
+        );
+    }
+});
+
+// ==========================
+// MESSAGE EVENT (Handle Logout)
+// ==========================
+self.addEventListener("message", event => {
+    if (event.data && event.data.type === "LOGOUT") {
+        console.log("Service Worker: Clearing Dynamic Cache...");
+        event.waitUntil(
+            caches.delete(DYNAMIC_CACHE).then(() => {
+                console.log("Service Worker: Dynamic Cache Cleared.");
             })
         );
     }

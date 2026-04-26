@@ -179,6 +179,15 @@
                 // force hide after 5s in case something hangs
                 setTimeout(() => { if (splash && !splash.classList.contains('hidden')) splash.classList.add('hidden'); }, 5000);
             });
+
+            // Handle Logout Cache Clear
+            document.addEventListener('submit', function(e) {
+                if (e.target && e.target.action && e.target.action.includes('/logout')) {
+                    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                        navigator.serviceWorker.controller.postMessage({ type: 'LOGOUT' });
+                    }
+                }
+            });
         </script>
 
 @stack('scripts')
