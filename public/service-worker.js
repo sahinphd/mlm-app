@@ -53,44 +53,55 @@ self.addEventListener("activate", event => {
 // FETCH EVENT
 // ==========================
 self.addEventListener("fetch", event => {
+    const request = event.request;
+    const url = new URL(request.url);
 
     // Ignore non-GET requests (important for Laravel forms, POST APIs)
-    if (event.request.method !== "GET") return;
+    if (request.method !== "GET") return;
 
-    // Ignore admin panel if needed (optional)
-    if (event.request.url.includes("/admin")) return;
+    // Ignore admin panel
+    if (url.pathname.startsWith("/admin")) return;
 
-    event.respondWith(
-        caches.match(event.request).then(cachedResponse => {
+    // Detect if request is for an HTML page
+    const isHtml = request.headers.get("accept") && request.headers.get("accept").includes("text/html");
 
-            // Return cached if exists
-            if (cachedResponse) {
-                return cachedResponse;
-            }
-
-            // Else fetch from network
-            return fetch(event.request)
+    if (isHtml) {
+        // NETWORK FIRST strategy for HTML pages
+        // This ensures cookies (sessions) and CSRF tokens are always fresh.
+        event.respondWith(
+            fetch(request)
                 .then(networkResponse => {
-
-                    // Clone response
                     const responseClone = networkResponse.clone();
-
-                    // Store in dynamic cache
                     caches.open(DYNAMIC_CACHE).then(cache => {
-                        cache.put(event.request, responseClone);
+                        cache.put(request, responseClone);
                     });
-
                     return networkResponse;
                 })
                 .catch(() => {
+                    // If network fails, try cache
+                    return caches.match(request).then(cachedResponse => {
+                        return cachedResponse || caches.match("/offline.html");
+                    });
+                })
+        );
+    } else {
+        // CACHE FIRST strategy for assets (CSS, JS, Images)
+        event.respondWith(
+            caches.match(request).then(cachedResponse => {
+                if (cachedResponse) {
+                    return cachedResponse;
+                }
 
-                    // If HTML page → show offline page
-                    if (event.request.headers.get("accept").includes("text/html")) {
-                        return caches.match("/offline.html");
-                    }
+                return fetch(request).then(networkResponse => {
+                    const responseClone = networkResponse.clone();
+                    caches.open(DYNAMIC_CACHE).then(cache => {
+                        cache.put(request, responseClone);
+                    });
+                    return networkResponse;
                 });
-        })
-    );
+            })
+        );
+    }
 });
 
 // ==========================
