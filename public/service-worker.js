@@ -1,51 +1,80 @@
 // ==========================
-// CONFIG
+// VERSION
 // ==========================
-const CACHE_VERSION = "v4_no_cache_stable";
+const SW_VERSION = "v4_stable_no_auth_cache";
 
 // ==========================
-// INSTALL EVENT
+// INSTALL
 // ==========================
 self.addEventListener("install", event => {
-    console.log("Service Worker: Install (Caching Disabled)");
+    console.log("SW Installed:", SW_VERSION);
     self.skipWaiting();
 });
 
 // ==========================
-// ACTIVATE EVENT
+// ACTIVATE
 // ==========================
 self.addEventListener("activate", event => {
-    console.log("Service Worker: Activating and Clearing All Caches...");
+    console.log("SW Activated:", SW_VERSION);
+
     event.waitUntil(
-        caches.keys().then(keys => {
-            return Promise.all(
-                keys.map(key => {
-                    console.log("Service Worker: Deleting Cache:", key);
-                    return caches.delete(key);
-                })
-            );
-        })
+        caches.keys().then(keys =>
+            Promise.all(keys.map(key => caches.delete(key)))
+        )
     );
+
     self.clients.claim();
 });
 
 // ==========================
-// FETCH EVENT
+// FETCH (SAFE MODE)
 // ==========================
-// NO FETCH LISTENER: Browser handles all requests normally via the network.
-// This ensures that /login, /admin, and all other pages are NEVER cached by the SW.
+// 🔥 IMPORTANT: NO caching → prevents Laravel 419 error
+self.addEventListener("fetch", event => {
+
+    const url = new URL(event.request.url);
+
+    // ❌ DO NOT TOUCH AUTH / SESSION / API
+    if (
+        event.request.method !== "GET" ||
+        url.pathname.startsWith("/login") ||
+        url.pathname.startsWith("/logout") ||
+        url.pathname.startsWith("/register") ||
+        url.pathname.startsWith("/password") ||
+        url.pathname.startsWith("/sanctum") ||
+        url.pathname.startsWith("/api") ||
+        url.pathname.startsWith("/dashboard") ||
+        url.pathname.startsWith("/user")
+    ) {
+        return; // browser handles it
+    }
+
+    // ❌ DO NOT INTERCEPT HTML PAGES (IMPORTANT)
+    if (event.request.headers.get("accept")?.includes("text/html")) {
+        return;
+    }
+
+    // ✅ Only allow normal network for static files (no cache)
+    event.respondWith(fetch(event.request).catch(() => {
+        return new Response("", { status: 503 });
+    }));
+});
 
 // ==========================
-// MESSAGE EVENT (Handle Logout)
+// CLEAR CACHE ON DEMAND
 // ==========================
 self.addEventListener("message", event => {
-    if (event.data && event.data.type === "LOGOUT") {
-        console.log("Service Worker: Clearing all caches on logout...");
+
+    if (event.data === "CLEAR_CACHE") {
         event.waitUntil(
             caches.keys().then(keys => {
                 return Promise.all(keys.map(key => caches.delete(key)));
             })
         );
+    }
+
+    if (event.data === "SKIP_WAITING") {
+        self.skipWaiting();
     }
 });
 
@@ -53,25 +82,22 @@ self.addEventListener("message", event => {
 // PUSH NOTIFICATIONS
 // ==========================
 self.addEventListener("push", event => {
-    let data = {};
-    try {
-        data = event.data ? event.data.json() : {};
-    } catch (e) {
-        data = { title: "New Notification", body: event.data.text() };
-    }
 
-    const title = data.title || "MLM App Notification";
+    const data = event.data ? event.data.json() : {};
+
+    const title = data.title || "Duare Dokandar";
     const options = {
         body: data.body || "You have a new update",
         icon: "/logo.png",
         badge: "/logo.png",
-        vibrate: [100, 50, 100],
         data: {
-            url: data.url || "/"
+            url: data.url || "/dashboard"
         }
     };
 
-    event.waitUntil(self.registration.showNotification(title, options));
+    event.waitUntil(
+        self.registration.showNotification(title, options)
+    );
 });
 
 // ==========================
@@ -79,19 +105,18 @@ self.addEventListener("push", event => {
 // ==========================
 self.addEventListener("notificationclick", event => {
     event.notification.close();
-    const urlToOpen = event.notification.data.url || "/";
+
+    const targetUrl = event.notification.data?.url || "/dashboard";
 
     event.waitUntil(
-        clients.matchAll({ type: "window", includeUncontrolled: true }).then(windowClients => {
-            for (let i = 0; i < windowClients.length; i++) {
-                const client = windowClients[i];
-                if (client.url === urlToOpen && "focus" in client) {
-                    return client.focus();
+        clients.matchAll({ type: "window", includeUncontrolled: true })
+            .then(clientList => {
+                for (let client of clientList) {
+                    if (client.url === targetUrl && "focus" in client) {
+                        return client.focus();
+                    }
                 }
-            }
-            if (clients.openWindow) {
-                return clients.openWindow(urlToOpen);
-            }
-        })
+                return clients.openWindow(targetUrl);
+            })
     );
 });
