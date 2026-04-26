@@ -1,82 +1,97 @@
 // ==========================
 // CONFIG
 // ==========================
-const CACHE_VERSION = "v2_no_cache";
+const CACHE_VERSION = "v3_safe";
 const STATIC_CACHE = "static-" + CACHE_VERSION;
-const DYNAMIC_CACHE = "dynamic-" + CACHE_VERSION;
-
-// Empty assets to stop caching
-const STATIC_ASSETS = [];
 
 // ==========================
-// INSTALL EVENT
+// INSTALL
 // ==========================
 self.addEventListener("install", event => {
-    console.log("Service Worker: Install (Caching Disabled)");
+    console.log("SW Installed (Safe Mode)");
     self.skipWaiting();
 });
 
 // ==========================
-// ACTIVATE EVENT
+// ACTIVATE
 // ==========================
 self.addEventListener("activate", event => {
-    console.log("Service Worker: Activating and Clearing All Caches...");
+    console.log("SW Activated - Clearing old caches");
+
     event.waitUntil(
-        caches.keys().then(keys => {
-            return Promise.all(
-                keys.map(key => {
-                    console.log("Service Worker: Deleting Cache:", key);
-                    return caches.delete(key);
-                })
-            );
-        })
+        caches.keys().then(keys =>
+            Promise.all(keys.map(key => caches.delete(key)))
+        )
     );
+
     self.clients.claim();
 });
 
 // ==========================
-// FETCH EVENT (REMOVED CACHING)
+// FETCH (CRITICAL FIX)
 // ==========================
-// Caching is completely disabled. Browser will handle requests normally via network.
+self.addEventListener("fetch", event => {
+
+    const url = new URL(event.request.url);
+
+    // ❌ NEVER TOUCH THESE ROUTES (IMPORTANT)
+    if (
+        event.request.method !== "GET" ||
+        url.pathname.includes("/login") ||
+        url.pathname.includes("/logout") ||
+        url.pathname.includes("/register") ||
+        url.pathname.includes("/password") ||
+        url.pathname.includes("/sanctum") ||
+        url.pathname.includes("/api")
+    ) {
+        return; // Let browser handle normally
+    }
+
+    // ✅ Only cache safe GET pages (optional)
+    event.respondWith(
+        fetch(event.request)
+            .then(response => {
+                return response;
+            })
+            .catch(() => {
+                return new Response("Offline", { status: 503 });
+            })
+    );
+});
 
 // ==========================
-// MESSAGE EVENT (Handle Logout)
+// FORCE HARD RELOAD (VERY IMPORTANT)
 // ==========================
 self.addEventListener("message", event => {
-    if (event.data && event.data.type === "LOGOUT") {
-        event.waitUntil(
-            caches.keys().then(keys => {
-                return Promise.all(keys.map(key => caches.delete(key)));
-            })
-        );
+    if (event.data === "SKIP_WAITING") {
+        self.skipWaiting();
+    }
+
+    if (event.data === "CLEAR_CACHE") {
+        caches.keys().then(keys => {
+            keys.forEach(key => caches.delete(key));
+        });
     }
 });
 
 // ==========================
-// BACKGROUND SYNC (Optional future)
-// ==========================
-self.addEventListener("sync", event => {
-    // Keep for potential future use
-});
-
-// ==========================
-// PUSH NOTIFICATIONS
+// PUSH
 // ==========================
 self.addEventListener("push", event => {
     const data = event.data ? event.data.json() : {};
-    const title = data.title || "MLM App Notification";
-    const options = {
-        body: data.body || "You have a new update",
-        icon: "/logo.png",
-        badge: "/logo.png"
-    };
-    event.waitUntil(self.registration.showNotification(title, options));
+
+    event.waitUntil(
+        self.registration.showNotification(data.title || "Notification", {
+            body: data.body || "",
+            icon: "/logo.png"
+        })
+    );
 });
 
 // ==========================
-// NOTIFICATION CLICK
+// CLICK
 // ==========================
 self.addEventListener("notificationclick", event => {
     event.notification.close();
-    event.waitUntil(clients.openWindow("/"));
+    event.waitUntil(clients.openWindow("/dashboard"));
 });
