@@ -98,6 +98,7 @@
                 }, 'google_translate_element');
             }
         </script>
+        
         <script>
             // record when splash was shown so we can ensure a minimum visible time
             const splashShownAt = Date.now();

@@ -4,6 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <link rel="manifest" href="{{ asset('manifest.json') }}">
+        <!-- Theme color (adaptive for light/dark mode) -->
+        <meta name="theme-color" media="(prefers-color-scheme: light)" content="#1f65fc">
+        <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000000">
+        
     <title>{{ config('app.name', 'MLM App') }}</title>
 
     <!-- Vite Assets -->
@@ -152,6 +157,29 @@
         return false;
     }
 </script>
+  <script>
+            // record when splash was shown so we can ensure a minimum visible time
+            const splashShownAt = Date.now();
+
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register("{{ asset('service-worker.js') }}")
+                .then(() => console.log("PWA Ready"))
+                .catch(err => console.log(err));
+            }
+
+            // ensure splash stays visible for at least 3 seconds
+            window.addEventListener('load', function() {
+                const splash = document.getElementById('splash');
+                if (!splash) return;
+                const elapsed = Date.now() - splashShownAt;
+                const minVisible = 3000; // ms
+                const delay = Math.max(0, minVisible - elapsed);
+                // hide after remaining time to reach minimum visibility
+                setTimeout(() => splash.classList.add('hidden'), delay);
+                // force hide after 5s in case something hangs
+                setTimeout(() => { if (splash && !splash.classList.contains('hidden')) splash.classList.add('hidden'); }, 5000);
+            });
+        </script>
 
 @stack('scripts')
 
