@@ -117,6 +117,25 @@
             return false;
         }
     </script>
+    <script>
+        // Service Worker registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register("{{ asset('service-worker.js') }}")
+                .then(() => console.log("PWA Ready"))
+                .catch(err => console.log(err));
+            });
+        }
+
+        // Handle Logout Cache Clear
+        document.addEventListener('submit', function(e) {
+            if (e.target && e.target.action && e.target.action.includes('/logout')) {
+                if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                    navigator.serviceWorker.controller.postMessage({ type: 'LOGOUT' });
+                }
+            }
+        });
+    </script>
     @stack('scripts')
   </body>
 </html>

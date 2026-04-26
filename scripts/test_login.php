@@ -1,5 +1,5 @@
 <?php
-$base = 'http://127.0.0.1:8000';
+$base = 'http://127.0.0.1:8001';
 $cookie = __DIR__ . '/cookies.txt';
 
 function get($url, $cookie){
@@ -37,7 +37,7 @@ $token = $m[1];
 
 $creds = [
     '_token' => $token,
-    'email' => 'test@example.com',
+    'email' => 'admin@example.com',
     'password' => 'password'
 ];
 

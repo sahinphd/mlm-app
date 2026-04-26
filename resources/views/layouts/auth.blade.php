@@ -79,5 +79,14 @@
         }
     </script>
     <script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register("{{ asset('service-worker.js') }}")
+                .then(() => console.log("PWA Ready"))
+                .catch(err => console.log(err));
+            });
+        }
+    </script>
   </body>
 </html>
