@@ -85,6 +85,11 @@ class NotificationService
 
         $serviceAccount = json_decode(Storage::disk('local')->get($jsonPath), true);
         
+        if (!isset($serviceAccount['client_email']) || !isset($serviceAccount['private_key'])) {
+            Log::error('FCM Service Account JSON is invalid. Missing client_email or private_key. It looks like you uploaded an OAuth Client ID instead of a Service Account Key.');
+            return null;
+        }
+
         $now = time();
         $header = ['alg' => 'RS256', 'typ' => 'JWT'];
         $payload = [
