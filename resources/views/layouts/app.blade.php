@@ -4,6 +4,8 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="manifest" href="{{ asset('manifest.json') }}">
+        <meta name="theme-color" content="#198754">
         <title>{{ config('app.name', 'MLM App') }}</title>
         @if (app()->environment('local'))
             @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -73,6 +75,13 @@
                     includedLanguages: 'en,bn,hi',
                     autoDisplay: false
                 }, 'google_translate_element');
+            }
+        </script>
+        <script>
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register("{{ asset('service-worker.js') }}")
+                .then(() => console.log("PWA Ready"))
+                .catch(err => console.log(err));
             }
         </script>
         <script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>

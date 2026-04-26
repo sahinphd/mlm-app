@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offline | Duare Dokandar</title>
+
+    <!-- App Theme -->
+    <meta name="theme-color" content="#0d6efd">
+    <meta name="mobile-web-app-capable" content="yes">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0d6efd, #6610f2);
+            color: #fff;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .container {
+            text-align: center;
+            padding: 30px;
+            max-width: 400px;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+
+        .loader {
+            margin: 25px auto;
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255,255,255,0.3);
+            border-top: 5px solid #fff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        h2 {
+            margin-top: 10px;
+            font-size: 22px;
+        }
+
+        p {
+            margin-top: 10px;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        button {
+            margin-top: 25px;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            background: #fff;
+            color: #0d6efd;
+            font-size: 15px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background: #f1f1f1;
+        }
+
+        .status {
+            margin-top: 15px;
+            font-size: 13px;
+            opacity: 0.85;
+        }
+
+        .footer {
+            position: absolute;
+            bottom: 15px;
+            font-size: 12px;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+
+        <div class="logo">Duare Dokandar</div>
+
+        <div class="loader"></div>
+
+        <h2>No Internet Connection</h2>
+
+        <p>
+            Unable to reach <strong>app.duaredorkar.in</strong><br>
+            Please check your network.
+        </p>
+
+        <button onclick="retry()">🔄 Try Again</button>
+
+        <div class="status" id="statusText">Checking connection...</div>
+
+    </div>
+
+    <div class="footer">
+        Smart Grocery Network
+    </div>
+
+    <script>
+        function retry() {
+            window.location.href = "/";
+        }
+
+        function checkConnection() {
+            const status = document.getElementById("statusText");
+
+            if (navigator.onLine) {
+                status.innerHTML = "✅ Back online! Redirecting...";
+                setTimeout(() => {
+                    window.location.href = "/";
+                }, 1200);
+            } else {
+                status.innerHTML = "❌ Still offline...";
+            }
+        }
+
+        // Check every 3 sec
+        setInterval(checkConnection, 3000);
+
+        // Initial check
+        checkConnection();
+    </script>
+
+</body>
+</html>
