@@ -7,7 +7,7 @@ const DYNAMIC_CACHE = "dynamic-" + CACHE_VERSION;
 
 // Files to cache immediately
 const STATIC_ASSETS = [
-    "/",
+    
     "/offline.html",
     "/manifest.json",
 ];
