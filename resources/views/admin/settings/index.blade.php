@@ -27,6 +27,26 @@
         </div>
     @endif
 
+    @if($errors->any())
+        <div class="mb-6 flex w-full border-l-6 border-[#F87171] bg-[#F87171] bg-opacity-[15%] px-7 py-4 shadow-md dark:bg-[#1b1b1b] md:p-5">
+            <div class="mr-5 flex h-9 w-full max-w-[36px] items-center justify-center rounded-lg bg-[#F87171]">
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M6.4917 7.65547L1.11151 13H0L5.38019 7.65547L0 2.31094H1.11151L6.4917 7.65547L11.8719 2.31094H12.9834L7.60321 7.65547L13 13H11.8885L6.4917 7.65547Z" fill="white" stroke="white"></path>
+                </svg>
+            </div>
+            <div class="w-full">
+                <h5 class="text-lg font-semibold text-black dark:text-[#F87171]">
+                    Error
+                </h5>
+                <ul class="list-inside list-disc">
+                    @foreach($errors->all() as $error)
+                        <li class="text-base leading-relaxed text-body">{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        </div>
+    @endif
+
     <div x-data="{ activeTab: 'general' }">
         <!-- Tabs -->
         <div class="mb-6 flex flex-wrap gap-5 border-b border-stroke dark:border-strokedark sm:gap-10">

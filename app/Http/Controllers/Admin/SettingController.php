@@ -40,6 +40,34 @@ class SettingController extends Controller
         // Handle FCM Service Account JSON
         if ($request->hasFile('fcm_service_account')) {
             $file = $request->file('fcm_service_account');
+            $jsonContent = json_decode(file_get_contents($file->getRealPath()), true);
+
+            if (!$jsonContent) {
+                return back()->withErrors(['fcm_service_account' => 'Invalid JSON file.'])->withInput();
+            }
+
+            // FCM V1 requires these keys
+            $requiredKeys = ['project_id', 'private_key', 'client_email', 'type'];
+            foreach ($requiredKeys as $key) {
+                if (!isset($jsonContent[$key])) {
+                    return back()->withErrors(['fcm_service_account' => "Missing required key: {$key}. Make sure you uploaded a Service Account Key JSON, not an OAuth Client ID."])->withInput();
+                }
+            }
+
+            if ($jsonContent['type'] !== 'service_account') {
+                return back()->withErrors(['fcm_service_account' => 'The uploaded JSON is not a service account key. Type must be "service_account".'])->withInput();
+            }
+
+            // Verify project ID matches if provided in request
+            if ($request->filled('fcm_project_id') && $jsonContent['project_id'] !== $request->fcm_project_id) {
+                return back()->withErrors(['fcm_project_id' => "The provided Project ID does not match the project_id in the JSON file ({$jsonContent['project_id']})."])->withInput();
+            }
+
+            // Auto-fill project_id if it's empty in request
+            if (!$request->filled('fcm_project_id')) {
+                $request->merge(['fcm_project_id' => $jsonContent['project_id']]);
+            }
+
             $filename = 'fcm-service-account.json';
             Storage::disk('local')->putFileAs('certs', $file, $filename);
         }
