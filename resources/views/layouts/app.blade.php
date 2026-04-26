@@ -4,6 +4,9 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+        <meta http-equiv="Pragma" content="no-cache" />
+        <meta http-equiv="Expires" content="0" />
         <link rel="manifest" href="{{ asset('manifest.json') }}">
         <!-- Theme color (adaptive for light/dark mode) -->
         <meta name="theme-color" media="(prefers-color-scheme: light)" content="#1f65fc">
