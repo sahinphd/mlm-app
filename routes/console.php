@@ -9,5 +9,5 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-Schedule::command('emi:apply-penalties')->daily();
-Schedule::command('emi:send-reminders')->daily();
+Schedule::command('emi:apply-penalties')->dailyAt('01:00');
+Schedule::command('emi:send-reminders')->dailyAt('04:00');

@@ -52,50 +52,15 @@ class ApplyEmiPenalties extends Command
 
                 $wallet = $user->wallet;
                 $ca = $user->creditAccount;
-
-                // Determine if it's already overdue (past the due date)
-                $isOverdue = $emi->status === 'overdue' || $emi->due_date < $today;
-                
-                $penalty = null;
-                if ($isOverdue) {
-                    // Safety: find or create penalty record for this specific EMI
-                    $penalty = Penalty::firstOrCreate(
-                        ['emi_schedule_id' => $emi->id],
-                        [
-                            'user_id' => $emi->user_id,
-                            'amount' => $penaltyAmount,
-                            'status' => 'unpaid'
-                        ]
-                    );
-
-                    // If it was just created (meaning EMI just transitioned to overdue), send notification
-                    if ($penalty->wasRecentlyCreated) {
-                        $user->notify(new PenaltyLeviedNotification($penalty));
-                        $this->line("Applied unpaid penalty of {$penaltyAmount} to User #{$emi->user_id} for EMI #{$emi->id}");
-                    }
-                    
-                    if ($emi->status !== 'overdue') {
-                        $emi->status = 'overdue';
-                        $emi->save();
-                    }
-                }
-
-                // --- Auto-Payment Logic ---
                 $emiAmount = (float) $emi->installment_amount;
-                $unpaidPenaltyAmount = 0;
 
-                if ($penalty && $penalty->status === 'unpaid') {
-                    $unpaidPenaltyAmount = (float) $penalty->amount;
-                }
-
-                $totalToDeduct = $emiAmount + $unpaidPenaltyAmount;
-
-                if ($wallet && $wallet->main_balance >= $totalToDeduct) {
-                    // 1. Deduct from wallet
-                    $wallet->main_balance -= $totalToDeduct;
+                // 1. Attempt Auto-Payment of the EMI first
+                if ($wallet && $wallet->main_balance >= $emiAmount) {
+                    // Deduct EMI from wallet
+                    $wallet->main_balance -= $emiAmount;
                     $wallet->save();
 
-                    // 2. Record Wallet Transaction for EMI
+                    // Record Wallet Transaction for EMI
                     WalletTransaction::create([
                         'wallet_id' => $wallet->id,
                         'type' => 'debit',
@@ -105,22 +70,7 @@ class ApplyEmiPenalties extends Command
                         'description' => 'Auto-deducted EMI Payment for Order #' . $emi->order_id
                     ]);
 
-                    // 3. Record Wallet Transaction for Penalty if any
-                    if ($unpaidPenaltyAmount > 0) {
-                        WalletTransaction::create([
-                            'wallet_id' => $wallet->id,
-                            'type' => 'debit',
-                            'source' => 'penalty',
-                            'amount' => $unpaidPenaltyAmount,
-                            'reference_id' => 'penalty:' . $penalty->id,
-                            'description' => 'Auto-deducted Penalty for Overdue EMI #' . $emi->id
-                        ]);
-
-                        $penalty->status = 'paid';
-                        $penalty->save();
-                    }
-
-                    // 4. Update Credit Account
+                    // Update Credit Account
                     if ($ca) {
                         $ca->used_credit = max(0, $ca->used_credit - $emiAmount);
                         $ca->available_credit = min($ca->credit_limit, $ca->available_credit + $emiAmount);
@@ -136,13 +86,59 @@ class ApplyEmiPenalties extends Command
                         ]);
                     }
 
-                    // 5. Finalize EMI Status
+                    // Finalize EMI Status
                     $emi->status = 'paid';
                     $emi->save();
 
-                    $this->line("Successfully auto-paid EMI #{$emi->id} for User #{$emi->user_id}. Total: ₹{$totalToDeduct}");
-                } else {
-                    $this->line("Insufficient balance (₹".($wallet->main_balance ?? 0).") to auto-pay EMI #{$emi->id} for User #{$emi->user_id}. Needed: ₹{$totalToDeduct}");
+                    $this->line("Successfully auto-paid EMI #{$emi->id} for User #{$emi->user_id}. Amount: ₹{$emiAmount}");
+                } 
+                else {
+                    // 2. EMI payment failed (insufficient balance)
+                    $this->line("Insufficient balance (₹".($wallet->main_balance ?? 0).") to auto-pay EMI #{$emi->id} for User #{$emi->user_id}. Needed: ₹{$emiAmount}");
+
+                    // If the due date is strictly in the past, apply penalty and mark as overdue
+                    if ($emi->due_date < $today) {
+                        // Apply Penalty logic
+                        $penalty = Penalty::firstOrCreate(
+                            ['emi_schedule_id' => $emi->id],
+                            [
+                                'user_id' => $emi->user_id,
+                                'amount' => $penaltyAmount,
+                                'status' => 'unpaid'
+                            ]
+                        );
+
+                        // Force Deduct Unpaid Penalty if not already paid
+                        if ($penalty->status === 'unpaid') {
+                            if ($wallet) {
+                                $wallet->main_balance -= $penaltyAmount;
+                                $wallet->save();
+
+                                WalletTransaction::create([
+                                    'wallet_id' => $wallet->id,
+                                    'type' => 'debit',
+                                    'source' => 'penalty',
+                                    'amount' => $penaltyAmount,
+                                    'reference_id' => 'penalty:' . $penalty->id,
+                                    'description' => 'Auto-deducted Penalty for Overdue EMI #' . $emi->id
+                                ]);
+
+                                $penalty->status = 'paid';
+                                $penalty->save();
+                                $this->line("Applied and forced deduction of ₹{$penaltyAmount} penalty for User #{$emi->user_id} (EMI was due on {$emi->due_date})");
+                            }
+                        }
+
+                        // Send notification if it just became overdue/penalized
+                        if ($penalty->wasRecentlyCreated) {
+                            $user->notify(new PenaltyLeviedNotification($penalty));
+                        }
+                        
+                        if ($emi->status !== 'overdue') {
+                            $emi->status = 'overdue';
+                            $emi->save();
+                        }
+                    }
                 }
             });
         }
