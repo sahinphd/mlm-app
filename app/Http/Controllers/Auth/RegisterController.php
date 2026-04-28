@@ -16,22 +16,20 @@ class RegisterController extends Controller
     {
         $data = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email',
+            'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:6|confirmed',
             'country' => 'required|string|max:8',
             'phone' => 'required|string|max:30',
             'referral' => 'nullable|string|max:50',
+        ], [
+            'email.unique' => 'An account with this email already exists. Please login.',
         ]);
 
         $phoneCombined = trim(($data['country'] ?? '') . ' ' . ($data['phone'] ?? ''));
 
-        // If a user already exists with this email or phone, redirect to login with a warning
-        $exists = User::where('email', $data['email'])
-            ->orWhere('phone', $phoneCombined)
-            ->first();
-
-        if ($exists) {
-            return redirect('/login')->with('warning', 'An account with this email or phone already exists. Please login.');
+        // Check for unique phone number manually since it's combined
+        if (User::where('phone', $phoneCombined)->exists()) {
+            return back()->withErrors(['phone' => 'An account with this mobile number already exists. Please login.'])->withInput();
         }
 
         $user = User::create([

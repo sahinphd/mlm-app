@@ -11,8 +11,8 @@
     <form method="POST" action="{{ route('password.email') }}">
         @csrf
         <div class="mb-4">
-            <label class="block text-sm mb-1">Email</label>
-            <input type="email" name="email" value="{{ old('email') }}" required class="w-full border px-3 py-2 rounded" />
+            <label class="block text-sm mb-1">Email or Mobile Number</label>
+            <input type="text" name="email" value="{{ old('email') }}" required placeholder="email@example.com or 9876543210" class="w-full border px-3 py-2 rounded" />
             @error('email')<p class="text-sm text-red-600">{{ $message }}</p>@enderror
         </div>
         <div>

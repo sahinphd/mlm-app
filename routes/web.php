@@ -26,7 +26,13 @@ Route::post('/password/reset', [\App\Http\Controllers\Auth\PasswordResetControll
 
 Route::post('/register', [\App\Http\Controllers\Auth\RegisterController::class, 'register'])->name('register');
 Route::post('/login', [\App\Http\Controllers\Auth\LoginController::class, 'login'])->name('login');
+Route::get('/login/select-account', [\App\Http\Controllers\Auth\LoginController::class, 'showSelectAccount'])->name('login.select_account');
+Route::post('/login/select-account', [\App\Http\Controllers\Auth\LoginController::class, 'selectAccount'])->name('login.select_account.post');
 Route::post('/logout', [\App\Http\Controllers\Auth\LoginController::class, 'logout'])->name('logout');
+
+// Password reset selection routes
+Route::get('/password/select-account', [\App\Http\Controllers\Auth\PasswordResetController::class, 'showSelectAccount'])->name('password.select_account');
+Route::post('/password/select-account', [\App\Http\Controllers\Auth\PasswordResetController::class, 'selectAccount'])->name('password.select_account.post');
 
 // Contact endpoint removed — mailing reverted
 

@@ -145,11 +145,11 @@
                             </td>
                             <td class="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
                                 @if($emi->status == 'paid')
-                                    <span class="inline-flex rounded-full bg-success bg-opacity-10 py-1 px-3 text-sm font-medium text-success">Paid</span>
+                                    <span class="inline-flex rounded-full bg-success bg-opacity-10 py-1 px-3 text-sm font-medium text-white">Paid</span>
                                 @elseif($emi->status == 'overdue')
-                                    <span class="inline-flex rounded-full bg-danger bg-opacity-10 py-1 px-3 text-sm font-medium text-danger">Overdue</span>
+                                    <span class="inline-flex rounded-full bg-danger bg-opacity-10 py-1 px-3 text-sm font-medium text-white">Overdue</span>
                                 @else
-                                    <span class="inline-flex rounded-full bg-warning bg-opacity-10 py-1 px-3 text-sm font-medium text-warning">Pending</span>
+                                    <span class="inline-flex rounded-full bg-warning bg-opacity-10 py-1 px-3 text-sm font-medium text-white">Pending</span>
                                 @endif
                             </td>
                             <td class="border-b border-[#eee] py-5 px-4 dark:border-strokedark text-right">
