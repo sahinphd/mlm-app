@@ -91,11 +91,11 @@ class SettingController extends Controller
         $data = $request->except(['_token', 'logo', 'logo_dark', 'logo_icon', 'auth_logo', 'fcm_service_account', 'payment_qr_code']);
         
         // Handle checkboxes that might be missing if unchecked
-        if (!$request->has('enable_bv_commission')) {
-            $data['enable_bv_commission'] = 'off';
-        }
-        if (!$request->has('use_custom_qr')) {
-            $data['use_custom_qr'] = 'off';
+        $checkboxes = ['enable_bv_commission', 'use_custom_qr', 'truecaller_login'];
+        foreach ($checkboxes as $cb) {
+            if (!$request->has($cb)) {
+                $data[$cb] = 'off';
+            }
         }
 
         $settings = $this->getSettings();
@@ -121,6 +121,7 @@ class SettingController extends Controller
                 'emi_frequency' => 7, // days (weekly)
                 'late_penalty_amount' => 80,
                 'enable_push_notifications' => 'off',
+                'truecaller_login' => 'off',
                 'fcm_project_id' => '',
                 'joining_commission_level_1' => 100,
                 'joining_commission_level_2' => 50,

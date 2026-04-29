@@ -26,7 +26,7 @@
       </div>
       @endif
 
-      @if(config('services.truecaller.client_id'))
+      @if(config('services.truecaller.client_id') && ($systemSettings['truecaller_login'] ?? 'off') === 'on')
       <div class="mb-6">
         <button type="button" onclick="initTruecaller()" class="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition rounded-lg bg-[#21b3ff] shadow-theme-xs hover:bg-[#00a3f5]">
             <svg class="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
@@ -125,51 +125,42 @@
     </div>
   </div>
 </div>
-@if(config('services.truecaller.client_id'))
+@if(config('services.truecaller.client_id') && ($systemSettings['truecaller_login'] ?? 'off') === 'on')
 <script>
     function initTruecaller() {
-        if (typeof Truecaller === 'undefined') {
-            alert("Truecaller SDK is still loading. Please try again in a moment.");
-            return;
-        }
+        // Generate a random nonce for security
+        const nonce = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        const appKey = "{{ config('services.truecaller.client_id') }}";
+        const appName = "{{ config('app.name') }}";
+        
+        // Deep link for mobile web flow
+        const truecallerDeepLink = "truecallersdk://truesdk/web_verify?" +
+            "type=btmsheet" +
+            "&requestNonce=" + nonce +
+            "&partnerKey=" + appKey +
+            "&partnerName=" + appName +
+            "&lang=en" +
+            "&loginPrefix=signin" +
+            "&loginSuffix=toconfirm" +
+            "&ctaPrefix=continue" +
+            "&ctaColor=%230087ff" +
+            "&ctaTextColor=%23ffffff" +
+            "&btnShape=round" +
+            "&skipOption=useanothermethod" +
+            "&ttl=60000";
 
-        Truecaller.init({
-            appKey: "{{ config('services.truecaller.client_id') }}",
-            callback: function(profile) {
-                // When Truecaller returns a verified profile
-                fetch('{{ route('login.truecaller') }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
-                    body: JSON.stringify({
-                        phone: profile.phoneNumber,
-                        name: profile.firstName + ' ' + profile.lastName,
-                        email: profile.email
-                    })
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success && data.redirect) {
-                        window.location.href = data.redirect;
-                    } else {
-                        alert(data.message || "Authentication failed.");
-                        if (data.redirect) window.location.href = data.redirect;
-                    }
-                })
-                .catch(err => {
-                    console.error("Truecaller Login Error:", err);
-                    alert("An error occurred during Truecaller login.");
-                });
-            },
-            failure: function(error) {
-                console.error("Truecaller SDK Error:", error);
+        // Try to open the Truecaller app
+        window.location.href = truecallerDeepLink;
+
+        // Fallback: If the user stays on this page for more than 2 seconds, 
+        // it means the Truecaller app is likely not installed or didn't open.
+        setTimeout(function() {
+            if (document.hasFocus()) {
+                console.log("Truecaller app not detected or failed to open.");
+                // Optionally alert the user or show a fallback message
+                // alert("Please ensure Truecaller app is installed for 1-tap login.");
             }
-        });
-
-        // Trigger the verification
-        Truecaller.verify();
+        }, 2000);
     }
 </script>
 @endif

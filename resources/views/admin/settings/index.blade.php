@@ -324,6 +324,15 @@
                         </select>
                     </div>
 
+                    <div class="mb-5.5">
+                        <label class="mb-3 block text-sm font-medium text-black dark:text-white">Enable Truecaller Login</label>
+                        <select name="truecaller_login" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
+                            <option value="on" {{ ($settings['truecaller_login'] ?? 'off') === 'on' ? 'selected' : '' }}>Enabled</option>
+                            <option value="off" {{ ($settings['truecaller_login'] ?? 'off') === 'off' ? 'selected' : '' }}>Disabled</option>
+                        </select>
+                        <p class="mt-2 text-xs text-gray-500">Enable "1-tap" login via Truecaller on mobile devices. Requires App Key in .env.</p>
+                    </div>
+
                     <div class="border-b border-stroke py-4 dark:border-strokedark">
                         <h3 class="font-medium text-black dark:text-white">EMI & Credit Settings</h3>
                     </div>
