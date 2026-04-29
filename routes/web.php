@@ -26,6 +26,7 @@ Route::post('/password/reset', [\App\Http\Controllers\Auth\PasswordResetControll
 
 Route::post('/register', [\App\Http\Controllers\Auth\RegisterController::class, 'register'])->name('register');
 Route::post('/login', [\App\Http\Controllers\Auth\LoginController::class, 'login'])->name('login');
+Route::post('/login/truecaller', [\App\Http\Controllers\Auth\TruecallerController::class, 'login'])->name('login.truecaller');
 Route::get('/login/select-account', [\App\Http\Controllers\Auth\LoginController::class, 'showSelectAccount'])->name('login.select_account');
 Route::post('/login/select-account', [\App\Http\Controllers\Auth\LoginController::class, 'selectAccount'])->name('login.select_account.post');
 Route::post('/logout', [\App\Http\Controllers\Auth\LoginController::class, 'logout'])->name('logout');

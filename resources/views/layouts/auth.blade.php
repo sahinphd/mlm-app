@@ -12,6 +12,7 @@
     <meta http-equiv="Expires" content="0" />
     <title>{{ config('app.name', 'MLM App') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <script src="https://commercial-sdk.truecaller.com/sdk.js"></script>
     <style>
         /* ===== Google Translate Fix ===== */
         .goog-te-banner-frame.skiptranslate,

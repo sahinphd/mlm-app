@@ -26,6 +26,22 @@
       </div>
       @endif
 
+      @if(config('services.truecaller.client_id'))
+      <div class="mb-6">
+        <button type="button" onclick="initTruecaller()" class="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition rounded-lg bg-[#21b3ff] shadow-theme-xs hover:bg-[#00a3f5]">
+            <svg class="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.5 14H7.5V8h9v8z"/>
+            </svg>
+            Login with Truecaller
+        </button>
+        <div class="relative flex items-center justify-center mt-6">
+            <div class="flex-grow border-t border-gray-300 dark:border-gray-700"></div>
+            <span class="px-3 text-xs text-gray-500 uppercase bg-white dark:bg-dark-900">Or continue with</span>
+            <div class="flex-grow border-t border-gray-300 dark:border-gray-700"></div>
+        </div>
+      </div>
+      @endif
+
       <div>
         <form method="POST" action="{{ route('login') }}">
           @csrf
@@ -109,4 +125,52 @@
     </div>
   </div>
 </div>
+@if(config('services.truecaller.client_id'))
+<script>
+    function initTruecaller() {
+        if (typeof Truecaller === 'undefined') {
+            alert("Truecaller SDK is still loading. Please try again in a moment.");
+            return;
+        }
+
+        Truecaller.init({
+            appKey: "{{ config('services.truecaller.client_id') }}",
+            callback: function(profile) {
+                // When Truecaller returns a verified profile
+                fetch('{{ route('login.truecaller') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        phone: profile.phoneNumber,
+                        name: profile.firstName + ' ' + profile.lastName,
+                        email: profile.email
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.redirect) {
+                        window.location.href = data.redirect;
+                    } else {
+                        alert(data.message || "Authentication failed.");
+                        if (data.redirect) window.location.href = data.redirect;
+                    }
+                })
+                .catch(err => {
+                    console.error("Truecaller Login Error:", err);
+                    alert("An error occurred during Truecaller login.");
+                });
+            },
+            failure: function(error) {
+                console.error("Truecaller SDK Error:", error);
+            }
+        });
+
+        // Trigger the verification
+        Truecaller.verify();
+    }
+</script>
+@endif
 @endsection

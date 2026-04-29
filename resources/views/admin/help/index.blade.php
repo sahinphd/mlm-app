@@ -156,6 +156,33 @@
                 <p class="text-sm">For errors related to payments or emails, check the server logs located at: <br><code class="text-xs bg-gray-100 dark:bg-gray-800 p-1 rounded">storage/logs/laravel.log</code></p>
             </div>
         </div>
+
+        <!-- Section 7: Authentication Settings -->
+        <div class="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+            <div class="border-b border-stroke py-4 px-7 dark:border-strokedark bg-gray-50 dark:bg-meta-4">
+                <h3 class="font-bold text-black dark:text-white">7. Truecaller Login & Authentication</h3>
+            </div>
+            <div class="p-7 space-y-4">
+                <h4 class="font-semibold text-black dark:text-white">Mobile Number Login</h4>
+                <p class="text-sm">Users can log in with their <strong>Email</strong> or <strong>Mobile Number</strong>. If multiple accounts share a mobile number, the system will prompt the user to select the correct account after password verification.</p>
+
+                <h4 class="font-semibold text-black dark:text-white pt-2">Configuring Truecaller</h4>
+                <p class="text-sm">To enable "Login with Truecaller", you must configure your application on the Truecaller Developer Portal and update your server environment.</p>
+                
+                <ol class="list-decimal list-inside text-sm space-y-2 pl-4">
+                    <li>Log in to the <strong><a href="https://developer.truecaller.com/" target="_blank" class="text-brand-500 underline">Truecaller Developer Portal</a></strong>.</li>
+                    <li>Create a new <strong>Web Application</strong>.</li>
+                    <li>Set the <strong>Callback URL</strong> (Redirect URI) to:<br>
+                        <code class="block mt-1 bg-gray-100 dark:bg-gray-800 p-2 rounded text-xs text-brand-500 font-bold">https://app.duaredokandar.in/login/truecaller</code>
+                    </li>
+                    <li>Copy your <strong>App Key</strong> (Client ID).</li>
+                    <li>Open your server's <strong>.env</strong> file and add the key:<br>
+                        <code class="block mt-1 bg-gray-100 dark:bg-gray-800 p-2 rounded text-xs">TRUECALLER_CLIENT_ID=your_app_key_here</code>
+                    </li>
+                </ol>
+                <p class="text-xs italic text-gray-500">Note: The Truecaller button will automatically appear on the login page once the key is added. To disable it, simply remove the key from the .env file.</p>
+            </div>
+        </div>
     </div>
 </div>
 @endsection

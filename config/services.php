@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'truecaller' => [
+        'client_id' => env('TRUECALLER_CLIENT_ID'),
+    ],
+
 ];
