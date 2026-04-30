@@ -88,6 +88,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile/id-card', [\App\Http\Controllers\ProfileController::class, 'idCard'])->name('profile.id-card');
     Route::get('/commissions', [\App\Http\Controllers\CommissionController::class, 'index'])->name('commissions.index');
     Route::get('/commissions/bv', [\App\Http\Controllers\CommissionController::class, 'bvIndex'])->name('commissions.bv');
+    Route::get('/commissions/withdrawal', [\App\Http\Controllers\CommissionWithdrawalController::class, 'index'])->name('commissions.withdrawal');
+    Route::post('/commissions/withdraw', [\App\Http\Controllers\CommissionWithdrawalController::class, 'withdrawCommission'])->name('commissions.withdraw');
+    Route::post('/commissions/convert-bv', [\App\Http\Controllers\CommissionWithdrawalController::class, 'convertBv'])->name('commissions.convert-bv');
     Route::get('/commissions/data', [\App\Http\Controllers\CommissionController::class, 'data'])->name('commissions.data');
     
     Route::get('/wallet/history', [\App\Http\Controllers\WalletHistoryController::class, 'walletIndex'])->name('wallet.history');

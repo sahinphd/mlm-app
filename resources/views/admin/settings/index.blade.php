@@ -252,23 +252,23 @@
                     <div class="mt-5.5 grid grid-cols-1 gap-5.5 sm:grid-cols-5">
                         <div>
                             <label class="mb-3 block text-sm font-medium text-black dark:text-white">Level 1 (%)</label>
-                            <input type="number" step="0.01" name="repurchase_commission_level_1" value="{{ $settings['repurchase_commission_level_1'] ?? 20 }}" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
+                            <input type="number" step="any" name="repurchase_commission_level_1" value="{{ $settings['repurchase_commission_level_1'] ?? 20 }}" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
                         </div>
                         <div>
                             <label class="mb-3 block text-sm font-medium text-black dark:text-white">Level 2 (%)</label>
-                            <input type="number" step="0.01" name="repurchase_commission_level_2" value="{{ $settings['repurchase_commission_level_2'] ?? 10 }}" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
+                            <input type="number" step="any" name="repurchase_commission_level_2" value="{{ $settings['repurchase_commission_level_2'] ?? 10 }}" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
                         </div>
                         <div>
                             <label class="mb-3 block text-sm font-medium text-black dark:text-white">Level 3 (%)</label>
-                            <input type="number" step="0.01" name="repurchase_commission_level_3" value="{{ $settings['repurchase_commission_level_3'] ?? 5 }}" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
+                            <input type="number" step="any" name="repurchase_commission_level_3" value="{{ $settings['repurchase_commission_level_3'] ?? 5 }}" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
                         </div>
                         <div>
                             <label class="mb-3 block text-sm font-medium text-black dark:text-white">Level 4 (%)</label>
-                            <input type="number" step="0.01" name="repurchase_commission_level_4" value="{{ $settings['repurchase_commission_level_4'] ?? 3 }}" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
+                            <input type="number" step="any" name="repurchase_commission_level_4" value="{{ $settings['repurchase_commission_level_4'] ?? 3 }}" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
                         </div>
                         <div>
                             <label class="mb-3 block text-sm font-medium text-black dark:text-white">Level 5 (%)</label>
-                            <input type="number" step="0.01" name="repurchase_commission_level_5" value="{{ $settings['repurchase_commission_level_5'] ?? 2 }}" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
+                            <input type="number" step="any" name="repurchase_commission_level_5" value="{{ $settings['repurchase_commission_level_5'] ?? 2 }}" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
                         </div>
                     </div>
 
@@ -279,23 +279,59 @@
                     <div class="mt-5.5 grid grid-cols-1 gap-5.5 sm:grid-cols-5">
                         <div>
                             <label class="mb-3 block text-sm font-medium text-black dark:text-white">Level 1 (per BV)</label>
-                            <input type="number" step="0.01" name="order_commission_level_1" value="{{ $settings['order_commission_level_1'] ?? 2.0 }}" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
+                            <input type="number" step="any" name="order_commission_level_1" value="{{ $settings['order_commission_level_1'] ?? 2.0 }}" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
                         </div>
                         <div>
                             <label class="mb-3 block text-sm font-medium text-black dark:text-white">Level 2 (per BV)</label>
-                            <input type="number" step="0.01" name="order_commission_level_2" value="{{ $settings['order_commission_level_2'] ?? 1.0 }}" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
+                            <input type="number" step="any" name="order_commission_level_2" value="{{ $settings['order_commission_level_2'] ?? 1.0 }}" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
                         </div>
                         <div>
                             <label class="mb-3 block text-sm font-medium text-black dark:text-white">Level 3 (per BV)</label>
-                            <input type="number" step="0.01" name="order_commission_level_3" value="{{ $settings['order_commission_level_3'] ?? 0.3 }}" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
+                            <input type="number" step="any" name="order_commission_level_3" value="{{ $settings['order_commission_level_3'] ?? 0.3 }}" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
                         </div>
                         <div>
                             <label class="mb-3 block text-sm font-medium text-black dark:text-white">Level 4 (per BV)</label>
-                            <input type="number" step="0.01" name="order_commission_level_4" value="{{ $settings['order_commission_level_4'] ?? 0.2 }}" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
+                            <input type="number" step="any" name="order_commission_level_4" value="{{ $settings['order_commission_level_4'] ?? 0.2 }}" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
                         </div>
                         <div>
                             <label class="mb-3 block text-sm font-medium text-black dark:text-white">Level 5 (per BV)</label>
-                            <input type="number" step="0.01" name="order_commission_level_5" value="{{ $settings['order_commission_level_5'] ?? 0.1 }}" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
+                            <input type="number" step="any" name="order_commission_level_5" value="{{ $settings['order_commission_level_5'] ?? 0.1 }}" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
+                        </div>
+                    </div>
+
+                    <div class="border-b border-stroke py-4 dark:border-strokedark mt-5.5">
+                        <h3 class="font-medium text-black dark:text-white">Commission Withdrawal Settings</h3>
+                    </div>
+                    <div class="mt-5.5 grid grid-cols-1 gap-5.5 sm:grid-cols-4">
+                        <div>
+                            <label class="mb-3 block text-sm font-medium text-black dark:text-white">Lock Period (Days)</label>
+                            <input type="number" name="commission_lock_period_days" value="{{ $settings['commission_lock_period_days'] ?? 30 }}" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
+                        </div>
+                        <div>
+                            <label class="mb-3 block text-sm font-medium text-black dark:text-white">Min. Withdrawal ({{ $settings['currency'] ?? 'INR' }})</label>
+                            <input type="number" name="min_commission_withdrawal" value="{{ $settings['min_commission_withdrawal'] ?? 500 }}" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
+                        </div>
+                        <div>
+                            <label class="mb-3 block text-sm font-medium text-black dark:text-white">TDS Deduction (%)</label>
+                            <input type="number" step="any" name="commission_withdrawal_tds_percent" value="{{ $settings['commission_withdrawal_tds_percent'] ?? 5 }}" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
+                        </div>
+                        <div>
+                            <label class="mb-3 block text-sm font-medium text-black dark:text-white">Service Charge (%)</label>
+                            <input type="number" step="any" name="commission_withdrawal_service_charge" value="{{ $settings['commission_withdrawal_service_charge'] ?? 5 }}" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
+                        </div>
+                    </div>
+
+                    <div class="border-b border-stroke py-4 dark:border-strokedark mt-5.5">
+                        <h3 class="font-medium text-black dark:text-white">BV Point Conversion Settings</h3>
+                    </div>
+                    <div class="mt-5.5 grid grid-cols-1 gap-5.5 sm:grid-cols-2">
+                        <div>
+                            <label class="mb-3 block text-sm font-medium text-black dark:text-white">Conversion Rate (1 BV = ? {{ $settings['currency'] ?? 'INR' }})</label>
+                            <input type="number" step="any" name="bv_conversion_rate" value="{{ $settings['bv_conversion_rate'] ?? 1.0 }}" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
+                        </div>
+                        <div>
+                            <label class="mb-3 block text-sm font-medium text-black dark:text-white">Min. BV for Conversion</label>
+                            <input type="number" name="min_bv_withdrawal" value="{{ $settings['min_bv_withdrawal'] ?? 100 }}" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
                         </div>
                     </div>
                 </div>

@@ -112,10 +112,17 @@ class MLMService
                         if ($comm->type === 'bv') {
                             $wallet->earning_balance -= $comm->amount;
                         } else {
-                            // joining or repurchase
-                            $wallet->main_balance -= $comm->amount;
+                            // joining or repurchase: if already withdrawn, deduct from main balance
+                            if ($comm->status === 'withdrawn') {
+                                $wallet->main_balance -= $comm->amount;
+                            } else {
+                                $wallet->commission_balance -= $comm->amount;
+                            }
                         }
                         $wallet->save();
+
+                        // Update commission status to reversed
+                        $comm->update(['status' => 'reversed']);
 
                         WalletTransaction::create([
                             'wallet_id' => $wallet->id,
@@ -136,13 +143,19 @@ class MLMService
 
     protected function creditCommission($uplineId, $fromUserId, $orderId, $level, $amount, $type, $note = null)
     {
-        DB::transaction(function () use ($uplineId, $fromUserId, $orderId, $level, $amount, $type, $note) {
+        $settings = $this->getSettings();
+        $lockDays = (int) ($settings['commission_lock_period_days'] ?? 0);
+        $withdrawableAt = $lockDays > 0 ? \Illuminate\Support\Carbon::now()->addDays($lockDays) : \Illuminate\Support\Carbon::now();
+
+        DB::transaction(function () use ($uplineId, $fromUserId, $orderId, $level, $amount, $type, $note, $withdrawableAt) {
             $comm = Commission::create([
                 'user_id' => $uplineId,
                 'from_user_id' => $fromUserId,
                 'order_id' => $orderId,
                 'level' => $level,
                 'amount' => $amount,
+                'status' => 'pending',
+                'withdrawable_at' => $withdrawableAt,
                 'type' => $type,
                 'note' => $note
             ]);
@@ -151,15 +164,15 @@ class MLMService
             if ($amount > 0) {
                 $wallet = Wallet::firstOrCreate(
                     ['user_id' => $uplineId],
-                    ['main_balance' => 0, 'earning_balance' => 0, 'credit_balance' => 0]
+                    ['main_balance' => 0, 'commission_balance' => 0, 'earning_balance' => 0, 'credit_balance' => 0]
                 );
 
                 // Add to the appropriate balance based on commission type
                 if ($type === 'bv') {
                     $wallet->earning_balance += $amount;
                 } else {
-                    // joining or repurchase
-                    $wallet->main_balance += $amount;
+                    // joining or repurchase goes to commission_balance now
+                    $wallet->commission_balance += $amount;
                 }
                 $wallet->save();
 
@@ -235,6 +248,12 @@ class MLMService
                 'order_commission_level_3' => 0.3,
                 'order_commission_level_4' => 0.2,
                 'order_commission_level_5' => 0.1,
+                'commission_lock_period_days' => 30,
+                'min_commission_withdrawal' => 500,
+                'commission_withdrawal_tds_percent' => 5,
+                'commission_withdrawal_service_charge' => 5,
+                'bv_conversion_rate' => 1.0,
+                'min_bv_withdrawal' => 100,
             ];
         }
         return json_decode(\Illuminate\Support\Facades\Storage::disk('local')->get($settingsFile), true);

@@ -41,16 +41,21 @@
         </div>
     </div>
 
-    <!-- Quick Stats -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <div class="rounded-2xl border border-gray-100 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
             <h4 class="text-sm font-medium text-gray-500 mb-1">My Balance</h4>
             <p class="text-2xl font-bold text-gray-800 dark:text-white">₹{{ number_format(auth()->user()->wallet?->main_balance ?? 0, 2) }}</p>
         </div>
         <div class="rounded-2xl border border-gray-100 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
-            <h4 class="text-sm font-medium text-gray-500 mb-1">BV Earnings</h4>
-            <p class="text-2xl font-bold text-gray-800 dark:text-white">₹{{ number_format(auth()->user()->wallet?->earning_balance ?? 0, 2) }}</p>
+            <h4 class="text-sm font-medium text-gray-500 mb-1">Commission Wallet</h4>
+            <p class="text-2xl font-bold text-gray-800 dark:text-white">₹{{ number_format(auth()->user()->wallet?->commission_balance ?? 0, 2) }}</p>
         </div>
+        <div class="rounded-2xl border border-gray-100 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+            <h4 class="text-sm font-medium text-gray-500 mb-1">BV Earnings</h4>
+            <p class="text-2xl font-bold text-gray-800 dark:text-white">{{ number_format(auth()->user()->wallet?->earning_balance ?? 0, 2) }} BV</p>
+        </div>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div class="rounded-2xl border border-gray-100 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
             <h4 class="text-sm font-medium text-gray-500 mb-1">Approved Credit</h4>
             <p class="text-2xl font-bold text-brand-600 dark:text-white">
