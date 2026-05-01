@@ -44,13 +44,26 @@ Find the new **"Payouts & Conversions"** link in your sidebar.
     *   **Withdrawable:** Earnings that have passed the lock-in period.
     *   **Locked:** Recent earnings that are still in the verification period.
 3.  Click **"Transfer Withdrawable to Main Balance"**.
-4.  The system will show you the Net Amount you will receive after **TDS** and **Service Charges**.
+4.  The system will process the payout and create separate line items in your history:
+    *   **Net Payout Debit**: The actual amount moved to your main wallet.
+    *   **TDS Deduction**: The tax portion withheld.
+    *   **Service Charge Deduction**: The platform fee withheld.
+    *   **Main Wallet Credit**: The net amount received in your main balance.
 
 ### 3. Converting BV Points
 1.  View your **BV Point Balance**.
 2.  Check the current **Conversion Rate** set by the admin.
 3.  If you meet the minimum BV requirement, click **"Convert BV to Main Balance"**.
 4.  The points will be deducted, and the equivalent ₹ value will be added to your Main Balance instantly.
+
+---
+
+## 📊 DASHBOARD REPORTS
+Your **Dashboard** now features 4 real-time report cards:
+*   **Total Commission**: All-time gross earnings.
+*   **Withdrawable**: Current available funds in your Commission Wallet.
+*   **Total Payouts**: Sum of all successful transfers to your Main Balance.
+*   **Total Deductions**: Total tax and service fees paid.
 
 ---
 

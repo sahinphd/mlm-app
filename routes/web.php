@@ -69,6 +69,84 @@ Route::middleware('auth')->group(function () {
             $q->where('user_id', $user->id);
         })->orderBy('created_at', 'desc')->take(5)->get();
 
+        $settings = app(\App\Services\MLMService::class)->getSettings();
+        $bvRate = (float)($settings['bv_conversion_rate'] ?? 1.0);
+        $lockDays = (int) ($settings['commission_lock_period_days'] ?? 30);
+        $now = now();
+        $thresholdDate = $now->copy()->subDays($lockDays);
+
+        // Cash Components
+        $cashEarned = \App\Models\Commission::where('user_id', $user->id)
+            ->where('status', '!=', 'reversed')
+            ->where('type', '!=', 'bv')
+            ->sum('amount');
+        
+        $cashWithdrawn = \App\Models\Commission::where('user_id', $user->id)
+            ->where('status', 'withdrawn')
+            ->where('type', '!=', 'bv')
+            ->sum('amount');
+
+        $withdrawableCommissions = \App\Models\Commission::where('user_id', $user->id)
+            ->where('status', 'pending')
+            ->where('type', '!=', 'bv')
+            ->where('created_at', '<=', $thresholdDate)
+            ->sum('amount');
+
+        $lockedCommissions = \App\Models\Commission::where('user_id', $user->id)
+            ->where('status', 'pending')
+            ->where('type', '!=', 'bv')
+            ->where('created_at', '>', $thresholdDate)
+            ->sum('amount');
+
+        // BV Components (in Cash Value for aggregated cards)
+        $withdrawableBvPoints = \App\Models\Commission::where('user_id', $user->id)
+            ->where('status', 'pending')
+            ->where('type', 'bv')
+            ->where('created_at', '<=', $thresholdDate)
+            ->sum('amount');
+        
+        $lockedBvPoints = \App\Models\Commission::where('user_id', $user->id)
+            ->where('status', 'pending')
+            ->where('type', 'bv')
+            ->where('created_at', '>', $thresholdDate)
+            ->sum('amount');
+        
+        $bvCashWithdrawn = \App\Models\WalletTransaction::whereHas('wallet', function($q) use ($user) {
+            $q->where('user_id', $user->id);
+        })->where('source', 'bv_withdrawal')
+          ->where('type', 'credit')
+          ->sum('amount');
+
+        // Aggregated Metrics for Dashboard Cards (Unified Financial Value)
+        $totalWithdrawn = $cashWithdrawn + $bvCashWithdrawn;
+        $totalWithdrawable = $withdrawableCommissions + ($withdrawableBvPoints * $bvRate);
+        $totalLocked = $lockedCommissions + ($lockedBvPoints * $bvRate);
+        $totalEarned = $totalWithdrawn + $totalWithdrawable + $totalLocked;
+
+        $totalTDS = \App\Models\WalletTransaction::whereHas('wallet', function($q) use ($user) {
+            $q->where('user_id', $user->id);
+        })->where('source', 'commission_withdrawal')
+          ->where('type', 'debit')
+          ->where('description', 'LIKE', '%TDS%')
+          ->sum('amount');
+
+        $totalServiceCharge = \App\Models\WalletTransaction::whereHas('wallet', function($q) use ($user) {
+            $q->where('user_id', $user->id);
+        })->where('source', 'commission_withdrawal')
+          ->where('type', 'debit')
+          ->where('description', 'LIKE', '%Service Charge%')
+          ->sum('amount');
+
+        $nextReleaseRecord = \App\Models\Commission::where('user_id', $user->id)
+            ->where('status', 'pending')
+            ->where('created_at', '>', $thresholdDate)
+            ->orderBy('created_at', 'asc')
+            ->first();
+        
+        $nextRelease = $nextReleaseRecord ? $nextReleaseRecord->created_at->addDays($lockDays) : null;
+        
+        $bvCashValue = ($user->wallet?->earning_balance ?? 0) * $bvRate;
+
         return view('dashboard', [
             'page' => 'ecommerce', 
             'referralRecord' => $referralRecord,
@@ -76,7 +154,17 @@ Route::middleware('auth')->group(function () {
             'personalBv' => $personalBv,
             'totalReferrals' => $totalReferrals,
             'activeReferrals' => $activeReferrals,
-            'recentTransactions' => $recentTransactions
+            'recentTransactions' => $recentTransactions,
+            'totalCommissions' => $totalEarned,
+            'totalWithdrawn' => $totalWithdrawn,
+            'withdrawableCommissions' => $totalWithdrawable,
+            'totalTDS' => $totalTDS,
+            'totalServiceCharge' => $totalServiceCharge,
+            'lockedCommissions' => $totalLocked,
+            'nextRelease' => $nextRelease,
+            'bvCashValue' => $bvCashValue,
+            'withdrawableBvPoints' => $withdrawableBvPoints,
+            'lockedBvPoints' => $lockedBvPoints
         ]); 
     })->name('dashboard');
 

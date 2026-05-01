@@ -101,42 +101,59 @@ class MLMService
 
     public function reverseOrderCommissions($order)
     {
-        DB::transaction(function () use ($order) {
+        $settings = $this->getSettings();
+        $bvRate = (float)($settings['bv_conversion_rate'] ?? 1.0);
+
+        DB::transaction(function () use ($order, $bvRate) {
             $commissions = Commission::where('order_id', $order->id)->get();
 
             foreach ($commissions as $comm) {
-                if ($comm->amount > 0) {
+                if ($comm->amount > 0 && $comm->status !== 'reversed') {
                     $wallet = Wallet::where('user_id', $comm->user_id)->first();
                     if ($wallet) {
-                        // Deduct from the appropriate balance based on commission type
+                        $oldStatus = $comm->status;
+                        $amountToDeduct = $comm->amount;
+                        $isWithdrawn = ($oldStatus === 'withdrawn');
+
                         if ($comm->type === 'bv') {
-                            $wallet->earning_balance -= $comm->amount;
+                            if ($isWithdrawn) {
+                                // Deduct cash equivalent from main balance
+                                $cashValue = $amountToDeduct * $bvRate;
+                                $wallet->main_balance -= $cashValue;
+                                
+                                WalletTransaction::create([
+                                    'wallet_id' => $wallet->id,
+                                    'type' => 'debit',
+                                    'source' => 'bv_reversal',
+                                    'amount' => $cashValue,
+                                    'reference_id' => 'reversal:' . $comm->id,
+                                    'description' => 'BV reversal for Order #' . $order->id . ' (Converted points recovered)'
+                                ]);
+                            } else {
+                                $wallet->earning_balance -= $amountToDeduct;
+                            }
                         } else {
                             // joining or repurchase: if already withdrawn, deduct from main balance
-                            if ($comm->status === 'withdrawn') {
-                                $wallet->main_balance -= $comm->amount;
+                            if ($isWithdrawn) {
+                                $wallet->main_balance -= $amountToDeduct;
+                                
+                                WalletTransaction::create([
+                                    'wallet_id' => $wallet->id,
+                                    'type' => 'debit',
+                                    'source' => $comm->type . '_reversal',
+                                    'amount' => $amountToDeduct,
+                                    'reference_id' => 'reversal:' . $comm->id,
+                                    'description' => 'Commission reversal for Order #' . $order->id . ' (Withdrawn funds recovered)'
+                                ]);
                             } else {
-                                $wallet->commission_balance -= $comm->amount;
+                                $wallet->commission_balance -= $amountToDeduct;
                             }
                         }
+                        
                         $wallet->save();
-
-                        // Update commission status to reversed
                         $comm->update(['status' => 'reversed']);
-
-                        WalletTransaction::create([
-                            'wallet_id' => $wallet->id,
-                            'type' => 'debit',
-                            'source' => $comm->type,
-                            'amount' => $comm->amount,
-                            'reference_id' => 'reversal:' . $comm->id,
-                            'description' => 'Commission reversal for Order #' . $order->id . ' (Status: ' . ucfirst($order->status) . ')'
-                        ]);
                     }
                 }
-                // Mark commission as reversed by setting amount to negative or deleting? 
-                // Better to keep record but update amount or add a 'reversed' flag.
-                // For now, we will just subtract from wallet and log the transaction.
             }
         });
     }
@@ -145,7 +162,12 @@ class MLMService
     {
         $settings = $this->getSettings();
         $lockDays = (int) ($settings['commission_lock_period_days'] ?? 0);
-        $withdrawableAt = $lockDays > 0 ? \Illuminate\Support\Carbon::now()->addDays($lockDays) : \Illuminate\Support\Carbon::now();
+        
+        // If lockDays is 0, it's withdrawable immediately.
+        // Otherwise, add the specified number of days.
+        $withdrawableAt = $lockDays > 0 
+            ? \Illuminate\Support\Carbon::now()->addDays($lockDays)->startOfDay() 
+            : \Illuminate\Support\Carbon::now();
 
         DB::transaction(function () use ($uplineId, $fromUserId, $orderId, $level, $amount, $type, $note, $withdrawableAt) {
             $comm = Commission::create([
@@ -175,15 +197,6 @@ class MLMService
                     $wallet->commission_balance += $amount;
                 }
                 $wallet->save();
-
-                WalletTransaction::create([
-                    'wallet_id' => $wallet->id,
-                    'type' => 'credit',
-                    'source' => $type, // Use joining, repurchase, or bv
-                    'amount' => $amount,
-                    'reference_id' => 'commission:' . $comm->id,
-                    'description' => ucfirst($type) . ' commission (Level ' . $level . ') from Order/User #' . ($orderId ?? $fromUserId)
-                ]);
             }
         });
     }

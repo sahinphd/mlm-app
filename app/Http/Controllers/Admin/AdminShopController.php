@@ -118,9 +118,6 @@ class AdminShopController extends Controller
                     'source' => 'purchase',
                     'description' => 'Admin Order purchase: ' . $name
                 ]);
-                
-                $wallet = Wallet::firstOrCreate(['user_id' => $targetUser->id], ['main_balance' => 0, 'earning_balance' => 0, 'credit_balance' => 0]);
-                WalletTransaction::create(['wallet_id' => $wallet->id, 'type' => 'debit', 'source' => 'purchase', 'amount' => $total, 'description' => 'Admin Order paid using credit: ' . $name]);
             } else {
                 // manual_cash -> No wallet deduction, no wallet transaction record
             }

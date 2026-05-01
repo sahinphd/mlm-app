@@ -119,9 +119,6 @@ class ShopController extends Controller
                     'source' => 'purchase',
                     'description' => 'Purchase of ' . $name
                 ]);
-                
-                $wallet = Wallet::firstOrCreate(['user_id' => $user->id], ['main_balance' => 0, 'earning_balance' => 0, 'credit_balance' => 0]);
-                WalletTransaction::create(['wallet_id' => $wallet->id, 'type' => 'debit', 'source' => 'purchase', 'amount' => $total, 'description' => 'Order paid using credit: ' . $name]);
             }
 
             $settings = $this->mlmService->getSettings();

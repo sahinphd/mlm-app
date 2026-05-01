@@ -38,7 +38,8 @@ class WalletHistoryController extends Controller
         $user = Auth::user();
         $wallet = Wallet::firstOrCreate(['user_id' => $user->id]);
         
-        $query = WalletTransaction::where('wallet_id', $wallet->id);
+        $query = WalletTransaction::where('wallet_id', $wallet->id)
+            ->whereNotIn('source', ['joining', 'repurchase', 'bv', 'commission']);
 
         // Total count
         $totalData = $query->count();

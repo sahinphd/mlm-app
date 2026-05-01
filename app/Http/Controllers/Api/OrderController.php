@@ -77,10 +77,6 @@ class OrderController extends Controller
                     'source' => 'purchase',
                     'description' => 'Order purchase'
                 ]);
-
-                // log as wallet transaction on credit_balance for record
-                $wallet = Wallet::firstOrCreate(['user_id'=>$user->id],['main_balance'=>0,'earning_balance'=>0,'credit_balance'=>0]);
-                WalletTransaction::create(['wallet_id'=>$wallet->id,'type'=>'debit','source'=>'purchase','amount'=>$total,'description'=>'Order paid using credit']);
             }
 
             $order = Order::create(['user_id'=>$user->id,'total_amount'=>$total,'total_bv'=>$total_bv,'payment_method'=>$data['payment_method'],'status'=>'completed']);
