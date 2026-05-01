@@ -239,16 +239,16 @@ class CommissionWithdrawalController extends Controller
             // Credit to main balance
             $wallet->increment('main_balance', $mainAmount);
 
-            // Record transaction for BV wallet (debit)
+            // Record transaction for BV wallet (debit) - Use 'bv' source to keep it in BV ledger/history
             WalletTransaction::create([
                 'wallet_id' => $wallet->id,
                 'type' => 'debit',
-                'source' => 'bv_withdrawal',
+                'source' => 'bv',
                 'amount' => $withdrawableBvPoints,
                 'description' => "Converted " . number_format($withdrawableBvPoints, 2) . " withdrawable BV points to main balance at rate " . $rate,
             ]);
 
-            // Record transaction for main wallet (credit)
+            // Record transaction for main wallet (credit) - Keep 'bv_withdrawal' source for wallet history
             WalletTransaction::create([
                 'wallet_id' => $wallet->id,
                 'type' => 'credit',

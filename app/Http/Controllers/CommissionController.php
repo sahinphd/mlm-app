@@ -44,30 +44,12 @@ class CommissionController extends Controller
         $user = Auth::user();
         $type = $request->query('type');
         
-        $query = Commission::where('user_id', $user->id)->with('fromUser');
-
+        // 1. Get Earnings (Commission Table)
+        $commQuery = Commission::where('user_id', $user->id)->with('fromUser');
         if ($type === 'bv') {
-            $query->where('type', 'bv');
+            $commQuery->where('type', 'bv');
         } else {
-            $query->where('type', '!=', 'bv');
-        }
-
-        // Total count
-        $totalData = $query->count();
-        $totalFiltered = $totalData;
-
-        // Search
-        if ($search = $request->input('search.value')) {
-            $query->where(function($q) use ($search) {
-                $q->where('amount', 'LIKE', "%{$search}%")
-                  ->orWhere('type', 'LIKE', "%{$search}%")
-                  ->orWhere('level', 'LIKE', "%{$search}%")
-                  ->orWhereHas('fromUser', function($sub) use ($search) {
-                      $sub->where('name', 'LIKE', "%{$search}%")
-                          ->orWhere('email', 'LIKE', "%{$search}%");
-                  });
-            });
-            $totalFiltered = $query->count();
+            $commQuery->where('type', '!=', 'bv');
         }
 
         // Sorting
@@ -75,34 +57,88 @@ class CommissionController extends Controller
         $orderColumnIndex = $request->input('order.0.column', 4);
         $orderDir = $request->input('order.0.dir', 'desc');
         $orderColumn = $columns[$orderColumnIndex] ?? 'created_at';
-        $query->orderBy($orderColumn, $orderDir);
 
-        // Pagination
-        $start = $request->input('start', 0);
-        $length = $request->input('length', 10);
-        $commissions = $query->skip($start)->take($length)->get();
-
-        $data = [];
+        // 2. If BV, also get Deductions (WalletTransaction Table)
+        $combinedData = [];
+        $commissions = $commQuery->get();
+        
         foreach ($commissions as $comm) {
-            $data[] = [
+            $combinedData[] = [
                 'from_user' => ($comm->fromUser->name ?? 'N/A') . '<br><small class="text-gray-500">' . ($comm->fromUser->email ?? '') . '</small>',
                 'level' => '<span class="px-2 py-1 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">Level ' . $comm->level . '</span>',
-                'amount' => '₹' . number_format($comm->amount, 2),
+                'amount' => ($type === 'bv' ? '' : '₹') . number_format($comm->amount, 2),
+                'amount_raw' => (float)$comm->amount,
                 'type' => $comm->type === 'joining' 
                     ? '<span class="px-2 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">Joining</span>'
                     : ($comm->type === 'bv' 
-                        ? '<span class="px-2 py-1 rounded-full text-xs font-semibold bg-green-50 text-green-600 dark:bg-green-500/10 dark:text-green-400">BV</span>'
+                        ? '<span class="px-2 py-1 rounded-full text-xs font-semibold bg-green-50 text-green-600 dark:bg-green-500/10 dark:text-green-400">BV Earning</span>'
                         : '<span class="px-2 py-1 rounded-full text-xs font-semibold bg-purple-50 text-purple-600 dark:bg-purple-500/10 dark:text-purple-400">' . ucfirst($comm->type) . '</span>'),
                 'date' => $comm->created_at->format('M d, Y H:i'),
-                'raw_date' => $comm->created_at->toDateTimeString()
+                'created_at' => $comm->created_at->toDateTimeString()
             ];
         }
 
+        if ($type === 'bv') {
+            $wallet = \App\Models\Wallet::where('user_id', $user->id)->first();
+            if ($wallet) {
+                $deductions = \App\Models\WalletTransaction::where('wallet_id', $wallet->id)
+                    ->where('source', 'bv')
+                    ->where('type', 'debit')
+                    ->get();
+
+                foreach ($deductions as $tx) {
+                    $combinedData[] = [
+                        'from_user' => '<span class="text-gray-500">System (Conversion)</span>',
+                        'level' => '<span class="px-2 py-1 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-400">-</span>',
+                        'amount' => '-' . number_format($tx->amount, 2),
+                        'amount_raw' => -(float)$tx->amount,
+                        'type' => '<span class="px-2 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400">BV Conversion</span>',
+                        'date' => $tx->created_at->format('M d, Y H:i'),
+                        'created_at' => $tx->created_at->toDateTimeString()
+                    ];
+                }
+            }
+        }
+
+        // Apply manual sorting to the combined array
+        usort($combinedData, function($a, $b) use ($orderColumn, $orderDir) {
+            $valA = $a[$orderColumn];
+            $valB = $b[$orderColumn];
+            
+            if ($orderColumn === 'amount') {
+                $valA = $a['amount_raw'];
+                $valB = $b['amount_raw'];
+            }
+
+            if ($valA == $valB) return 0;
+            if ($orderDir === 'asc') {
+                return ($valA < $valB) ? -1 : 1;
+            } else {
+                return ($valA > $valB) ? -1 : 1;
+            }
+        });
+
+        // Search in the array
+        if ($search = $request->input('search.value')) {
+            $combinedData = array_filter($combinedData, function($item) use ($search) {
+                return stripos(strip_tags($item['from_user']), $search) !== false ||
+                       stripos(strip_tags($item['type']), $search) !== false ||
+                       stripos($item['amount'], $search) !== false;
+            });
+        }
+
+        $totalFiltered = count($combinedData);
+
+        // Manual Pagination
+        $start = $request->input('start', 0);
+        $length = $request->input('length', 10);
+        $pagedData = array_slice($combinedData, $start, $length);
+
         return response()->json([
             "draw"            => intval($request->input('draw')),
-            "recordsTotal"    => intval($totalData),
+            "recordsTotal"    => intval($totalFiltered),
             "recordsFiltered" => intval($totalFiltered),
-            "data"            => $data
+            "data"            => $pagedData
         ]);
     }
 
