@@ -39,8 +39,8 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         <div class="rounded-2xl border border-gray-100 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
             <div class="flex items-center justify-between mb-1">
-                <h4 class="text-sm font-medium text-gray-500">Total Earned</h4>
-                <button title="Your all-time gross earnings (Cash + BV Cash Value)." class="text-gray-400 hover:text-brand-500 transition-colors">
+                <h4 class="text-sm font-medium text-gray-500">Total Commission (Incl. Joining & Repurchase)</h4>
+                <button title="Your all-time gross commissions including joining and repurchase commissions (Cash + BV Cash Value)." class="text-gray-400 hover:text-brand-500 transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
@@ -50,8 +50,8 @@
         </div>
         <div class="rounded-2xl border border-gray-100 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
             <div class="flex items-center justify-between mb-1">
-                <h4 class="text-sm font-medium text-gray-500">Total Withdrawn</h4>
-                <button title="Total amount transferred to your main balance (Cash + BV Conversions)." class="text-gray-400 hover:text-blue-500 transition-colors">
+                <h4 class="text-sm font-medium text-gray-500">Total Withdrawn Commission</h4>
+                <button title="Total commission transferred to your main balance (Cash + BV Conversions)." class="text-gray-400 hover:text-blue-500 transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
@@ -61,7 +61,7 @@
         </div>
         <div class="rounded-2xl border border-gray-100 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
             <div class="flex items-center justify-between mb-1">
-                <h4 class="text-sm font-medium text-gray-500">Withdrawable</h4>
+                <h4 class="text-sm font-medium text-gray-500">Withdrawable Commission</h4>
                 <button title="Total amount currently eligible for payout/conversion (Cash + BV Cash Value)." class="text-gray-400 hover:text-green-500 transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3-1.343-3-3S10.343 2 12 2s3 1.343 3 3-1.343 3-3 3zM6 20c0-3.866 3.582-7 8-7s8 3.134 8 7" />
@@ -242,7 +242,7 @@
                     @forelse($recentPayouts as $tx)
                         <tr>
                             <td class="py-4 px-6">
-                                <span class="inline-flex rounded-full bg-opacity-10 py-1 px-3 text-xs font-semibold {{ $tx->source == 'commission_withdrawal' ? 'bg-green-500 text-green-600' : 'bg-orange-500 text-orange-600' }}">
+                                <span class="inline-flex rounded-full bg-opacity-10 py-1 px-3 text-xs font-semibold {{ $tx->source == 'commission_withdrawal' ? 'bg-green-500 text-white' : 'bg-orange-500 text-white' }}">
                                     {{ $tx->source == 'commission_withdrawal' ? 'Commission' : 'BV Conversion' }}
                                 </span>
                             </td>

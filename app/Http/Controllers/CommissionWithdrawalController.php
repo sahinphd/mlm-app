@@ -66,10 +66,10 @@ class CommissionWithdrawalController extends Controller
           ->where('type', 'credit')
           ->sum('amount');
 
-        // Aggregated Metrics (Unified Financial Value)
-        $totalWithdrawn = $cashWithdrawn + $bvCashWithdrawn;
-        $totalWithdrawable = $cashWithdrawable + ($withdrawableBvPoints * $bvRate);
-        $totalLocked = $cashLocked + ($lockedBvPoints * $bvRate);
+        // Aggregated Metrics (Strictly Cash Commissions)
+        $totalWithdrawn = $cashWithdrawn;
+        $totalWithdrawable = $cashWithdrawable;
+        $totalLocked = $cashLocked;
         $totalEarned = $totalWithdrawn + $totalWithdrawable + $totalLocked;
 
         // Total TDS & Service Charge (From Transactions)
@@ -151,33 +151,33 @@ class CommissionWithdrawalController extends Controller
             // Credit net to main balance
             $wallet->increment('main_balance', $netAmount);
 
-            // Record transaction for commission wallet (debit net payout)
+            // Record transaction for commission wallet (debit net payout) - Source 'commission' for ledger
             WalletTransaction::create([
                 'wallet_id' => $wallet->id,
                 'type' => 'debit',
-                'source' => 'commission_withdrawal',
+                'source' => 'commission',
                 'amount' => $netAmount,
                 'description' => "Commission Payout Transfer (Net Amount)",
             ]);
 
-            // Record TDS deduction
+            // Record TDS deduction - Source 'commission' for ledger
             if ($tdsAmount > 0) {
                 WalletTransaction::create([
                     'wallet_id' => $wallet->id,
                     'type' => 'debit',
-                    'source' => 'commission_withdrawal',
+                    'source' => 'commission',
                     'amount' => $tdsAmount,
                     'fee' => 0,
                     'description' => "TDS Deduction (" . $tdsPercent . "%)",
                 ]);
             }
 
-            // Record Service Charge deduction
+            // Record Service Charge deduction - Source 'commission' for ledger
             if ($serviceCharge > 0) {
                 WalletTransaction::create([
                     'wallet_id' => $wallet->id,
                     'type' => 'debit',
-                    'source' => 'commission_withdrawal',
+                    'source' => 'commission',
                     'amount' => $serviceCharge,
                     'description' => "Service Charge Deduction (" . $servicePercent . "%)",
                 ]);

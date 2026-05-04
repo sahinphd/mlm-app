@@ -117,10 +117,10 @@ Route::middleware('auth')->group(function () {
           ->where('type', 'credit')
           ->sum('amount');
 
-        // Aggregated Metrics for Dashboard Cards (Unified Financial Value)
-        $totalWithdrawn = $cashWithdrawn + $bvCashWithdrawn;
-        $totalWithdrawable = $withdrawableCommissions + ($withdrawableBvPoints * $bvRate);
-        $totalLocked = $lockedCommissions + ($lockedBvPoints * $bvRate);
+        // Aggregated Metrics for Dashboard Cards (Strictly Cash Commissions)
+        $totalWithdrawn = $cashWithdrawn;
+        $totalWithdrawable = $withdrawableCommissions;
+        $totalLocked = $lockedCommissions;
         $totalEarned = $totalWithdrawn + $totalWithdrawable + $totalLocked;
 
         $totalTDS = \App\Models\WalletTransaction::whereHas('wallet', function($q) use ($user) {

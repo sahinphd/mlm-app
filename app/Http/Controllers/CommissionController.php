@@ -98,6 +98,27 @@ class CommissionController extends Controller
                     ];
                 }
             }
+        } else {
+            // Include cash withdrawal debits
+            $wallet = \App\Models\Wallet::where('user_id', $user->id)->first();
+            if ($wallet) {
+                $deductions = \App\Models\WalletTransaction::where('wallet_id', $wallet->id)
+                    ->where('source', 'commission')
+                    ->where('type', 'debit')
+                    ->get();
+
+                foreach ($deductions as $tx) {
+                    $combinedData[] = [
+                        'from_user' => '<span class="text-gray-500">System (Withdrawal)</span>',
+                        'level' => '<span class="px-2 py-1 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-400">-</span>',
+                        'amount' => '-₹' . number_format($tx->amount, 2),
+                        'amount_raw' => -(float)$tx->amount,
+                        'type' => '<span class="px-2 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400">Payout</span>',
+                        'date' => $tx->created_at->format('M d, Y H:i'),
+                        'created_at' => $tx->created_at->toDateTimeString()
+                    ];
+                }
+            }
         }
 
         // Apply manual sorting to the combined array

@@ -87,17 +87,17 @@
 
     <!-- Commissions & Deductions Section -->
     <div class="mb-6">
-        <h3 class="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2 ml-1">Commission & Deductions</h3>
+        <h3 class="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2 ml-1">Cash Commission & Deductions</h3>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
             <!-- Withdrawable -->
             <div class="rounded-2xl border border-gray-100 bg-white p-3 md:p-4 dark:border-gray-800 dark:bg-white/[0.03]">
-                <h4 class="text-[10px] font-medium text-gray-500 uppercase mb-1">Withdrawable</h4>
+                <h4 class="text-[10px] font-medium text-gray-500 uppercase mb-1">Withdrawable Cash</h4>
                 <p class="text-base sm:text-lg font-bold text-green-600">₹{{ number_format($withdrawableCommissions ?? 0, 2) }}</p>
             </div>
             <!-- Locked -->
             <div class="rounded-2xl border border-gray-100 bg-white p-3 md:p-4 dark:border-gray-800 dark:bg-white/[0.03]">
                 <div class="flex items-center justify-between mb-1">
-                    <h4 class="text-[10px] font-medium text-gray-500 uppercase">Locked</h4>
+                    <h4 class="text-[10px] font-medium text-gray-500 uppercase">Locked Cash</h4>
                     @if($nextRelease)
                     <span class="text-[8px] font-bold text-orange-500 uppercase">Rel: {{ \Carbon\Carbon::parse($nextRelease)->format('M d') }}</span>
                     @endif
