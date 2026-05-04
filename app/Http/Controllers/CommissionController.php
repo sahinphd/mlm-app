@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Commission;
+use App\Models\BvCommission;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -29,8 +30,7 @@ class CommissionController extends Controller
             abort(404);
         }
 
-        $totalBvCommission = Commission::where('user_id', $user->id)
-            ->where('type', 'bv')
+        $totalBvCommission = BvCommission::where('user_id', $user->id)
             ->sum('amount');
 
         return view('commissions.bv', [
@@ -44,12 +44,12 @@ class CommissionController extends Controller
         $user = Auth::user();
         $type = $request->query('type');
         
-        // 1. Get Earnings (Commission Table)
-        $commQuery = Commission::where('user_id', $user->id)->with('fromUser');
+        // 1. Get Earnings
         if ($type === 'bv') {
-            $commQuery->where('type', 'bv');
+            $commQuery = BvCommission::where('user_id', $user->id)->with('fromUser');
         } else {
-            $commQuery->where('type', '!=', 'bv');
+            $commQuery = Commission::where('user_id', $user->id)->with('fromUser')
+                ->where('type', '!=', 'bv');
         }
 
         // Sorting
@@ -63,16 +63,17 @@ class CommissionController extends Controller
         $commissions = $commQuery->get();
         
         foreach ($commissions as $comm) {
+            $commType = ($type === 'bv') ? 'bv' : $comm->type;
             $combinedData[] = [
                 'from_user' => ($comm->fromUser->name ?? 'N/A') . '<br><small class="text-gray-500">' . ($comm->fromUser->email ?? '') . '</small>',
                 'level' => '<span class="px-2 py-1 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">Level ' . $comm->level . '</span>',
                 'amount' => ($type === 'bv' ? '' : '₹') . number_format($comm->amount, 2),
                 'amount_raw' => (float)$comm->amount,
-                'type' => $comm->type === 'joining' 
+                'type' => $commType === 'joining' 
                     ? '<span class="px-2 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">Joining</span>'
-                    : ($comm->type === 'bv' 
+                    : ($commType === 'bv' 
                         ? '<span class="px-2 py-1 rounded-full text-xs font-semibold bg-green-50 text-green-600 dark:bg-green-500/10 dark:text-green-400">BV Earning</span>'
-                        : '<span class="px-2 py-1 rounded-full text-xs font-semibold bg-purple-50 text-purple-600 dark:bg-purple-500/10 dark:text-purple-400">' . ucfirst($comm->type) . '</span>'),
+                        : '<span class="px-2 py-1 rounded-full text-xs font-semibold bg-purple-50 text-purple-600 dark:bg-purple-500/10 dark:text-purple-400">' . ucfirst($commType) . '</span>'),
                 'date' => $comm->created_at->format('M d, Y H:i'),
                 'created_at' => $comm->created_at->toDateTimeString()
             ];
@@ -234,7 +235,7 @@ class CommissionController extends Controller
         $level = $request->query('level');
         $perPage = $request->query('per_page', 50);
 
-        $query = Commission::with(['user', 'fromUser'])->where('type', 'bv')->orderBy('created_at', 'desc');
+        $query = BvCommission::with(['user', 'fromUser'])->orderBy('created_at', 'desc');
 
         if ($receiverId) $query->where('user_id', $receiverId);
         if ($fromUserId) $query->where('from_user_id', $fromUserId);
@@ -317,7 +318,7 @@ class CommissionController extends Controller
         $endDate = $request->query('end_date');
         $level = $request->query('level');
 
-        $query = Commission::with(['user', 'fromUser'])->where('type', 'bv')->orderBy('created_at', 'desc');
+        $query = BvCommission::with(['user', 'fromUser'])->orderBy('created_at', 'desc');
 
         if ($receiverId) $query->where('user_id', $receiverId);
         if ($fromUserId) $query->where('from_user_id', $fromUserId);

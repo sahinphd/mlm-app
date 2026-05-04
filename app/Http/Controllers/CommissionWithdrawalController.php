@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Commission;
+use App\Models\BvCommission;
 use App\Models\Wallet;
 use App\Models\WalletTransaction;
 use App\Services\MLMService;
@@ -48,15 +49,13 @@ class CommissionWithdrawalController extends Controller
             ->sum('amount');
 
         // BV Components
-        $withdrawableBvPoints = Commission::where('user_id', $user->id)
+        $withdrawableBvPoints = BvCommission::where('user_id', $user->id)
             ->where('status', 'pending')
-            ->where('type', 'bv')
             ->where('created_at', '<=', $thresholdDate)
             ->sum('amount');
 
-        $lockedBvPoints = Commission::where('user_id', $user->id)
+        $lockedBvPoints = BvCommission::where('user_id', $user->id)
             ->where('status', 'pending')
-            ->where('type', 'bv')
             ->where('created_at', '>', $thresholdDate)
             ->sum('amount');
 
@@ -87,13 +86,29 @@ class CommissionWithdrawalController extends Controller
           ->where('description', 'LIKE', '%Service Charge%')
           ->sum('amount');
 
-        $nextReleaseRecord = Commission::where('user_id', $user->id)
+        $nextReleaseCash = Commission::where('user_id', $user->id)
+            ->where('status', 'pending')
+            ->where('type', '!=', 'bv')
+            ->where('created_at', '>', $thresholdDate)
+            ->orderBy('created_at', 'asc')
+            ->first();
+
+        $nextReleaseBv = BvCommission::where('user_id', $user->id)
             ->where('status', 'pending')
             ->where('created_at', '>', $thresholdDate)
             ->orderBy('created_at', 'asc')
             ->first();
         
-        $nextRelease = $nextReleaseRecord ? $nextReleaseRecord->created_at->addDays($lockDays) : null;
+        $earliest = null;
+        if ($nextReleaseCash && $nextReleaseBv) {
+            $earliest = $nextReleaseCash->created_at->lt($nextReleaseBv->created_at) ? $nextReleaseCash->created_at : $nextReleaseBv->created_at;
+        } elseif ($nextReleaseCash) {
+            $earliest = $nextReleaseCash->created_at;
+        } elseif ($nextReleaseBv) {
+            $earliest = $nextReleaseBv->created_at;
+        }
+
+        $nextRelease = $earliest ? $earliest->addDays($lockDays) : null;
 
         return view('commissions.withdrawal', [
             'page' => 'commission_withdrawal',
@@ -217,9 +232,8 @@ class CommissionWithdrawalController extends Controller
         $wallet = Wallet::where('user_id', $user->id)->firstOrFail();
         
         // Only convert withdrawable BV points
-        $withdrawableBvCommissions = Commission::where('user_id', $user->id)
+        $withdrawableBvCommissions = BvCommission::where('user_id', $user->id)
             ->where('status', 'pending')
-            ->where('type', 'bv')
             ->where('created_at', '<=', $thresholdDate)
             ->get();
 

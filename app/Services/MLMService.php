@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\User;
 use App\Models\Commission;
+use App\Models\BvCommission;
 use App\Models\Wallet;
 use App\Models\WalletTransaction;
 use Illuminate\Support\Facades\DB;
@@ -105,57 +106,72 @@ class MLMService
         $bvRate = (float)($settings['bv_conversion_rate'] ?? 1.0);
 
         DB::transaction(function () use ($order, $bvRate) {
+            // 1. Handle regular commissions
             $commissions = Commission::where('order_id', $order->id)->get();
-
             foreach ($commissions as $comm) {
-                if ($comm->amount > 0 && $comm->status !== 'reversed') {
-                    $wallet = Wallet::where('user_id', $comm->user_id)->first();
-                    if ($wallet) {
-                        $oldStatus = $comm->status;
-                        $amountToDeduct = $comm->amount;
-                        $isWithdrawn = ($oldStatus === 'withdrawn');
+                $this->processCommissionReversal($comm, $order, $bvRate);
+            }
 
-                        if ($comm->type === 'bv') {
-                            if ($isWithdrawn) {
-                                // Deduct cash equivalent from main balance
-                                $cashValue = $amountToDeduct * $bvRate;
-                                $wallet->main_balance -= $cashValue;
-                                
-                                WalletTransaction::create([
-                                    'wallet_id' => $wallet->id,
-                                    'type' => 'debit',
-                                    'source' => 'bv_reversal',
-                                    'amount' => $cashValue,
-                                    'reference_id' => 'reversal:' . $comm->id,
-                                    'description' => 'BV reversal for Order #' . $order->id . ' (Converted points recovered)'
-                                ]);
-                            } else {
-                                $wallet->earning_balance -= $amountToDeduct;
-                            }
-                        } else {
-                            // joining or repurchase: if already withdrawn, deduct from main balance
-                            if ($isWithdrawn) {
-                                $wallet->main_balance -= $amountToDeduct;
-                                
-                                WalletTransaction::create([
-                                    'wallet_id' => $wallet->id,
-                                    'type' => 'debit',
-                                    'source' => $comm->type . '_reversal',
-                                    'amount' => $amountToDeduct,
-                                    'reference_id' => 'reversal:' . $comm->id,
-                                    'description' => 'Commission reversal for Order #' . $order->id . ' (Withdrawn funds recovered)'
-                                ]);
-                            } else {
-                                $wallet->commission_balance -= $amountToDeduct;
-                            }
-                        }
-                        
-                        $wallet->save();
-                        $comm->update(['status' => 'reversed']);
-                    }
-                }
+            // 2. Handle BV commissions
+            $bvCommissions = BvCommission::where('order_id', $order->id)->get();
+            foreach ($bvCommissions as $bvComm) {
+                $this->processCommissionReversal($bvComm, $order, $bvRate, true);
             }
         });
+    }
+
+    protected function processCommissionReversal($comm, $order, $bvRate, $isBvTable = false)
+    {
+        if ($comm->amount > 0 && $comm->status !== 'reversed') {
+            $wallet = Wallet::where('user_id', $comm->user_id)->first();
+            if ($wallet) {
+                $oldStatus = $comm->status;
+                $amountToDeduct = $comm->amount;
+                $isWithdrawn = ($oldStatus === 'withdrawn');
+
+                // Determine if it's BV type (either from type column or from being in the BvCommission table)
+                $isBvType = $isBvTable || ($comm->type === 'bv');
+                $referencePrefix = $isBvTable ? 'bv_reversal:' : 'reversal:';
+
+                if ($isBvType) {
+                    if ($isWithdrawn) {
+                        // Deduct cash equivalent from main balance
+                        $cashValue = $amountToDeduct * $bvRate;
+                        $wallet->main_balance -= $cashValue;
+                        
+                        WalletTransaction::create([
+                            'wallet_id' => $wallet->id,
+                            'type' => 'debit',
+                            'source' => 'bv_reversal',
+                            'amount' => $cashValue,
+                            'reference_id' => $referencePrefix . $comm->id,
+                            'description' => 'BV reversal for Order #' . $order->id . ' (Converted points recovered)'
+                        ]);
+                    } else {
+                        $wallet->earning_balance -= $amountToDeduct;
+                    }
+                } else {
+                    // joining or repurchase: if already withdrawn, deduct from main balance
+                    if ($isWithdrawn) {
+                        $wallet->main_balance -= $amountToDeduct;
+                        
+                        WalletTransaction::create([
+                            'wallet_id' => $wallet->id,
+                            'type' => 'debit',
+                            'source' => $comm->type . '_reversal',
+                            'amount' => $amountToDeduct,
+                            'reference_id' => $referencePrefix . $comm->id,
+                            'description' => 'Commission reversal for Order #' . $order->id . ' (Withdrawn funds recovered)'
+                        ]);
+                    } else {
+                        $wallet->commission_balance -= $amountToDeduct;
+                    }
+                }
+                
+                $wallet->save();
+                $comm->update(['status' => 'reversed']);
+            }
+        }
     }
 
     protected function creditCommission($uplineId, $fromUserId, $orderId, $level, $amount, $type, $note = null)
@@ -170,17 +186,30 @@ class MLMService
             : \Illuminate\Support\Carbon::now();
 
         DB::transaction(function () use ($uplineId, $fromUserId, $orderId, $level, $amount, $type, $note, $withdrawableAt) {
-            $comm = Commission::create([
-                'user_id' => $uplineId,
-                'from_user_id' => $fromUserId,
-                'order_id' => $orderId,
-                'level' => $level,
-                'amount' => $amount,
-                'status' => 'pending',
-                'withdrawable_at' => $withdrawableAt,
-                'type' => $type,
-                'note' => $note
-            ]);
+            if ($type === 'bv') {
+                BvCommission::create([
+                    'user_id' => $uplineId,
+                    'from_user_id' => $fromUserId,
+                    'order_id' => $orderId,
+                    'level' => $level,
+                    'amount' => $amount,
+                    'status' => 'pending',
+                    'withdrawable_at' => $withdrawableAt,
+                    'note' => $note
+                ]);
+            } else {
+                Commission::create([
+                    'user_id' => $uplineId,
+                    'from_user_id' => $fromUserId,
+                    'order_id' => $orderId,
+                    'level' => $level,
+                    'amount' => $amount,
+                    'status' => 'pending',
+                    'withdrawable_at' => $withdrawableAt,
+                    'type' => $type,
+                    'note' => $note
+                ]);
+            }
 
             // Only update wallet and create transaction if amount is > 0
             if ($amount > 0) {

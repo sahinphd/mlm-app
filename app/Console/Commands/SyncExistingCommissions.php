@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Models\Commission;
+use App\Models\BvCommission;
 use App\Models\Wallet;
 use Illuminate\Support\Facades\DB;
 
@@ -42,8 +43,7 @@ class SyncExistingCommissions extends Command
         $this->info("Updated {$count} old commissions to 'withdrawn' status.");
 
         // 2. Populating withdrawable_at for BV commissions if empty
-        $bvCount = Commission::where('type', 'bv')
-            ->whereNull('withdrawable_at')
+        $bvCount = BvCommission::whereNull('withdrawable_at')
             ->update([
                 'withdrawable_at' => DB::raw('created_at')
             ]);
@@ -64,10 +64,12 @@ class SyncExistingCommissions extends Command
                 
                 // Set their commissions back to pending so they can withdraw
                 Commission::where('user_id', $wallet->user_id)
-                    ->where('type', '!=', 'bv')
+                    ->update(['status' => 'pending']);
+
+                BvCommission::where('user_id', $wallet->user_id)
                     ->update(['status' => 'pending']);
             }
-            $this->info('Balances moved to Commission Wallet for testing.');
+            $this->info('Balances moved to Commission/BV Wallet for testing.');
         }
 
         $this->info('Sync complete!');

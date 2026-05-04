@@ -99,15 +99,13 @@ Route::middleware('auth')->group(function () {
             ->sum('amount');
 
         // BV Components (in Cash Value for aggregated cards)
-        $withdrawableBvPoints = \App\Models\Commission::where('user_id', $user->id)
+        $withdrawableBvPoints = \App\Models\BvCommission::where('user_id', $user->id)
             ->where('status', 'pending')
-            ->where('type', 'bv')
             ->where('created_at', '<=', $thresholdDate)
             ->sum('amount');
         
-        $lockedBvPoints = \App\Models\Commission::where('user_id', $user->id)
+        $lockedBvPoints = \App\Models\BvCommission::where('user_id', $user->id)
             ->where('status', 'pending')
-            ->where('type', 'bv')
             ->where('created_at', '>', $thresholdDate)
             ->sum('amount');
         
@@ -137,13 +135,29 @@ Route::middleware('auth')->group(function () {
           ->where('description', 'LIKE', '%Service Charge%')
           ->sum('amount');
 
-        $nextReleaseRecord = \App\Models\Commission::where('user_id', $user->id)
+        $nextReleaseCash = \App\Models\Commission::where('user_id', $user->id)
+            ->where('status', 'pending')
+            ->where('type', '!=', 'bv')
+            ->where('created_at', '>', $thresholdDate)
+            ->orderBy('created_at', 'asc')
+            ->first();
+
+        $nextReleaseBv = \App\Models\BvCommission::where('user_id', $user->id)
             ->where('status', 'pending')
             ->where('created_at', '>', $thresholdDate)
             ->orderBy('created_at', 'asc')
             ->first();
         
-        $nextRelease = $nextReleaseRecord ? $nextReleaseRecord->created_at->addDays($lockDays) : null;
+        $earliest = null;
+        if ($nextReleaseCash && $nextReleaseBv) {
+            $earliest = $nextReleaseCash->created_at->lt($nextReleaseBv->created_at) ? $nextReleaseCash->created_at : $nextReleaseBv->created_at;
+        } elseif ($nextReleaseCash) {
+            $earliest = $nextReleaseCash->created_at;
+        } elseif ($nextReleaseBv) {
+            $earliest = $nextReleaseBv->created_at;
+        }
+
+        $nextRelease = $earliest ? $earliest->addDays($lockDays) : null;
         
         $bvCashValue = ($user->wallet?->earning_balance ?? 0) * $bvRate;
 
@@ -249,11 +263,50 @@ Route::middleware('auth')->group(function () {
     // Admin Section
     Route::middleware('can:admin-access')->group(function () {
         Route::get('/admin', function(){
-            // gather dashboard metrics
+            // 1. Core KPIs
             $usersCount = \App\Models\User::count();
             $ordersCount = \App\Models\Order::count();
             $walletTotal = \App\Models\Wallet::selectRaw('COALESCE(SUM(COALESCE(main_balance,0) + COALESCE(earning_balance,0) + COALESCE(credit_balance,0)),0) as total')->value('total');
 
+            // 2. Revenue & Fulfillment (Granular)
+            $salesStats = \App\Models\Order::selectRaw("
+                SUM(CASE WHEN status = 'completed' THEN total_amount ELSE 0 END) as value_completed,
+                SUM(CASE WHEN status = 'delivered' THEN total_amount ELSE 0 END) as value_delivered,
+                SUM(CASE WHEN status = 'shipped' THEN total_amount ELSE 0 END) as value_shipped,
+                SUM(CASE WHEN status = 'processing' THEN total_amount ELSE 0 END) as value_processing,
+                SUM(CASE WHEN status = 'pending' THEN total_amount ELSE 0 END) as value_pending,
+                SUM(CASE WHEN status = 'returned' THEN total_amount ELSE 0 END) as value_returned,
+                SUM(CASE WHEN status = 'failed' THEN total_amount ELSE 0 END) as value_failed,
+                SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as count_completed,
+                SUM(CASE WHEN status = 'delivered' THEN 1 ELSE 0 END) as count_delivered,
+                SUM(CASE WHEN status = 'shipped' THEN 1 ELSE 0 END) as count_shipped,
+                SUM(CASE WHEN status = 'processing' THEN 1 ELSE 0 END) as count_processing,
+                SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as count_pending,
+                SUM(CASE WHEN status = 'returned' THEN 1 ELSE 0 END) as count_returned
+            ")->first();
+
+            // 3. Credit & Risk Management
+            $creditAccountStats = \App\Models\CreditAccount::where('approval_status', 'approved')
+                ->selectRaw('SUM(credit_limit) as total_issued, SUM(used_credit) as total_used')
+                ->first();
+            $totalCreditCollected = \App\Models\CreditTransaction::where('type', 'credit')->sum('amount');
+            $overdueEmiValue = \App\Models\EmiSchedule::where('status', 'overdue')->sum('installment_amount');
+
+            // 4. User & Compliance Pipeline
+            $userAccountStats = \App\Models\User::selectRaw("
+                SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) as active_users,
+                SUM(CASE WHEN status = 'blocked' THEN 1 ELSE 0 END) as blocked_users,
+                SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_users,
+                SUM(CASE WHEN kyc_status = 'pending' THEN 1 ELSE 0 END) as kyc_pending
+            ")->first();
+
+            // 5. Commissions & BV
+            $totalPendingWithdrawals = \App\Models\Commission::where('status', 'pending')->where('type', '!=', 'bv')->sum('amount');
+            $totalWithdrawnCommission = \App\Models\Commission::where('status', 'withdrawn')->where('type', '!=', 'bv')->sum('amount');
+            $totalBvIssued = \App\Models\BvCommission::sum('amount');
+            $totalWithdrawnBv = \App\Models\BvCommission::where('status', 'withdrawn')->sum('amount');
+
+            // Existing Chart Data
             $labels = []; $data = [];
             for ($i = 6; $i >= 0; $i--) {
                 $day = now()->subDays($i)->startOfDay();
@@ -275,7 +328,24 @@ Route::middleware('auth')->group(function () {
 
             $recentPayments = \App\Models\PaymentRequest::with('user')->orderBy('created_at', 'desc')->take(5)->get();
 
-            return view('admin.dashboard', compact('usersCount','ordersCount','walletTotal','labels','data','projects', 'recentPayments'));
+            return view('admin.dashboard', compact(
+                'usersCount',
+                'ordersCount',
+                'walletTotal',
+                'salesStats',
+                'creditAccountStats',
+                'totalCreditCollected',
+                'overdueEmiValue',
+                'userAccountStats',
+                'totalPendingWithdrawals',
+                'totalWithdrawnCommission',
+                'totalBvIssued',
+                'totalWithdrawnBv',
+                'labels',
+                'data',
+                'projects',
+                'recentPayments'
+            ));
         })->name('admin.dashboard');
 
         // Admin Users

@@ -6,11 +6,12 @@ $kernel->bootstrap();
 
 use App\Models\Wallet;
 use App\Models\Commission;
+use App\Models\BvCommission;
 
 $wallet = Wallet::where('earning_balance', 276)->first();
 $uid = $wallet->user_id;
 
-$bvComms = Commission::where('user_id', $uid)->where('type', 'bv')->get();
+$bvComms = BvCommission::where('user_id', $uid)->get();
 
 echo "Current Time: " . now() . "\n";
 foreach ($bvComms as $c) {

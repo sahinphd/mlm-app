@@ -10,6 +10,7 @@ use App\Models\Wallet;
 use App\Models\CreditAccount;
 use App\Models\EmiSchedule;
 use App\Models\Commission;
+use App\Models\BvCommission;
 use Illuminate\Support\Facades\DB;
 
 class EmiAndCommissionTest extends TestCase
@@ -74,9 +75,9 @@ class EmiAndCommissionTest extends TestCase
         // Level 2: Repurchase (1%) = 2, BV (Rate 1) = 5 (Total 7)
         
         $this->assertDatabaseHas('commissions', ['user_id' => $parent->id, 'type' => 'repurchase', 'amount' => 4]);
-        $this->assertDatabaseHas('commissions', ['user_id' => $parent->id, 'type' => 'bv', 'amount' => 10]);
+        $this->assertDatabaseHas('bv_commissions', ['user_id' => $parent->id, 'amount' => 10]);
         $this->assertDatabaseHas('commissions', ['user_id' => $grand->id, 'type' => 'repurchase', 'amount' => 2]);
-        $this->assertDatabaseHas('commissions', ['user_id' => $grand->id, 'type' => 'bv', 'amount' => 5]);
+        $this->assertDatabaseHas('bv_commissions', ['user_id' => $grand->id, 'amount' => 5]);
 
         $this->assertEquals(14, $parentWallet->earning_balance);
         $this->assertEquals(7, $grandWallet->earning_balance);

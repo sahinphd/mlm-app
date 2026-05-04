@@ -68,7 +68,14 @@ class UserController extends Controller
             8 => 'created_at'
         ];
 
-        $query = User::with(['creditAccount', 'referralRecord.parent']);
+        $query = User::with(['wallet', 'creditAccount', 'referralRecord.parent'])
+            ->withSum(['emis as overdue_amount' => function($q) {
+                $q->where('status', 'overdue');
+            }], 'installment_amount')
+            ->withSum(['commissions as total_commission' => function($q) {
+                $q->where('type', '!=', 'bv');
+            }], 'amount')
+            ->withSum('bvCommissions as total_bv', 'amount');
 
         $recordsTotal = $query->count();
 
@@ -118,11 +125,17 @@ class UserController extends Controller
                 '<img src="'.e($u->avatar_url).'" 
                       alt="avatar" 
                       class="w-10 h-10 rounded-full border border-stroke dark:border-strokedark cursor-pointer js-user-info" 
+                      data-id="'. $u->id .'"
                       data-name="'.e($u->name).'"
                       data-phone="'.e($u->phone ?? '-').'"
                       data-ref-by="'.e($parentName).'"
                       data-ref-code="'.e($referralCode).'"
                       data-avatar="'.e($u->avatar_url).'"
+                      data-wallet="'.number_format($u->wallet->main_balance ?? 0, 2).'"
+                      data-commission="'.number_format($u->total_commission ?? 0, 2).'"
+                      data-bv="'.number_format($u->total_bv ?? 0, 2).'"
+                      data-credit-used="'.number_format($u->creditAccount->used_credit ?? 0, 2).'"
+                      data-overdue="'.number_format($u->overdue_amount ?? 0, 2).'"
                 />',
                 e($u->name),
                 '<a href="mailto:'.e($u->email).'" class="text-blue-600 truncate inline-block max-w-[150px]">'.e($u->email).'</a>',
@@ -366,6 +379,11 @@ class UserController extends Controller
             'created_at' => now(),
             'updated_at' => now(),
         ]);
+
+        // NEW: If created as 'active', distribute joining commissions
+        if ($u->status === 'active') {
+            $this->mlmService->distributeJoiningCommissions($u->id);
+        }
 
         return redirect()->route('admin.users')->with('success', 'User created successfully');
     }

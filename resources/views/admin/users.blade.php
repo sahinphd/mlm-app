@@ -132,15 +132,44 @@
         // Handle avatar click for info popup
         $('#usersTable').on('click', '.js-user-info', function() {
             const data = $(this).data();
+            const symbol = '₹';
+            const isOverdue = parseFloat(data.overdue.replace(/,/g, '')) > 0;
+            
             Swal.fire({
                 title: `<div class="text-xl font-bold text-black dark:text-white">${data.name}</div>`,
                 html: `
                     <div class="flex flex-col items-center justify-center space-y-4 py-4 text-left">
                         <img src="${data.avatar}" class="w-24 h-24 rounded-full border-4 border-primary shadow-lg mb-2" />
+                        
+                        <!-- Financial Overview -->
+                        <div class="w-full grid grid-cols-2 gap-3 mb-2">
+                            <div class="p-3 rounded bg-blue-50 dark:bg-meta-4 border border-blue-100 dark:border-strokedark">
+                                <div class="text-xs text-gray-500 uppercase font-bold mb-1">Main Wallet</div>
+                                <div class="text-lg font-bold text-blue-600">${symbol}${data.wallet}</div>
+                            </div>
+                            <div class="p-3 rounded bg-green-50 dark:bg-meta-4 border border-green-100 dark:border-strokedark">
+                                <div class="text-xs text-gray-500 uppercase font-bold mb-1">Total Commission</div>
+                                <div class="text-lg font-bold text-green-600">${symbol}${data.commission}</div>
+                            </div>
+                            <div class="p-3 rounded bg-orange-50 dark:bg-meta-4 border border-orange-100 dark:border-strokedark">
+                                <div class="text-xs text-gray-500 uppercase font-bold mb-1">Credit Due</div>
+                                <div class="text-lg font-bold text-orange-600">${symbol}${data.creditUsed}</div>
+                            </div>
+                            <div class="p-3 rounded ${isOverdue ? 'bg-red-50' : 'bg-gray-50'} dark:bg-meta-4 border ${isOverdue ? 'border-red-200' : 'border-stroke'} dark:border-strokedark">
+                                <div class="text-xs ${isOverdue ? 'text-red-600' : 'text-gray-500'} uppercase font-bold mb-1">Overdue Amount</div>
+                                <div class="text-lg font-bold ${isOverdue ? 'text-red-600' : 'text-gray-800 dark:text-white'}">${symbol}${data.overdue}</div>
+                            </div>
+                        </div>
+
+                        <!-- User Details -->
                         <div class="w-full bg-gray-50 dark:bg-meta-4 rounded-lg p-4 space-y-3">
                             <div class="flex justify-between border-b border-stroke dark:border-strokedark pb-2">
                                 <span class="font-semibold text-gray-600 dark:text-gray-300">Phone:</span>
                                 <span class="text-black dark:text-white font-medium">${data.phone}</span>
+                            </div>
+                            <div class="flex justify-between border-b border-stroke dark:border-strokedark pb-2">
+                                <span class="font-semibold text-gray-600 dark:text-gray-300">Total BV:</span>
+                                <span class="text-black dark:text-white font-medium">${data.bv}</span>
                             </div>
                             <div class="flex justify-between border-b border-stroke dark:border-strokedark pb-2">
                                 <span class="font-semibold text-gray-600 dark:text-gray-300">Referred By:</span>
@@ -153,11 +182,17 @@
                         </div>
                     </div>
                 `,
+                showCancelButton: true,
                 showConfirmButton: true,
-                confirmButtonText: 'Close',
+                confirmButtonText: 'Edit Profile',
+                cancelButtonText: 'Close',
                 confirmButtonColor: '#3C50E0',
                 background: document.documentElement.classList.contains('dark') ? '#24303F' : '#fff',
                 color: document.documentElement.classList.contains('dark') ? '#fff' : '#000'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = `/admin/users/${data.id}/edit`;
+                }
             });
         });
 
