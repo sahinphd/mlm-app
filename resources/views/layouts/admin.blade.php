@@ -18,6 +18,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
+        [x-cloak] { display: none !important; }
         /* ===== Google Translate Fix ===== */
         .goog-te-banner-frame.skiptranslate,
         body > .skiptranslate {

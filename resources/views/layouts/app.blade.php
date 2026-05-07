@@ -19,6 +19,7 @@
         @endif
 
         <style>
+            [x-cloak] { display: none !important; }
             /* ===== Google Translate Fix ===== */
             .goog-te-banner-frame.skiptranslate,
             body > .skiptranslate {
