@@ -243,6 +243,7 @@ class AdminWalletHistoryController extends Controller
         }
 
         $totalFiltered = $query->count();
+        $totalAmount = $query->sum('amount');
 
         // Sorting
         $columns = ['created_at', 'user_id', 'amount', 'status', 'emi_schedule_id', 'created_at'];
@@ -278,6 +279,7 @@ class AdminWalletHistoryController extends Controller
             "draw"            => intval($request->input('draw')),
             "recordsTotal"    => intval($totalData),
             "recordsFiltered" => intval($totalFiltered),
+            "totalAmount"     => $totalAmount,
             "data"            => $data
         ]);
     }

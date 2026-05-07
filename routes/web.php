@@ -413,7 +413,9 @@ Route::middleware('auth')->group(function () {
         Route::post('/admin/settings', [\App\Http\Controllers\Admin\SettingController::class, 'update'])->name('admin.settings.update');
 
         Route::get('/admin/emis', [\App\Http\Controllers\Admin\EmiManagementController::class, 'index'])->name('admin.emis.index');
+        Route::post('/admin/emis/run-penalty-job', [\App\Http\Controllers\Admin\EmiManagementController::class, 'runPenaltyJob'])->name('admin.emis.run_penalty_job');
         Route::get('/admin/penalties/history', [\App\Http\Controllers\Admin\AdminWalletHistoryController::class, 'penaltyIndex'])->name('admin.penalties.history');
+
         Route::get('/admin/penalties/history/data', [\App\Http\Controllers\Admin\AdminWalletHistoryController::class, 'penaltyData'])->name('admin.penalties.history.data');
         Route::post('/admin/emis/{id}/remind', [\App\Http\Controllers\Admin\EmiManagementController::class, 'sendReminder'])->name('admin.emis.remind');
 

@@ -88,6 +88,13 @@
                     </thead>
                     <tbody class="text-sm">
                     </tbody>
+                    <tfoot class="border-t border-stroke dark:border-strokedark">
+                        <tr>
+                            <th colspan="2" class="pt-3 text-sm font-bold text-black dark:text-white text-right">Total:</th>
+                            <th id="total-amount" class="pt-3 text-sm font-bold text-black dark:text-white text-right">₹0.00</th>
+                            <th colspan="2"></th>
+                        </tr>
+                    </tfoot>
                 </table>
             </div>
         </div>
@@ -122,6 +129,12 @@
             language: {
                 searchPlaceholder: "Search by amount or status...",
                 search: ""
+            },
+            drawCallback: function(settings) {
+                const response = settings.json;
+                if (response && response.totalAmount !== undefined) {
+                    $('#total-amount').text('₹' + parseFloat(response.totalAmount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+                }
             }
         });
 

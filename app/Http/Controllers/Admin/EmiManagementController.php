@@ -7,6 +7,7 @@ use App\Models\EmiSchedule;
 use App\Models\User;
 use App\Notifications\UpcomingEmiNotification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 
 class EmiManagementController extends Controller
@@ -51,6 +52,25 @@ class EmiManagementController extends Controller
             'endDate' => $endDate,
             'perPage' => $perPage
         ]);
+    }
+
+    public function runPenaltyJob()
+    {
+        try {
+            Artisan::call('emi:apply-penalties');
+            $output = Artisan::output();
+            
+            return response()->json([
+                'success' => true, 
+                'message' => 'Penalty & Auto-Payment job executed successfully.',
+                'output' => $output
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false, 
+                'message' => 'Error running job: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     public function sendReminder($id)

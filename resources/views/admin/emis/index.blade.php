@@ -6,6 +6,13 @@
         <h2 class="text-title-md2 font-bold text-black dark:text-white">
             Global EMI Schedules
         </h2>
+
+        <button onclick="runPenaltyJob()" class="flex items-center justify-center rounded bg-danger py-2 px-6 font-medium text-white hover:bg-opacity-90 transition">
+            <svg class="fill-current mr-2" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM13 17H11V15H13V17ZM13 13H11V7H13V13Z" fill="currentColor"/>
+            </svg>
+            Process Penalties & Auto-Payments
+        </button>
     </div>
 
     <!-- Filter & Search -->
@@ -160,6 +167,44 @@
                                 text: 'Error: ' + (err.responseJSON ? err.responseJSON.message : 'Unknown error')
                             });
                         }
+                    });
+                }
+            });
+        }
+
+        function runPenaltyJob() {
+            Swal.fire({
+                title: 'Process Penalties?',
+                text: "This will check for overdue EMIs, apply late fees, and attempt auto-payments from user wallets. This may take a few moments.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, process now!',
+                showLoaderOnConfirm: true,
+                preConfirm: () => {
+                    return $.ajax({
+                        url: "{{ route('admin.emis.run_penalty_job') }}",
+                        method: 'POST',
+                        data: {
+                            _token: '{{ csrf_token() }}'
+                        }
+                    }).catch(error => {
+                        Swal.showValidationMessage(
+                            `Request failed: ${error.responseJSON ? error.responseJSON.message : error.statusText}`
+                        )
+                    });
+                },
+                allowOutsideClick: () => !Swal.isLoading()
+            }).then((result) => {
+                if (result.isConfirmed && result.value.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Job Completed',
+                        text: result.value.message,
+                        footer: '<pre style="text-align: left; max-height: 200px; overflow: auto;">' + result.value.output + '</pre>'
+                    }).then(() => {
+                        window.location.reload();
                     });
                 }
             });
