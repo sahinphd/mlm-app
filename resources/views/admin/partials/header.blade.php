@@ -13,6 +13,19 @@
 		</div>
 
 		<div class="flex items-center gap-3">
+			@if(auth()->user()->isAdmin())
+			<!-- Admin Scan Customer QR One-Click Button -->
+			<a href="{{ route('admin.customer-lookup.index', ['scan' => 1]) }}" 
+			   @click.prevent="window.openAdminCustomerQrScanner ? window.openAdminCustomerQrScanner() : (window.location.href='{{ route('admin.customer-lookup.index', ['scan' => 1]) }}')"
+			   class="flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-semibold shadow-xs hover:shadow transition-all"
+			   title="Scan Customer QR Code">
+				<svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+				</svg>
+				<span class="hidden md:inline">Scan QR</span>
+			</a>
+			@endif
+
 			<!-- Customer Lookup Direct One-Click Button -->
 			<a href="{{ route('admin.customer-lookup.index') }}" 
 			   class="flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-lg bg-[#1555a8] hover:bg-[#12468d] text-white text-xs sm:text-sm font-semibold shadow-xs hover:shadow transition-all"

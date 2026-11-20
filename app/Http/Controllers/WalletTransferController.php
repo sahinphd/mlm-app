@@ -5,12 +5,20 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Models\WalletTransaction;
+use App\Services\LedgerService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class WalletTransferController extends Controller
 {
+    protected LedgerService $ledgerService;
+
+    public function __construct(LedgerService $ledgerService)
+    {
+        $this->ledgerService = $ledgerService;
+    }
+
     public function index()
     {
         $user = Auth::user();
@@ -46,60 +54,27 @@ class WalletTransferController extends Controller
             return back()->withErrors(['email' => 'You cannot transfer balance to yourself.'])->withInput();
         }
 
-        $senderWallet = Wallet::firstOrCreate(['user_id' => $sender->id]);
-        $recipientWallet = Wallet::firstOrCreate(['user_id' => $recipient->id]);
-
-        if ($senderWallet->main_balance < $request->amount) {
-            return back()->withErrors(['amount' => 'Insufficient main balance.'])->withInput();
-        }
-
         try {
-            DB::beginTransaction();
-
-            // Deduct from sender
-            $senderWallet->decrement('main_balance', $request->amount);
-
-            // Add to recipient
-            $recipientWallet->increment('main_balance', $request->amount);
-
-            // Record transaction for sender
-            WalletTransaction::create([
-                'wallet_id' => $senderWallet->id,
-                'type' => 'debit',
-                'source' => 'transfer',
-                'amount' => $request->amount,
-                'description' => "Transferred to {$recipient->name} ({$recipient->email}). Remarks: " . ($request->remarks ?? 'N/A'),
-            ]);
-
-            // Record transaction for recipient
-            WalletTransaction::create([
-                'wallet_id' => $recipientWallet->id,
-                'type' => 'credit',
-                'source' => 'transfer',
-                'amount' => $request->amount,
-                'description' => "Received from {$sender->name} ({$sender->email}). Remarks: " . ($request->remarks ?? 'N/A'),
-            ]);
-
-            DB::commit();
+            $result = $this->ledgerService->recordQrTransfer($sender, $recipient, (float) $request->amount, $request->remarks);
 
             if ($request->ajax()) {
                 return response()->json([
                     'success' => true,
                     'message' => 'Balance transferred successfully to ' . $recipient->name,
-                    'new_balance' => number_format($senderWallet->main_balance, 2)
+                    'transaction_id' => $result['transaction_id'],
+                    'new_balance' => number_format($result['sender_new_balance'], 2)
                 ]);
             }
 
             return redirect()->route('wallet.transfer')->with('success', 'Balance transferred successfully to ' . $recipient->name);
         } catch (\Exception $e) {
-            DB::rollBack();
             if ($request->ajax()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'An error occurred: ' . $e->getMessage()
-                ], 500);
+                    'message' => $e->getMessage()
+                ], 422);
             }
-            return back()->withErrors(['error' => 'An error occurred during transfer: ' . $e->getMessage()])->withInput();
+            return back()->withErrors(['error' => $e->getMessage()])->withInput();
         }
     }
 

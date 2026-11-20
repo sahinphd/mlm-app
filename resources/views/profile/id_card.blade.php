@@ -98,23 +98,33 @@
             </div>
             @endif
 
-            <!-- Bottom Bar with Barcode -->
+            <!-- Bottom Bar with Barcode & QR Code -->
             <div class="absolute bottom-0 left-0 w-full bg-slate-50 border-t border-gray-100 flex items-center justify-between px-4 py-1">
                 <div class="flex flex-col items-start">
                     <p class="text-[5.5px] text-slate-400 font-bold uppercase tracking-widest leading-none mb-0.5">Referral Code</p>
                     <p class="text-[8px] font-black text-brand-600 font-mono tracking-widest leading-none">{{ $user->referralRecord->referral_code ?? 'U'.$user->id }}</p>
                 </div>
-                <div class="bg-white px-1 py-0.5 rounded border border-gray-200 shadow-sm flex flex-col items-center">
-                    <svg id="barcode" class="h-4 w-auto"></svg>
+                <div class="flex items-center gap-1.5">
+                    <div class="bg-white p-0.5 rounded border border-gray-200 shadow-xs flex items-center justify-center" title="Customer QR Code">
+                        <div id="idcard-qrcode" class="w-6 h-6 flex items-center justify-center"></div>
+                    </div>
+                    <div class="bg-white px-1 py-0.5 rounded border border-gray-200 shadow-xs flex flex-col items-center">
+                        <svg id="barcode" class="h-4 w-auto"></svg>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <div class="mt-6 text-center no-print">
-        <div class="inline-block p-4 rounded-xl bg-blue-50 border border-blue-100 dark:bg-white/[0.03] dark:border-gray-800">
-            <p class="text-sm text-blue-800 dark:text-blue-300 font-medium">This card can be scanned by the admin for quick identification at the shop.</p>
-            <p class="text-xs text-blue-600 dark:text-blue-400 mt-1">Recommended print size: 85.6mm x 54mm (Standard CR80)</p>
+        <div class="inline-flex flex-col sm:flex-row items-center gap-3 p-4 rounded-xl bg-blue-50 border border-blue-100 dark:bg-white/[0.03] dark:border-gray-800">
+            <div class="text-left">
+                <p class="text-sm text-blue-800 dark:text-blue-300 font-medium">This card can be scanned by the admin for quick identification at the shop.</p>
+                <p class="text-xs text-blue-600 dark:text-blue-400 mt-0.5">Standard CR80 format (85.6mm x 54mm) with unique Customer QR Code.</p>
+            </div>
+            <a href="{{ route('wallet.my-qr') }}" class="px-3 py-1.5 rounded-lg bg-[#1555a8] hover:bg-[#12468d] text-white text-xs font-bold transition shadow-xs whitespace-nowrap">
+                Open QR Card
+            </a>
         </div>
     </div>
 </div>
@@ -172,8 +182,10 @@
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+<script src="{{ asset('vendor/qrcode/qrcode.min.js') }}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Render Barcode
         JsBarcode("#barcode", "{{ $user->referralRecord->referral_code ?? 'U'.$user->id }}", {
             format: "CODE128",
             width: 2,
@@ -182,6 +194,19 @@
             margin: 0,
             background: "transparent"
         });
+
+        // Render QR Code
+        const qrContainer = document.getElementById('idcard-qrcode');
+        if (qrContainer && typeof QRCode !== 'undefined') {
+            new QRCode(qrContainer, {
+                text: "CUST:{{ $user->id }}",
+                width: 24,
+                height: 24,
+                colorDark: '#0f172a',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.M
+            });
+        }
     });
 </script>
 @endpush

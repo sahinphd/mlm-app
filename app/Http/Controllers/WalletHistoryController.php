@@ -72,11 +72,13 @@ class WalletHistoryController extends Controller
         foreach ($transactions as $tx) {
             $data[] = [
                 'date' => $tx->created_at->format('M d, Y H:i'),
+                'txn_id' => '<span class="font-mono text-xs font-semibold text-gray-500 dark:text-gray-400">' . e($tx->reference_id ?: ('T-' . (88000 + (int) $tx->id))) . '</span>',
                 'type' => $tx->type === 'credit' 
                     ? '<span class="px-2 py-1 rounded-full text-xs font-semibold bg-green-50 text-green-600 dark:bg-green-500/10 dark:text-green-400">Credit</span>'
                     : '<span class="px-2 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400">Debit</span>',
                 'source' => ucfirst($tx->source),
-                'amount' => '₹' . number_format($tx->amount, 2),
+                'amount' => ($tx->type === 'credit' ? '+ ₹' : '- ₹') . number_format($tx->amount, 2),
+                'balance' => $tx->balance !== null ? '₹' . number_format($tx->balance, 2) : '-',
                 'description' => $tx->description ?? '-',
                 'raw_date' => $tx->created_at->toDateTimeString()
             ];

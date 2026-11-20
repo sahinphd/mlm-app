@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Models\WalletTransaction;
+use App\Services\LedgerService;
 use App\Services\MLMService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -17,10 +18,12 @@ use Illuminate\Support\Str;
 class CustomerLookupController extends Controller
 {
     protected MLMService $mlmService;
+    protected LedgerService $ledgerService;
 
-    public function __construct(MLMService $mlmService)
+    public function __construct(MLMService $mlmService, LedgerService $ledgerService)
     {
         $this->mlmService = $mlmService;
+        $this->ledgerService = $ledgerService;
     }
     /**
      * Ensure the authenticated user has admin privileges.
@@ -227,35 +230,14 @@ class CustomerLookupController extends Controller
 
         $amount = (float) $validated['amount'];
         $admin = Auth::user();
-        $adminName = $admin ? $admin->name : 'Admin';
 
         try {
-            DB::beginTransaction();
-
-            $wallet = Wallet::firstOrCreate(
-                ['user_id' => $user->id],
-                ['main_balance' => 0, 'earning_balance' => 0, 'credit_balance' => 0]
+            $this->ledgerService->recordAdminAddMoney(
+                $user,
+                $amount,
+                $validated['note'] ?? null,
+                $admin
             );
-
-            $wallet->main_balance = (float) $wallet->main_balance + $amount;
-            $wallet->save();
-
-            $note = !empty($validated['note'])
-                ? trim($validated['note'])
-                : "Wallet recharge added by Admin ({$adminName})";
-
-            $refId = 'ADMIN-ADD-' . strtoupper(Str::random(6)) . '-' . $user->id;
-
-            WalletTransaction::create([
-                'wallet_id' => $wallet->id,
-                'type' => 'credit',
-                'source' => 'manual',
-                'amount' => $amount,
-                'reference_id' => $refId,
-                'description' => $note,
-            ]);
-
-            DB::commit();
 
             $updatedCustomer = $this->formatCustomerData($user);
             $txData = $this->getCustomerTransactions($user, $request);
@@ -268,7 +250,6 @@ class CustomerLookupController extends Controller
                 'pagination' => $txData['pagination'],
             ]);
         } catch (\Throwable $e) {
-            DB::rollBack();
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to add wallet money: ' . $e->getMessage(),
@@ -293,54 +274,39 @@ class CustomerLookupController extends Controller
         $amount = (float) $validated['amount'];
         $bv = (float) ($validated['bv'] ?? 0);
         $admin = Auth::user();
-        $adminName = $admin ? $admin->name : 'Admin';
-
-        $wallet = Wallet::firstOrCreate(
-            ['user_id' => $user->id],
-            ['main_balance' => 0, 'earning_balance' => 0, 'credit_balance' => 0]
-        );
-
-        if ((float) $wallet->main_balance < $amount) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Insufficient wallet balance. Current balance is ₹' . number_format($wallet->main_balance, 2) . ', cannot deduct ₹' . number_format($amount, 2) . '.',
-            ], 422);
-        }
 
         try {
-            DB::beginTransaction();
+            $order = DB::transaction(function () use ($user, $amount, $bv, $validated, $admin) {
+                // Check balance with lock
+                $wallet = Wallet::where('user_id', $user->id)->lockForUpdate()->first();
+                if (!$wallet || (float) $wallet->main_balance < $amount) {
+                    $curBal = $wallet ? (float) $wallet->main_balance : 0;
+                    throw new \RuntimeException('Insufficient wallet balance. Current balance is ₹' . number_format($curBal, 2) . ', cannot deduct ₹' . number_format($amount, 2) . '.');
+                }
 
-            // 1. Deduct from customer's main wallet balance
-            $wallet->main_balance = (float) $wallet->main_balance - $amount;
-            $wallet->save();
+                // Create completed Order record for this shop purchase
+                $order = Order::create([
+                    'user_id' => $user->id,
+                    'total_amount' => $amount,
+                    'total_bv' => $bv,
+                    'payment_method' => 'main_wallet',
+                    'status' => 'completed',
+                ]);
 
-            $note = !empty($validated['note'])
-                ? trim($validated['note'])
-                : "Shop purchase deducted by Admin ({$adminName})";
+                // Record atomic deduction and immutable ledger
+                $this->ledgerService->recordAdminShopDeduct(
+                    $user,
+                    $amount,
+                    $order,
+                    $validated['note'] ?? null,
+                    $admin
+                );
 
-            // 2. Create completed Order record for this shop purchase (as in shopping module)
-            $order = Order::create([
-                'user_id' => $user->id,
-                'total_amount' => $amount,
-                'total_bv' => $bv,
-                'payment_method' => 'main_wallet',
-                'status' => 'completed',
-            ]);
+                // Distribute upline repurchase & BV commissions
+                $this->mlmService->distributeOrderCommissions($order);
 
-            // 3. Log wallet debit transaction referencing the order
-            WalletTransaction::create([
-                'wallet_id' => $wallet->id,
-                'type' => 'debit',
-                'source' => 'purchase',
-                'amount' => $amount,
-                'reference_id' => 'ORDER-' . $order->id,
-                'description' => $note,
-            ]);
-
-            // 4. Distribute upline repurchase & BV commissions exactly as in the shopping module
-            $this->mlmService->distributeOrderCommissions($order);
-
-            DB::commit();
+                return $order;
+            });
 
             // Check how many upline commissions were distributed
             $commCount = \App\Models\Commission::where('order_id', $order->id)->where('amount', '>', 0)->count();
@@ -363,11 +329,10 @@ class CustomerLookupController extends Controller
                 'pagination' => $txData['pagination'],
             ]);
         } catch (\Throwable $e) {
-            DB::rollBack();
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to deduct shop amount: ' . $e->getMessage(),
-            ], 500);
+                'message' => $e->getMessage(),
+            ], 422);
         }
     }
 
@@ -376,6 +341,12 @@ class CustomerLookupController extends Controller
      */
     protected function findUserByQuery(string $query): ?User
     {
+        // 0. Try QR payload resolver (e.g. CUST:15, CUST-10015, plain 15)
+        if ($qrUserId = $this->ledgerService->parseQrPayload($query)) {
+            $user = User::find($qrUserId);
+            if ($user) return $user;
+        }
+
         // 1. Try exact ID if numeric
         if (ctype_digit($query) || (is_numeric($query) && (int) $query > 0)) {
             $user = User::where('id', (int) $query)->first();
@@ -428,6 +399,7 @@ class CustomerLookupController extends Controller
         return [
             'id' => $user->id,
             'cust_id' => $custId,
+            'qr_payload' => $this->ledgerService->getCustomerQrPayload($user),
             'initials' => $initials,
             'name' => $user->name,
             'email' => $user->email,
@@ -537,7 +509,7 @@ class CustomerLookupController extends Controller
             ->paginate($perPage);
 
         $items = collect($paginator->items())->map(function ($tx) use ($runningBalances) {
-            $bal = $runningBalances[$tx->id] ?? 0;
+            $bal = $tx->balance !== null ? (float) $tx->balance : ($runningBalances[$tx->id] ?? 0);
             $isCredit = ($tx->type === 'credit');
 
             // Clean Khatabook transaction ID e.g. T-88103

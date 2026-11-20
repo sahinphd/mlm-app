@@ -43,15 +43,26 @@
     <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6 text-center">
         <div class="flex flex-col md:flex-row justify-between items-center mb-6">
             <div class="text-left mb-4 md:mb-0">
-                <h2 class="text-2xl font-semibold text-gray-800 dark:text-white/90">Wallet History</h2>
-                <p class="text-gray-500 dark:text-gray-400">View all your wallet transactions, including credits and debits.</p>
+                <h2 class="text-2xl font-semibold text-gray-800 dark:text-white/90">Wallet History & Ledger</h2>
+                <p class="text-gray-500 dark:text-gray-400">View all your wallet transactions, resulting ledger balances, and transfers.</p>
             </div>
-            <a href="{{ route('wallet.transfer') }}" class="flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-600">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                </svg>
-                Transfer Balance
-            </a>
+            <div class="flex items-center gap-2 flex-wrap">
+                <a href="{{ route('wallet.scan-pay') }}" class="flex items-center gap-1.5 rounded-lg bg-[#1555a8] px-3.5 py-2 text-sm font-medium text-white transition hover:bg-[#12468d] shadow-xs">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                    </svg>
+                    <span>Scan & Pay</span>
+                </a>
+                <a href="{{ route('wallet.my-qr') }}" class="flex items-center gap-1.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3.5 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 transition hover:bg-gray-50 shadow-xs">
+                    <span>My QR Code</span>
+                </a>
+                <a href="{{ route('wallet.transfer') }}" class="flex items-center gap-1.5 rounded-lg bg-gray-900 px-3.5 py-2 text-sm font-medium text-white transition hover:bg-black shadow-xs">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                    </svg>
+                    <span>Transfer Balance</span>
+                </a>
+            </div>
         </div>
         
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-5xl mx-auto">
@@ -79,9 +90,11 @@
                 <thead>
                     <tr class="border-b border-gray-100 dark:border-gray-800">
                         <th class="pb-3 text-sm font-medium text-gray-500 dark:text-gray-400">Date</th>
+                        <th class="pb-3 text-sm font-medium text-gray-500 dark:text-gray-400">Txn ID</th>
                         <th class="pb-3 text-sm font-medium text-gray-500 dark:text-gray-400 text-center">Type</th>
                         <th class="pb-3 text-sm font-medium text-gray-500 dark:text-gray-400 text-center">Source</th>
                         <th class="pb-3 text-sm font-medium text-gray-500 dark:text-gray-400 text-right">Amount</th>
+                        <th class="pb-3 text-sm font-medium text-gray-500 dark:text-gray-400 text-right">Balance</th>
                         <th class="pb-3 text-sm font-medium text-gray-500 dark:text-gray-400">Description</th>
                     </tr>
                 </thead>
@@ -104,9 +117,11 @@
             ajax: "{{ route('wallet.history.data') }}",
             columns: [
                 { data: 'date', name: 'created_at' },
+                { data: 'txn_id', name: 'reference_id' },
                 { data: 'type', name: 'type', className: 'text-center' },
                 { data: 'source', name: 'source', className: 'text-center' },
                 { data: 'amount', name: 'amount', className: 'text-right font-bold' },
+                { data: 'balance', name: 'balance', className: 'text-right font-semibold' },
                 { data: 'description', name: 'description' }
             ],
             order: [[0, 'desc']],

@@ -201,6 +201,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/wallet/transfer', [\App\Http\Controllers\WalletTransferController::class, 'index'])->name('wallet.transfer');
     Route::post('/wallet/transfer', [\App\Http\Controllers\WalletTransferController::class, 'transfer'])->name('wallet.transfer.post');
     Route::get('/wallet/user-search', [\App\Http\Controllers\WalletTransferController::class, 'search'])->name('wallet.user.search');
+    
+    // QR Code & Instant Ledger System
+    Route::get('/wallet/my-qr', [\App\Http\Controllers\QrCodeController::class, 'myQr'])->name('wallet.my-qr');
+    Route::get('/wallet/scan-pay', [\App\Http\Controllers\QrCodeController::class, 'scanPay'])->name('wallet.scan-pay');
+    Route::match(['get', 'post'], '/wallet/resolve-recipient', [\App\Http\Controllers\QrCodeController::class, 'resolveRecipient'])->name('wallet.resolve-recipient');
+    Route::post('/wallet/qr-transfer', [\App\Http\Controllers\QrCodeController::class, 'transfer'])->name('wallet.qr-transfer');
+    
     Route::get('/credit/history', [\App\Http\Controllers\WalletHistoryController::class, 'creditIndex'])->name('credit.history');
     Route::get('/credit/history/data', [\App\Http\Controllers\WalletHistoryController::class, 'creditData'])->name('credit.history.data');
 
@@ -373,6 +380,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/admin/customer-lookup/{user}/transactions', [\App\Http\Controllers\Admin\CustomerLookupController::class, 'transactions'])->name('admin.customer-lookup.transactions');
         Route::post('/admin/customer-lookup/{user}/add-money', [\App\Http\Controllers\Admin\CustomerLookupController::class, 'addMoney'])->name('admin.customer-lookup.add-money');
         Route::post('/admin/customer-lookup/{user}/shop-deduct', [\App\Http\Controllers\Admin\CustomerLookupController::class, 'shopDeduct'])->name('admin.customer-lookup.shop-deduct');
+        Route::get('/admin/customer-lookup/{user}/qr', [\App\Http\Controllers\QrCodeController::class, 'customerQr'])->name('admin.customer-qr');
 
         // Admin Products
         Route::get('/admin/products', [\App\Http\Controllers\Admin\ProductController::class, 'index'])->name('admin.products');

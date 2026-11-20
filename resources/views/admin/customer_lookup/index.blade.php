@@ -70,8 +70,8 @@
                        autocomplete="off"
                        class="w-full rounded-lg border border-gray-200 bg-gray-50/70 py-2.5 pl-10 pr-20 text-xs sm:text-sm font-medium text-black outline-none focus:border-[#1555a8] focus:bg-white dark:border-strokedark dark:bg-meta-4/30 dark:text-white dark:focus:border-[#1555a8] transition" />
 
-                <!-- Action Button -->
-                <div class="absolute inset-y-1 right-1 flex items-center gap-1">
+                <!-- Action Buttons (Scan QR + Find) -->
+                <div class="absolute inset-y-1 right-1 flex items-center gap-1.5">
                     <template x-if="searchQuery">
                         <button type="button" 
                                 @click="searchQuery = ''; matches = []; dropdownOpen = false"
@@ -79,6 +79,15 @@
                             ✕
                         </button>
                     </template>
+                    <button type="button"
+                            @click="openQrScannerModal()"
+                            class="rounded-md bg-emerald-600 hover:bg-emerald-700 px-2.5 py-1.5 text-xs font-bold text-white transition flex items-center gap-1 shadow-xs"
+                            title="Scan Customer QR Code">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                        </svg>
+                        <span class="hidden sm:inline">Scan QR</span>
+                    </button>
                     <button type="button"
                             @click="selectHighlightedOrSearch()"
                             class="rounded-md bg-[#1555a8] px-3 py-1.5 text-xs font-bold text-white hover:bg-[#12468d] transition">
@@ -182,7 +191,7 @@
                         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                         </svg>
-                        <span class="hidden sm:inline">Login as User</span>
+                        <span class="hidden sm:inline">LOGIN AS USER</span>
                     </button>
                 </form>
 
@@ -224,7 +233,7 @@
                     <!-- ID Row -->
                     <div class="px-4 py-2.5 flex items-center justify-between">
                         <span class="text-gray-500 dark:text-gray-400 font-medium">ID</span>
-                        <div class="flex items-center gap-1.5 font-medium text-black dark:text-white">
+                        <div class="flex items-center gap-2 font-medium text-black dark:text-white">
                             <span class="font-mono text-xs font-bold" x-text="customer ? customer.cust_id : 'CUST-10000'"></span>
                             <button type="button" 
                                     @click="copyText(customer ? customer.cust_id : '')" 
@@ -233,6 +242,16 @@
                                 <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                 </svg>
+                            </button>
+                            <!-- View Customer QR Button -->
+                            <button type="button" 
+                                    @click="openCustomerQrModal()"
+                                    class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-blue-50 dark:bg-meta-4/40 text-[11px] font-bold text-[#1555a8] dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-meta-4 transition"
+                                    title="View Customer QR Code">
+                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                                </svg>
+                                <span>QR Code</span>
                             </button>
                         </div>
                     </div>
@@ -601,6 +620,156 @@
         </div>
     </div>
 
+    <!-- ============================================================== -->
+    <!-- AJAX MODAL 3: ADMIN QR SCANNER MODAL (Camera & Fallback)      -->
+    <!-- ============================================================== -->
+    <div x-show="modals.qrScanner" 
+         x-transition
+         class="fixed inset-0 z-99999 flex items-center justify-center bg-black/70 p-4"
+         @keydown.escape.window="closeQrScannerModal()">
+        
+        <div @click.away="closeQrScannerModal()"
+             class="w-full max-w-md rounded-3xl bg-white p-5 shadow-2xl dark:bg-boxdark border border-stroke dark:border-strokedark overflow-hidden">
+            
+            <div class="flex items-center justify-between border-b pb-3 mb-3 border-gray-100 dark:border-gray-800">
+                <div class="flex items-center gap-2">
+                    <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-extrabold text-gray-900 dark:text-white uppercase tracking-wide">Scan Customer QR</h3>
+                        <p class="text-[11px] text-gray-500">Auto-loads profile & Khatabook ledger</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button type="button" 
+                            x-show="adminCameras.length > 1"
+                            @click="switchAdminCamera()" 
+                            title="Flip Camera"
+                            class="p-1 rounded-lg border border-gray-200 text-gray-500 hover:text-black">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                    </button>
+                    <button type="button" @click="closeQrScannerModal()" class="text-gray-400 hover:text-black dark:hover:text-white font-bold p-1">✕</button>
+                </div>
+            </div>
+
+            <!-- Viewfinder Area -->
+            <div class="relative w-full rounded-2xl overflow-hidden bg-black flex items-center justify-center min-h-[250px]">
+                <div id="admin-qr-reader" class="w-full h-full"></div>
+
+                <!-- Laser Target Box Overlay -->
+                <div x-show="adminScannerActive && !adminScanResolving" class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+                    <div class="w-48 h-48 border-2 border-white/60 rounded-2xl relative shadow-[0_0_0_9999px_rgba(0,0,0,0.55)]">
+                        <div class="absolute -top-1 -left-1 w-5 h-5 border-t-4 border-l-4 border-emerald-500 rounded-tl"></div>
+                        <div class="absolute -top-1 -right-1 w-5 h-5 border-t-4 border-r-4 border-emerald-500 rounded-tr"></div>
+                        <div class="absolute -bottom-1 -left-1 w-5 h-5 border-b-4 border-l-4 border-emerald-500 rounded-bl"></div>
+                        <div class="absolute -bottom-1 -right-1 w-5 h-5 border-b-4 border-r-4 border-emerald-500 rounded-br"></div>
+                        <div class="absolute left-2 right-2 h-0.5 bg-red-500 shadow-[0_0_8px_#ef4444] animate-bounce" style="animation-duration: 2s;"></div>
+                    </div>
+                </div>
+
+                <!-- Resolving Indicator -->
+                <div x-show="adminScanResolving" class="absolute inset-0 bg-black/80 flex flex-col items-center justify-center text-white z-20">
+                    <svg class="w-8 h-8 animate-spin text-emerald-400 mb-2" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                    </svg>
+                    <span class="text-xs font-bold">Opening customer ledger...</span>
+                </div>
+
+                <!-- Camera Error Notice -->
+                <div x-show="adminCameraError" class="p-4 text-center text-white text-xs">
+                    <p class="font-bold text-yellow-400" x-text="adminCameraError"></p>
+                    <p class="text-gray-300 mt-1">Please use manual fallback below.</p>
+                </div>
+            </div>
+
+            <!-- Manual Input Fallback inside Scanner Modal -->
+            <div class="mt-3.5 space-y-2">
+                <div class="flex items-center justify-between text-[11px] text-gray-500">
+                    <span>Manual ID fallback:</span>
+                    <label class="cursor-pointer font-bold text-[#1555a8] hover:underline flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span>Scan Image</span>
+                        <input type="file" accept="image/*" class="hidden" @change="scanAdminFromFile($event)">
+                    </label>
+                </div>
+
+                <form @submit.prevent="resolveModalManualInput()" class="flex gap-1.5">
+                    <input type="text" 
+                           x-model="modalManualInput" 
+                           placeholder="Type CUST:15, CUST-10015, or ID..." 
+                           class="flex-1 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-meta-4/20 py-1.5 px-3 text-xs text-black dark:text-white outline-none focus:border-[#1555a8]" />
+                    <button type="submit" 
+                            class="px-3 py-1.5 rounded-lg bg-[#1555a8] text-white text-xs font-bold hover:bg-[#12468d] transition">
+                        Open
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- AJAX MODAL 4: CUSTOMER QR CODE DISPLAY & PRINT MODAL           -->
+    <!-- ============================================================== -->
+    <div x-show="modals.customerQr" 
+         x-transition
+         class="fixed inset-0 z-99999 flex items-center justify-center bg-black/70 p-4"
+         @keydown.escape.window="modals.customerQr = false">
+        
+        <div @click.away="modals.customerQr = false"
+             class="w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl dark:bg-boxdark border border-stroke dark:border-strokedark text-center">
+            
+            <div class="flex items-center justify-between border-b pb-3 mb-4 border-gray-100 dark:border-gray-800">
+                <div class="text-left">
+                    <h3 class="text-sm font-extrabold text-[#1555a8] uppercase tracking-wide" x-text="customer ? customer.name : ''"></h3>
+                    <p class="text-xs text-gray-500" x-text="customer ? customer.cust_id : ''"></p>
+                </div>
+                <button @click="modals.customerQr = false" class="text-gray-400 hover:text-black dark:hover:text-white font-bold">✕</button>
+            </div>
+
+            <!-- QR Container -->
+            <div class="p-4 bg-gray-50 dark:bg-meta-4/10 rounded-2xl border border-dashed border-[#1555a8]/30 inline-block mb-4">
+                <div id="admin-customer-qr-canvas" class="flex items-center justify-center min-w-[200px] min-h-[200px]"></div>
+            </div>
+
+            <div class="rounded-xl bg-gray-50 dark:bg-meta-4/20 p-3 text-xs text-left space-y-1.5 mb-4">
+                <div class="flex justify-between">
+                    <span class="text-gray-500">Payload:</span>
+                    <span class="font-mono font-bold text-gray-800 dark:text-gray-200" x-text="customer ? (customer.qr_payload || 'CUST:' + customer.id) : ''"></span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-500">Current Balance:</span>
+                    <span class="font-bold text-green-700 dark:text-green-400" x-text="customer ? customer.main_balance_formatted : ''"></span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-500">Phone:</span>
+                    <span class="font-medium text-gray-800 dark:text-gray-200" x-text="customer ? (customer.phone || 'N/A') : ''"></span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+                <button type="button" 
+                        @click="copyText(customer ? (customer.qr_payload || 'CUST:' + customer.id) : '')" 
+                        class="py-2 px-3 rounded-xl border border-gray-200 dark:border-gray-700 text-xs font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-50">
+                    Copy Payload
+                </button>
+                <a :href="'{{ url('/wallet/my-qr') }}?user_id=' + (customer ? customer.id : '')" 
+                   target="_blank"
+                   class="py-2 px-3 rounded-xl bg-[#1555a8] hover:bg-[#12468d] text-white text-xs font-bold transition flex items-center justify-center gap-1">
+                    Full QR Card ↗
+                </a>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script>
@@ -620,8 +789,17 @@ function singleScreenKhataApp(config) {
 
         modals: {
             addMoney: false,
-            shopDeduct: false
+            shopDeduct: false,
+            qrScanner: false,
+            customerQr: false
         },
+        adminScannerInstance: null,
+        adminScannerActive: false,
+        adminCameras: [],
+        adminCameraIndex: 0,
+        adminCameraError: '',
+        adminScanResolving: false,
+        modalManualInput: '',
         txFilter: {
             type: 'all',
             date: 'all',
@@ -641,7 +819,13 @@ function singleScreenKhataApp(config) {
         },
 
         init() {
-            // Screen is always ready
+            window.openAdminCustomerQrScanner = () => this.openQrScannerModal();
+
+            if (window.location.search.includes('scan=1')) {
+                this.$nextTick(() => {
+                    this.openQrScannerModal();
+                });
+            }
         },
 
         clearCustomer() {
@@ -960,8 +1144,158 @@ function singleScreenKhataApp(config) {
             } finally {
                 this.actionLoading = false;
             }
+        },
+
+        openQrScannerModal() {
+            this.modalManualInput = '';
+            this.adminCameraError = '';
+            this.adminScanResolving = false;
+            this.modals.qrScanner = true;
+            this.$nextTick(() => {
+                this.startAdminScanner();
+            });
+        },
+
+        async closeQrScannerModal() {
+            await this.stopAdminScanner();
+            this.modals.qrScanner = false;
+        },
+
+        async startAdminScanner() {
+            this.adminCameraError = '';
+            const initLib = async () => {
+                if (typeof Html5Qrcode === 'undefined') {
+                    setTimeout(initLib, 100);
+                    return;
+                }
+
+                try {
+                    if (!this.adminScannerInstance) {
+                        this.adminScannerInstance = new Html5Qrcode("admin-qr-reader");
+                    }
+
+                    const devices = await Html5Qrcode.getCameras();
+                    if (!devices || devices.length === 0) {
+                        this.adminCameraError = 'No camera found on this device.';
+                        return;
+                    }
+                    this.adminCameras = devices;
+
+                    let selectedCam = devices[0].id;
+                    for (let i = 0; i < devices.length; i++) {
+                        if (devices[i].label.toLowerCase().includes('back') || devices[i].label.toLowerCase().includes('rear')) {
+                            selectedCam = devices[i].id;
+                            this.adminCameraIndex = i;
+                            break;
+                        }
+                    }
+
+                    await this.adminScannerInstance.start(
+                        selectedCam,
+                        { fps: 10, qrbox: { width: 220, height: 220 }, aspectRatio: 1.0 },
+                        (decodedText) => this.onAdminQrScanned(decodedText),
+                        () => {}
+                    );
+                    this.adminScannerActive = true;
+                } catch (err) {
+                    console.error('Admin scanner start error:', err);
+                    this.adminScannerActive = false;
+                    this.adminCameraError = 'Camera access denied or unavailable.';
+                }
+            };
+            initLib();
+        },
+
+        async stopAdminScanner() {
+            if (this.adminScannerInstance && this.adminScannerActive) {
+                try {
+                    await this.adminScannerInstance.stop();
+                } catch (e) {}
+                this.adminScannerActive = false;
+            }
+        },
+
+        async switchAdminCamera() {
+            if (this.adminCameras.length <= 1) return;
+            await this.stopAdminScanner();
+            this.adminCameraIndex = (this.adminCameraIndex + 1) % this.adminCameras.length;
+            const camId = this.adminCameras[this.adminCameraIndex].id;
+
+            try {
+                await this.adminScannerInstance.start(
+                    camId,
+                    { fps: 10, qrbox: { width: 220, height: 220 }, aspectRatio: 1.0 },
+                    (decodedText) => this.onAdminQrScanned(decodedText),
+                    () => {}
+                );
+                this.adminScannerActive = true;
+            } catch (err) {
+                console.error('Camera flip error:', err);
+            }
+        },
+
+        async scanAdminFromFile(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            try {
+                if (!this.adminScannerInstance) {
+                    this.adminScannerInstance = new Html5Qrcode("admin-qr-reader");
+                }
+                this.adminScanResolving = true;
+                const result = await this.adminScannerInstance.scanFile(file, true);
+                this.onAdminQrScanned(result);
+            } catch (err) {
+                this.showToast('No readable QR code found in image.', 'error');
+            } finally {
+                this.adminScanResolving = false;
+            }
+        },
+
+        async onAdminQrScanned(decodedText) {
+            if (!decodedText || this.adminScanResolving) return;
+            this.adminScanResolving = true;
+            await this.stopAdminScanner();
+            this.modals.qrScanner = false;
+            this.searchCustomerDirectly(decodedText.trim());
+        },
+
+        resolveModalManualInput() {
+            const q = (this.modalManualInput || '').trim();
+            if (!q) return;
+            this.closeQrScannerModal();
+            this.searchCustomerDirectly(q);
+        },
+
+        openCustomerQrModal() {
+            if (!this.customer) return;
+            this.modals.customerQr = true;
+            this.$nextTick(() => {
+                const container = document.getElementById('admin-customer-qr-canvas');
+                if (!container) return;
+                container.innerHTML = '';
+                const payload = this.customer.qr_payload || ('CUST:' + this.customer.id);
+
+                const initQr = () => {
+                    if (typeof QRCode === 'undefined') {
+                        setTimeout(initQr, 80);
+                        return;
+                    }
+                    new QRCode(container, {
+                        text: payload,
+                        width: 200,
+                        height: 200,
+                        colorDark: '#0f172a',
+                        colorLight: '#ffffff',
+                        correctLevel: QRCode.CorrectLevel.H
+                    });
+                };
+                initQr();
+            });
         }
     };
 }
 </script>
+<script src="{{ asset('vendor/html5-qrcode/html5-qrcode.min.js') }}"></script>
+<script src="{{ asset('vendor/qrcode/qrcode.min.js') }}"></script>
 @endsection

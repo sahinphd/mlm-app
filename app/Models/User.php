@@ -87,6 +87,11 @@ class User extends Authenticatable
         return $this->hasMany(EmiSchedule::class);
     }
 
+    public function walletLedgers()
+    {
+        return $this->hasMany(WalletLedger::class);
+    }
+
     public function isAdmin(): bool
     {
         return $this->role === 'admin';
