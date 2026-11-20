@@ -188,6 +188,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
     Route::post('/profile', [\App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
     Route::get('/profile/id-card', [\App\Http\Controllers\ProfileController::class, 'idCard'])->name('profile.id-card');
+    Route::post('/impersonate/leave', [\App\Http\Controllers\Admin\ImpersonationController::class, 'leave'])->name('impersonate.leave');
     Route::get('/commissions', [\App\Http\Controllers\CommissionController::class, 'index'])->name('commissions.index');
     Route::get('/commissions/bv', [\App\Http\Controllers\CommissionController::class, 'bvIndex'])->name('commissions.bv');
     Route::get('/commissions/withdrawal', [\App\Http\Controllers\CommissionWithdrawalController::class, 'index'])->name('commissions.withdrawal');
@@ -362,6 +363,16 @@ Route::middleware('auth')->group(function () {
         Route::get('/admin/users/{user}/edit', [\App\Http\Controllers\Admin\UserController::class, 'edit'])->name('admin.users.edit');
         Route::post('/admin/users/{user}', [\App\Http\Controllers\Admin\UserController::class, 'update'])->name('admin.users.update');
         Route::delete('/admin/users/{user}', [\App\Http\Controllers\Admin\UserController::class, 'destroy'])->name('admin.users.destroy');
+
+        // Impersonate User
+        Route::post('/admin/impersonate/{user}', [\App\Http\Controllers\Admin\ImpersonationController::class, 'impersonate'])->name('admin.impersonate');
+
+        // Customer Lookup & Transactions
+        Route::get('/admin/customer-lookup', [\App\Http\Controllers\Admin\CustomerLookupController::class, 'index'])->name('admin.customer-lookup.index');
+        Route::get('/admin/customer-lookup/search', [\App\Http\Controllers\Admin\CustomerLookupController::class, 'search'])->name('admin.customer-lookup.search');
+        Route::get('/admin/customer-lookup/{user}/transactions', [\App\Http\Controllers\Admin\CustomerLookupController::class, 'transactions'])->name('admin.customer-lookup.transactions');
+        Route::post('/admin/customer-lookup/{user}/add-money', [\App\Http\Controllers\Admin\CustomerLookupController::class, 'addMoney'])->name('admin.customer-lookup.add-money');
+        Route::post('/admin/customer-lookup/{user}/shop-deduct', [\App\Http\Controllers\Admin\CustomerLookupController::class, 'shopDeduct'])->name('admin.customer-lookup.shop-deduct');
 
         // Admin Products
         Route::get('/admin/products', [\App\Http\Controllers\Admin\ProductController::class, 'index'])->name('admin.products');

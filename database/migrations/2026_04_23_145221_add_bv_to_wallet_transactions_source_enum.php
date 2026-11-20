@@ -12,7 +12,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        DB::statement("ALTER TABLE wallet_transactions MODIFY COLUMN source ENUM('joining', 'repurchase', 'emi', 'penalty', 'manual', 'purchase', 'commission', 'transfer', 'bv') NOT NULL");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE wallet_transactions MODIFY COLUMN source ENUM('joining', 'repurchase', 'emi', 'penalty', 'manual', 'purchase', 'commission', 'transfer', 'bv') NOT NULL");
+        }
     }
 
     /**
@@ -20,6 +22,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        DB::statement("ALTER TABLE wallet_transactions MODIFY COLUMN source ENUM('joining', 'repurchase', 'emi', 'penalty', 'manual', 'purchase', 'commission', 'transfer') NOT NULL");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE wallet_transactions MODIFY COLUMN source ENUM('joining', 'repurchase', 'emi', 'penalty', 'manual', 'purchase', 'commission', 'transfer') NOT NULL");
+        }
     }
 };

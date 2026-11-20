@@ -75,19 +75,21 @@
                         @if($user->avatar)
                             <img src="{{ asset($user->avatar) }}" id="avatar-preview" class="h-full w-full rounded-full object-cover" alt="Profile">
                         @else
-                            <div class="h-full w-full rounded-full bg-gray-100 flex items-center justify-center text-gray-400">
+                            <div id="avatar-placeholder" class="h-full w-full rounded-full bg-gray-100 flex items-center justify-center text-gray-400">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                 </svg>
                             </div>
+                            <img src="" id="avatar-preview" class="h-full w-full rounded-full object-cover hidden" alt="Profile">
                         @endif
                     </div>
                 </div>
                 <div class="flex-1 text-center sm:text-left">
                     <h4 class="font-medium text-gray-800 dark:text-white">Profile Photo</h4>
-                    <p class="text-xs text-gray-500 mb-3">Update your profile picture. Max 1MB (JPG, PNG).</p>
+                    <p class="text-xs text-gray-500 mb-3">Crop and optimize on the spot. Auto-reduced to &lt; 10 KB.</p>
                     @if(!$isLocked)
-                        <input type="file" name="avatar" accept="image/*" class="text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 cursor-pointer" onchange="previewImage(event)"/>
+                        <input type="file" id="avatar-file-input" name="avatar" accept="image/*" class="text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 cursor-pointer"/>
+                        <div id="avatar-status-badge" class="hidden"></div>
                     @endif
                 </div>
             </div>
@@ -160,19 +162,16 @@
     </div>
 </div>
 
+@include('partials.avatar_cropper')
+
 <script>
-function previewImage(event) {
-    var reader = new FileReader();
-    reader.onload = function() {
-        var output = document.getElementById('avatar-preview');
-        if (output) {
-            output.src = reader.result;
-        } else {
-            // If preview img doesn't exist, replace the placeholder div
-            location.reload(); // Simplest way to show new image if logic is complex
-        }
-    }
-    reader.readAsDataURL(event.target.files[0]);
-}
+document.addEventListener('DOMContentLoaded', function() {
+    window.initAvatarCropper({
+        inputId: 'avatar-file-input',
+        previewId: 'avatar-preview',
+        placeholderId: 'avatar-placeholder',
+        statusBadgeId: 'avatar-status-badge'
+    });
+});
 </script>
 @endsection

@@ -14,7 +14,9 @@ return new class extends Migration
     {
         // On many databases like MySQL, modifying ENUM directly requires a raw statement.
         // We'll use a more flexible approach if possible, or just raw if it's MySQL.
-        DB::statement("ALTER TABLE commissions MODIFY COLUMN type ENUM('joining', 'repurchase', 'bv') NOT NULL");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE commissions MODIFY COLUMN type ENUM('joining', 'repurchase', 'bv') NOT NULL");
+        }
     }
 
     /**
@@ -22,6 +24,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        DB::statement("ALTER TABLE commissions MODIFY COLUMN type ENUM('joining', 'repurchase') NOT NULL");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE commissions MODIFY COLUMN type ENUM('joining', 'repurchase') NOT NULL");
+        }
     }
 };

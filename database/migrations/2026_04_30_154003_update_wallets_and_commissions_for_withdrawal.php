@@ -29,7 +29,9 @@ return new class extends Migration
         });
 
         // 4. Update wallet_transactions source enum
-        DB::statement("ALTER TABLE wallet_transactions MODIFY COLUMN source ENUM('joining', 'repurchase', 'emi', 'penalty', 'manual', 'purchase', 'commission', 'transfer', 'bv', 'commission_withdrawal', 'bv_withdrawal') NOT NULL");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE wallet_transactions MODIFY COLUMN source ENUM('joining', 'repurchase', 'emi', 'penalty', 'manual', 'purchase', 'commission', 'transfer', 'bv', 'commission_withdrawal', 'bv_withdrawal') NOT NULL");
+        }
     }
 
     /**
@@ -49,6 +51,8 @@ return new class extends Migration
             $table->dropColumn('fee');
         });
 
-        DB::statement("ALTER TABLE wallet_transactions MODIFY COLUMN source ENUM('joining', 'repurchase', 'emi', 'penalty', 'manual', 'purchase', 'commission', 'transfer', 'bv') NOT NULL");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE wallet_transactions MODIFY COLUMN source ENUM('joining', 'repurchase', 'emi', 'penalty', 'manual', 'purchase', 'commission', 'transfer', 'bv') NOT NULL");
+        }
     }
 };

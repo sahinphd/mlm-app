@@ -145,6 +145,7 @@ class UserController extends Controller
                 $creditStatusBadge,
                 $u->created_at?->format('Y-m-d'),
                 '<a href="'.route('admin.users.show', $u->id).'" class="text-sm text-primary mr-2">View</a>' .
+                ((!$u->isAdmin()) ? '<form action="'.route('admin.impersonate', $u->id).'?redirect=profile" method="POST" class="inline mr-2">'.csrf_field().'<button type="submit" class="text-sm text-emerald-600 font-semibold hover:underline" title="Login as User">Login</button></form>' : '') .
                 '<a href="'.route('admin.users.genealogy', $u->id).'" class="text-sm text-success mr-2">Genealogy</a>' .
                 '<a href="/admin/users/'. $u->id .'/edit" class="text-sm text-blue-600 mr-2">Edit</a>' .
                 '<a href="#" data-id="'. $u->id .'" class="text-sm text-red-600 js-delete">Delete</a>'
@@ -230,7 +231,7 @@ class UserController extends Controller
             'credit_approval' => 'nullable|string|in:pending,approved,rejected',
             'kyc_status' => 'nullable|string|in:unfilled,pending,approved,rejected',
             'kyc_notes' => 'nullable|string',
-            'avatar' => 'nullable|image|max:10',
+            'avatar' => 'nullable|image|max:2048',
         ]);
 
         $oldStatus = $user->status;

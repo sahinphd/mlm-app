@@ -63,6 +63,7 @@
             #splash { transition: opacity 450ms ease, visibility 450ms; }
             #splash.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
         </style>
+        @include('admin.partials.impersonation_banner')
         <nav class="bg-white shadow p-4">
             <div class="max-w-4xl mx-auto flex justify-between items-center">
                 <a href="/" class="font-semibold">{{ config('app.name', 'MLM') }}</a>

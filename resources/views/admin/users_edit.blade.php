@@ -18,12 +18,13 @@
                 @csrf
                 
                 <div class="mb-5.5 flex items-center gap-4">
-                    <div class="h-14 w-14 rounded-full overflow-hidden">
-                        <img src="{{ $user->avatar_url }}" alt="User" class="h-full w-full object-cover" id="avatar-preview">
+                    <div class="h-16 w-16 rounded-full overflow-hidden border-2 border-primary p-0.5">
+                        <img src="{{ $user->avatar_url }}" alt="User" class="h-full w-full rounded-full object-cover" id="avatar-preview">
                     </div>
                     <div>
-                        <label class="mb-3 block text-sm font-medium text-black dark:text-white">User Avatar (Max 10 KB)</label>
-                        <input type="file" name="avatar" accept="image/*" class="w-full cursor-pointer rounded-lg border-[1.5px] border-stroke bg-transparent font-medium outline-none transition file:mr-5 file:border-collapse file:cursor-pointer file:border-0 file:border-r file:border-solid file:border-stroke file:bg-whiter file:py-2 file:px-5 file:hover:bg-primary file:hover:bg-opacity-10 focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:file:border-form-strokedark dark:file:bg-white/10 dark:focus:border-primary">
+                        <label class="mb-2 block text-sm font-medium text-black dark:text-white">User Avatar (Auto-compressed to &lt; 10 KB)</label>
+                        <input type="file" id="admin-avatar-input" name="avatar" accept="image/*" class="w-full cursor-pointer rounded-lg border-[1.5px] border-stroke bg-transparent font-medium outline-none transition file:mr-5 file:border-collapse file:cursor-pointer file:border-0 file:border-r file:border-solid file:border-stroke file:bg-whiter file:py-2 file:px-5 file:hover:bg-primary file:hover:bg-opacity-10 focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:file:border-form-strokedark dark:file:bg-white/10 dark:focus:border-primary">
+                        <div id="admin-avatar-status-badge" class="hidden"></div>
                         @error('avatar') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
                 </div>
@@ -142,16 +143,16 @@
 </div>
 @endsection
 
+@include('partials.avatar_cropper')
+
 @push('scripts')
 <script>
-    document.querySelector('input[name="avatar"]').addEventListener('change', function(e) {
-        if (e.target.files && e.target.files[0]) {
-            const reader = new FileReader();
-            reader.onload = function(ex) {
-                document.getElementById('avatar-preview').src = ex.target.result;
-            }
-            reader.readAsDataURL(e.target.files[0]);
-        }
+document.addEventListener('DOMContentLoaded', function() {
+    window.initAvatarCropper({
+        inputId: 'admin-avatar-input',
+        previewId: 'avatar-preview',
+        statusBadgeId: 'admin-avatar-status-badge'
     });
+});
 </script>
 @endpush

@@ -2,7 +2,52 @@
 
 @section('content')
   <div class="container mx-auto p-4">
-    <h1 class="text-2xl font-semibold mb-4">Admin Dashboard</h1>
+    <!-- Top Header & One-Click Actions -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-5">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-800 dark:text-white">Admin Dashboard</h1>
+
+      </div>
+      <!-- <div class="flex items-center gap-2">
+        <a href="{{ route('admin.customer-lookup.index') }}" 
+           class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#1555a8] hover:bg-[#12468d] active:scale-[0.99] text-white text-sm font-semibold rounded-xl shadow-xs hover:shadow transition-all group">
+          <svg class="w-4 h-4 shrink-0 transition-transform group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+          </svg>
+          <span>Customer Lookup</span>
+        </a>
+      </div> -->
+    </div>
+
+    <!-- Customer Lookup Quick Access Bar -->
+    <div class="mb-6 p-4 rounded-xl border border-blue-200 bg-gradient-to-r from-blue-50/90 via-indigo-50/40 to-white dark:from-gray-800 dark:via-gray-800/90 dark:to-gray-800/60 dark:border-gray-700 shadow-xs flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div class="flex items-center gap-3.5">
+        <div class="h-11 w-11 rounded-xl bg-[#1555a8] text-white flex items-center justify-center shadow-xs shrink-0">
+          <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h2 class="text-sm sm:text-base font-bold text-gray-900 dark:text-white">Customer Lookup</h2>
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-100 text-[#1555a8] dark:bg-blue-900/60 dark:text-blue-300">Single Screen Khata</span>
+          </div>
+          
+        </div>
+      </div>
+      <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shrink-0">
+        <form action="{{ route('admin.customer-lookup.index') }}" method="GET" class="flex items-center gap-2">
+          <input type="text" name="q" placeholder="Search customer ID, phone, email..." class="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-xs sm:text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#1555a8]/20 focus:border-[#1555a8] w-full sm:w-60" />
+          <button type="submit" class="px-3.5 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg text-xs sm:text-sm font-semibold transition shrink-0">
+            Find
+          </button>
+        </form>
+        <a href="{{ route('admin.customer-lookup.index') }}" class="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-[#1555a8] hover:bg-[#12468d] text-white text-xs sm:text-sm font-semibold rounded-lg shadow-xs hover:shadow transition-all whitespace-nowrap">
+          <span>Open Lookup Screen</span>
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+        </a>
+      </div>
+    </div>
 
     @php
       use Illuminate\Support\Facades\Storage;
@@ -16,32 +61,61 @@
     @endphp
     <!-- Quick Management Section -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-      <a href="{{ route('admin.products') }}" class="p-4 rounded border bg-blue-50 border-blue-200 shadow-sm hover:bg-blue-100 transition flex items-center gap-3">
-        <div class="h-10 w-10 rounded bg-blue-500 flex items-center justify-center text-white">
-          <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+      <!-- Manage Products -->
+      <a href="{{ route('admin.products') }}" 
+         class="group p-4 rounded-xl border border-blue-200 bg-blue-50/80 hover:bg-blue-100/90 dark:bg-blue-950/25 dark:border-blue-900/50 dark:hover:bg-blue-900/35 shadow-xs hover:shadow-md transition-all duration-200 flex items-center justify-between">
+        <div class="flex items-center gap-3.5">
+          <div class="h-11 w-11 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-xs shrink-0 transition-transform duration-200 group-hover:scale-105">
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+            </svg>
+          </div>
+          <div>
+            <div class="font-bold text-sm sm:text-base text-blue-900 dark:text-blue-200">Manage Products</div>
+            <div class="text-xs text-blue-600 dark:text-blue-400 mt-0.5">Add, edit, delete products</div>
+          </div>
         </div>
-        <div>
-          <div class="font-bold text-blue-800">Manage Products</div>
-          <div class="text-xs text-blue-600">Add, edit, delete products</div>
-        </div>
+        <svg class="w-4 h-4 text-blue-400 dark:text-blue-500 opacity-60 group-hover:opacity-100 group-hover:translate-x-1 transition-all shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
       </a>
-      <a href="{{ route('admin.packages') }}" class="p-4 rounded border bg-purple-50 border-blue-200 shadow-sm hover:bg-purple-100 transition flex items-center gap-3">
-        <div class="h-10 w-10 rounded bg-purple-500 flex items-center justify-center text-white">
-          <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+
+      <!-- Manage Packages -->
+      <a href="{{ route('admin.packages') }}" 
+         class="group p-4 rounded-xl border border-purple-200 bg-purple-50/80 hover:bg-purple-100/90 dark:bg-purple-950/25 dark:border-purple-900/50 dark:hover:bg-purple-900/35 shadow-xs hover:shadow-md transition-all duration-200 flex items-center justify-between">
+        <div class="flex items-center gap-3.5">
+          <div class="h-11 w-11 rounded-xl bg-purple-600 text-white flex items-center justify-center shadow-xs shrink-0 transition-transform duration-200 group-hover:scale-105">
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+            </svg>
+          </div>
+          <div>
+            <div class="font-bold text-sm sm:text-base text-purple-900 dark:text-purple-200">Manage Packages</div>
+            <div class="text-xs text-purple-600 dark:text-purple-400 mt-0.5">Create product bundles</div>
+          </div>
         </div>
-        <div>
-          <div class="font-bold text-purple-800">Manage Packages</div>
-          <div class="text-xs text-purple-600">Create product bundles</div>
-        </div>
+        <svg class="w-4 h-4 text-purple-400 dark:text-purple-500 opacity-60 group-hover:opacity-100 group-hover:translate-x-1 transition-all shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
       </a>
-      <a href="{{ route('admin.shop.index') }}" class="p-4 rounded border bg-green-50 border-green-200 shadow-sm hover:bg-green-100 transition flex items-center gap-3">
-        <div class="h-10 w-10 rounded bg-green-500 flex items-center justify-center text-white">
-          <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+
+      <!-- Admin Shop -->
+      <a href="{{ route('admin.shop.index') }}" 
+         class="group p-4 rounded-xl border border-emerald-200 bg-emerald-50/80 hover:bg-emerald-100/90 dark:bg-emerald-950/25 dark:border-emerald-900/50 dark:hover:bg-emerald-900/35 shadow-xs hover:shadow-md transition-all duration-200 flex items-center justify-between">
+        <div class="flex items-center gap-3.5">
+          <div class="h-11 w-11 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-xs shrink-0 transition-transform duration-200 group-hover:scale-105">
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+            </svg>
+          </div>
+          <div>
+            <div class="font-bold text-sm sm:text-base text-emerald-900 dark:text-emerald-200">Admin Shop</div>
+            <div class="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5">Place orders for users</div>
+          </div>
         </div>
-        <div>
-          <div class="font-bold text-green-800">Admin Shop</div>
-          <div class="text-xs text-green-600">Place orders for users</div>
-        </div>
+        <svg class="w-4 h-4 text-emerald-400 dark:text-emerald-500 opacity-60 group-hover:opacity-100 group-hover:translate-x-1 transition-all shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
       </a>
     </div>
 

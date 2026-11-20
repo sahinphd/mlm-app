@@ -7,7 +7,18 @@
         <h2 class="text-title-md2 font-bold text-black dark:text-white">
             User Details: {{ $user->name }}
         </h2>
-        <div class="flex gap-3">
+        <div class="flex flex-wrap gap-2 sm:gap-3">
+            @if(!$user->isAdmin())
+            <form action="{{ route('admin.impersonate', $user->id) }}?redirect=profile" method="POST" class="inline m-0">
+                @csrf
+                <button type="submit" class="inline-flex items-center justify-center rounded-md bg-emerald-600 py-2 px-4 text-center font-medium text-white hover:bg-emerald-700 shadow-sm transition">
+                    <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                    </svg>
+                    Login as User
+                </button>
+            </form>
+            @endif
             <a href="{{ route('admin.users.genealogy', $user->id) }}" class="inline-flex items-center justify-center rounded-md bg-success py-2 px-6 text-center font-medium text-white hover:bg-opacity-90">
                 View Genealogy
             </a>

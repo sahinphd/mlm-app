@@ -16,12 +16,15 @@ return new class extends Migration
         // joining and repurchase commissions are currently in earning_balance but should be in main_balance
         
         $wallets = DB::table('wallets')->get();
+        $isSqlite = DB::getDriverName() === 'sqlite';
+        $refComm = $isSqlite ? "('commission:' || commissions.id)" : "CONCAT('commission:', commissions.id)";
+        $refRev = $isSqlite ? "('reversal:' || commissions.id)" : "CONCAT('reversal:', commissions.id)";
 
         foreach ($wallets as $wallet) {
             // 1. Calculate credits to move
             $credits = DB::table('wallet_transactions')
-                ->join('commissions', function($join) {
-                    $join->on('wallet_transactions.reference_id', '=', DB::raw("CONCAT('commission:', commissions.id)"));
+                ->join('commissions', function($join) use ($refComm) {
+                    $join->on('wallet_transactions.reference_id', '=', DB::raw($refComm));
                 })
                 ->where('wallet_transactions.wallet_id', $wallet->id)
                 ->where('wallet_transactions.type', 'credit')
@@ -30,8 +33,8 @@ return new class extends Migration
 
             // 2. Calculate debits (reversals) to move
             $debits = DB::table('wallet_transactions')
-                ->join('commissions', function($join) {
-                    $join->on('wallet_transactions.reference_id', '=', DB::raw("CONCAT('reversal:', commissions.id)"));
+                ->join('commissions', function($join) use ($refRev) {
+                    $join->on('wallet_transactions.reference_id', '=', DB::raw($refRev));
                 })
                 ->where('wallet_transactions.wallet_id', $wallet->id)
                 ->where('wallet_transactions.type', 'debit')
@@ -58,11 +61,14 @@ return new class extends Migration
     public function down(): void
     {
         $wallets = DB::table('wallets')->get();
+        $isSqlite = DB::getDriverName() === 'sqlite';
+        $refComm = $isSqlite ? "('commission:' || commissions.id)" : "CONCAT('commission:', commissions.id)";
+        $refRev = $isSqlite ? "('reversal:' || commissions.id)" : "CONCAT('reversal:', commissions.id)";
 
         foreach ($wallets as $wallet) {
             $credits = DB::table('wallet_transactions')
-                ->join('commissions', function($join) {
-                    $join->on('wallet_transactions.reference_id', '=', DB::raw("CONCAT('commission:', commissions.id)"));
+                ->join('commissions', function($join) use ($refComm) {
+                    $join->on('wallet_transactions.reference_id', '=', DB::raw($refComm));
                 })
                 ->where('wallet_transactions.wallet_id', $wallet->id)
                 ->where('wallet_transactions.type', 'credit')
@@ -70,8 +76,8 @@ return new class extends Migration
                 ->sum('wallet_transactions.amount');
 
             $debits = DB::table('wallet_transactions')
-                ->join('commissions', function($join) {
-                    $join->on('wallet_transactions.reference_id', '=', DB::raw("CONCAT('reversal:', commissions.id)"));
+                ->join('commissions', function($join) use ($refRev) {
+                    $join->on('wallet_transactions.reference_id', '=', DB::raw($refRev));
                 })
                 ->where('wallet_transactions.wallet_id', $wallet->id)
                 ->where('wallet_transactions.type', 'debit')

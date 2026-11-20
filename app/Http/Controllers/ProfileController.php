@@ -34,7 +34,7 @@ class ProfileController extends Controller
             'address' => 'nullable|string',
             'nominee_name' => 'nullable|string|max:255',
             'nominee_relation' => 'nullable|string|max:255',
-            'avatar' => 'nullable|image|max:1024', // 1MB Max
+            'avatar' => 'nullable|image|max:2048', // 2MB Max
             'submit_kyc' => 'nullable|boolean',
         ]);
 

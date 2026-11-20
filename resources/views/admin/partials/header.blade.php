@@ -1,3 +1,4 @@
+@include('admin.partials.impersonation_banner')
 <header class="sticky top-0 z-40 w-full border-b bg-white dark:bg-gray-900 shadow-sm">
 	<div class="flex items-center justify-between px-4 py-3 lg:px-6">
 		<div class="flex items-center gap-3">
@@ -12,12 +13,22 @@
 		</div>
 
 		<div class="flex items-center gap-3">
-			<div class="hidden lg:block relative">
+			<!-- Customer Lookup Direct One-Click Button -->
+			<a href="{{ route('admin.customer-lookup.index') }}" 
+			   class="flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-lg bg-[#1555a8] hover:bg-[#12468d] text-white text-xs sm:text-sm font-semibold shadow-xs hover:shadow transition-all"
+			   title="Open Customer Lookup Screen">
+				<svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+				</svg>
+				<span class="hidden sm:inline">Customer Lookup</span>
+			</a>
+
+			<form action="{{ route('admin.customer-lookup.index') }}" method="GET" class="hidden lg:block relative">
 				<span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
 					<svg class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
 				</span>
-				<input type="text" placeholder="Search..." class="rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-white/5 pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 w-64 transition-all" />
-			</div>
+				<input type="text" name="q" placeholder="Lookup customer ID / phone..." class="rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-white/5 pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1555a8]/20 focus:border-[#1555a8] w-64 transition-all text-gray-800 dark:text-gray-100 placeholder-gray-400" />
+			</form>
 
 			<!-- Dark Mode Toggler -->
 			<button
@@ -91,6 +102,17 @@
 								Notifications
 							</a>
 						</li>
+						@if(session()->has('admin_impersonator_id'))
+						<li class="border-t dark:border-gray-700 mt-1">
+							<form action="{{ route('impersonate.leave') }}" method="POST">
+								@csrf
+								<button type="submit" class="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/10 transition-colors">
+									<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+									Exit Impersonation
+								</button>
+							</form>
+						</li>
+						@endif
 						<li class="border-t dark:border-gray-700 mt-1">
 							<form id="logout-form" action="{{ route('logout') }}" method="POST">
 								@csrf
