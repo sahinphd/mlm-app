@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Helpers\PhoneHelper;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -18,24 +19,32 @@ class RegisterController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:6|confirmed',
-            'country' => 'required|string|max:8',
-            'phone' => 'required|string|max:30',
+            'country' => 'nullable|string|max:8',
+            'phone' => 'nullable|string|max:30',
             'referral' => 'nullable|string|max:50',
         ], [
             'email.unique' => 'An account with this email already exists. Please login.',
         ]);
 
-        $phoneCombined = trim(($data['country'] ?? '') . ' ' . ($data['phone'] ?? ''));
+        $normalizedPhone = null;
+        if (!empty($data['phone'])) {
+            $country = $data['country'] ?? '+91';
+            $normalizedPhone = PhoneHelper::normalize($data['phone'], $country);
 
-        // Check for unique phone number manually since it's combined
-        if (User::where('phone', $phoneCombined)->exists()) {
-            return back()->withErrors(['phone' => 'An account with this mobile number already exists. Please login.'])->withInput();
+            if (!PhoneHelper::isValid($normalizedPhone)) {
+                return back()->withErrors(['phone' => 'Please enter a valid 10-digit mobile number.'])->withInput();
+            }
+
+            // Check for unique phone number flexibly across all variants (+91, 10 digits, with spaces, etc.)
+            if (User::wherePhone($normalizedPhone)->exists()) {
+                return back()->withErrors(['phone' => 'An account with this mobile number already exists. Please login.'])->withInput();
+            }
         }
 
         $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
-            'phone' => $phoneCombined,
+            'phone' => $normalizedPhone,
             'password' => Hash::make($data['password']),
         ]);
 

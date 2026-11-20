@@ -82,7 +82,7 @@ class LedgerService
 
         $cleanPhone = preg_replace('/[^0-9]/', '', $payload);
         if (!empty($cleanPhone) && strlen($cleanPhone) >= 7) {
-            $user = User::where('phone', $payload)->orWhere('phone', $cleanPhone)->first();
+            $user = User::wherePhone($payload)->first();
             if ($user) return $user->id;
         }
 

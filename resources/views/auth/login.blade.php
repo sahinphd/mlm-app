@@ -43,7 +43,7 @@
       @endif
 
       <div>
-        <form method="POST" action="{{ route('login') }}">
+        <form method="POST" action="{{ route('login') }}" id="login-form">
           @csrf
           <div class="space-y-4">
             <!-- Email/Phone -->
@@ -54,6 +54,7 @@
               <input
                 type="text"
                 name="email"
+                id="login-email"
                 value="{{ old('email') }}"
                 required
                 placeholder="info@gmail.com or 9876543210"
@@ -164,4 +165,14 @@
     }
 </script>
 @endif
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const input = document.getElementById('login-email');
+    if (input) {
+        input.addEventListener('blur', function() {
+            this.value = this.value.trim();
+        });
+    }
+});
+</script>
 @endsection

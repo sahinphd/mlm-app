@@ -38,13 +38,25 @@ class ProfileController extends Controller
             'submit_kyc' => 'nullable|boolean',
         ]);
 
+        $cleanPhone = \App\Helpers\PhoneHelper::normalize($data['phone']);
+
+        if (empty($cleanPhone) || !\App\Helpers\PhoneHelper::isValid($cleanPhone)) {
+            return redirect()->back()->withErrors(['phone' => 'Please enter a valid 10-digit mobile number.'])->withInput();
+        }
+
+        // Check if another user is already using this phone number
+        $phoneConflict = \App\Models\User::wherePhone($cleanPhone)->where('id', '!=', $user->id)->exists();
+        if ($phoneConflict) {
+            return redirect()->back()->withErrors(['phone' => 'This mobile number is already in use by another account.'])->withInput();
+        }
+
         $user->name = $data['name'];
-        $user->phone = $data['phone'];
-        $user->aadhaar_number = $data['aadhaar_number'];
-        $user->pan_number = $data['pan_number'];
-        $user->address = $data['address'];
-        $user->nominee_name = $data['nominee_name'];
-        $user->nominee_relation = $data['nominee_relation'];
+        $user->phone = $cleanPhone;
+        $user->aadhaar_number = $data['aadhaar_number'] ?? $user->aadhaar_number;
+        $user->pan_number = $data['pan_number'] ?? $user->pan_number;
+        $user->address = $data['address'] ?? $user->address;
+        $user->nominee_name = $data['nominee_name'] ?? $user->nominee_name;
+        $user->nominee_relation = $data['nominee_relation'] ?? $user->nominee_relation;
 
         if ($request->hasFile('avatar')) {
             // Delete old avatar if exists

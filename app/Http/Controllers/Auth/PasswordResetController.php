@@ -18,10 +18,14 @@ class PasswordResetController extends Controller
     {
         $request->validate([ 'email' => 'required|string' ]);
 
-        $input = $request->email;
-        $loginField = filter_var($input, FILTER_VALIDATE_EMAIL) ? 'email' : 'phone';
+        $input = trim($request->email);
+        $isEmail = filter_var($input, FILTER_VALIDATE_EMAIL);
         
-        $users = \App\Models\User::where($loginField, $input)->get();
+        if ($isEmail) {
+            $users = \App\Models\User::where('email', $input)->get();
+        } else {
+            $users = \App\Models\User::wherePhone($input)->get();
+        }
 
         if ($users->isEmpty()) {
             return back()->withErrors(['email' => 'No account found with this identifier.']);

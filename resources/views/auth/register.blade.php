@@ -65,27 +65,26 @@
                   Phone Number<span class="text-error-500">*</span>
                 </label>
                 <div class="flex gap-2">
-                    <select name="country" required class="dark:bg-dark-900 h-11 w-20 rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
-                        <option value="+91" selected>India (+91)</option>
-                        <option value="+880">BD (+880)</option>
-                        <option value="+44">UK (+44)</option>
-                        <option value="+61">AUS (+61)</option>
-                        <option value="+1">USA (+1)</option>
-                        <option value="+971">UAE (+971)</option>
-                        <option value="+92">PK (+92)</option>
-                        <option value="+977">NP (+977)</option>
-                        <option value="+966">KW (+966)</option>
-
-
-
+                    <select name="country" id="country-select" required class="dark:bg-dark-900 h-11 w-24 rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                        <option value="+91" {{ old('country', '+91') == '+91' ? 'selected' : '' }}>India (+91)</option>
+                        <option value="+880" {{ old('country') == '+880' ? 'selected' : '' }}>BD (+880)</option>
+                        <option value="+44" {{ old('country') == '+44' ? 'selected' : '' }}>UK (+44)</option>
+                        <option value="+61" {{ old('country') == '+61' ? 'selected' : '' }}>AUS (+61)</option>
+                        <option value="+1" {{ old('country') == '+1' ? 'selected' : '' }}>USA (+1)</option>
+                        <option value="+971" {{ old('country') == '+971' ? 'selected' : '' }}>UAE (+971)</option>
+                        <option value="+92" {{ old('country') == '+92' ? 'selected' : '' }}>PK (+92)</option>
+                        <option value="+977" {{ old('country') == '+977' ? 'selected' : '' }}>NP (+977)</option>
+                        <option value="+966" {{ old('country') == '+966' ? 'selected' : '' }}>KW (+966)</option>
                     </select>
                     <input                    
                       type="tel"
+                      id="phone-input"
                       name="phone"
                       value="{{ old('phone') }}"
                       required
-                      placeholder="8123456789"
-                      class="dark:bg-dark-900 h-11  w-80 W-inline flex-1 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+                      placeholder="10-digit mobile number"
+                      inputmode="numeric"
+                      class="dark:bg-dark-900 h-11 flex-1 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
                     />
                 </div>
                 @error('phone')
@@ -177,4 +176,50 @@
     </div>
   </div>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const countrySelect = document.getElementById('country-select');
+    const phoneInput = document.getElementById('phone-input');
+
+    if (!countrySelect || !phoneInput) return;
+
+    function cleanPhone() {
+        let val = phoneInput.value;
+        const country = countrySelect.value;
+        
+        // Remove spaces always
+        val = val.replace(/\s+/g, '');
+
+        if (country === '+91') {
+            // Strip any non-digits
+            val = val.replace(/\D/g, '');
+
+            // If user typed/pasted with leading +91 or 91
+            if (val.length === 12 && val.startsWith('91')) {
+                val = val.slice(2);
+            } else if (val.length === 11 && val.startsWith('0')) {
+                val = val.slice(1);
+            }
+
+            // Cap at 10 digits
+            if (val.length > 10) {
+                val = val.slice(0, 10);
+            }
+            phoneInput.placeholder = "10-digit mobile number";
+            phoneInput.maxLength = 10;
+        } else {
+            phoneInput.placeholder = "Mobile number";
+            phoneInput.removeAttribute('maxLength');
+        }
+
+        phoneInput.value = val;
+    }
+
+    phoneInput.addEventListener('input', cleanPhone);
+    phoneInput.addEventListener('paste', function() { setTimeout(cleanPhone, 0); });
+    countrySelect.addEventListener('change', cleanPhone);
+    
+    cleanPhone();
+});
+</script>
 @endsection

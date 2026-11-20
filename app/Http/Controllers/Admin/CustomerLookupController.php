@@ -168,6 +168,10 @@ class CustomerLookupController extends Controller
 
                 if (!empty($cleanPhone) && strlen($cleanPhone) >= 3) {
                     $q->orWhere('phone', 'LIKE', "%{$cleanPhone}%");
+                    if (strlen($cleanPhone) >= 10) {
+                        $last10 = substr($cleanPhone, -10);
+                        $q->orWhere('phone', 'LIKE', "%{$last10}%");
+                    }
                 }
 
                 $q->orWhereExists(function($sub) use ($query) {
@@ -362,10 +366,7 @@ class CustomerLookupController extends Controller
         // 3. Try phone number
         $cleanPhone = preg_replace('/[^0-9]/', '', $query);
         if (!empty($cleanPhone) && strlen($cleanPhone) >= 4) {
-            $user = User::where('phone', $query)
-                ->orWhere('phone', $cleanPhone)
-                ->orWhere('phone', 'LIKE', '%' . $cleanPhone . '%')
-                ->first();
+            $user = User::wherePhone($query)->first();
             if ($user) return $user;
         }
 

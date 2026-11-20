@@ -45,7 +45,7 @@
                 <div class="mb-5.5 flex flex-col gap-5.5 sm:flex-row">
                     <div class="w-full sm:w-1/2">
                         <label class="mb-3 block text-sm font-medium text-black dark:text-white">Phone Number</label>
-                        <input type="text" name="phone" value="{{ old('phone', $user->phone) }}" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
+                        <input type="text" name="phone" value="{{ old('phone', $user->phone) }}" placeholder="10-digit mobile number" oninput="this.value = this.value.replace(/\s+/g, '')" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
                         @error('phone') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
                     <div class="w-full sm:w-1/2">

@@ -241,7 +241,7 @@ class UserController extends Controller
         $user->email = $data['email'];
 
         if (array_key_exists('phone', $data)) {
-            $user->phone = $data['phone'];
+            $user->phone = !empty($data['phone']) ? \App\Helpers\PhoneHelper::normalize($data['phone']) : null;
         }
 
         $user->role = $data['role'];

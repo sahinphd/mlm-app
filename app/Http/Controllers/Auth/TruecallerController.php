@@ -65,11 +65,7 @@ class TruecallerController extends Controller
             return response()->json(['success' => false, 'message' => 'Phone number not provided by Truecaller.'], 400);
         }
 
-        // Normalize phone (Truecaller usually sends with +country code)
-        // We strip '+' for searching
-        $searchPhone = ltrim($phone, '+');
-
-        $users = User::where('phone', 'LIKE', '%' . $searchPhone . '%')->get();
+        $users = User::wherePhone($phone)->get();
 
         if ($users->isEmpty()) {
             return response()->json([
@@ -115,8 +111,7 @@ class TruecallerController extends Controller
             'phone' => 'required|string',
         ]);
 
-        $phone = ltrim($request->phone, '+');
-        $users = User::where('phone', 'LIKE', '%' . $phone . '%')->get();
+        $users = User::wherePhone($request->phone)->get();
 
         if ($users->isEmpty()) {
             return response()->json(['success' => false, 'message' => 'No account found.', 'redirect' => route('register.view')], 404);

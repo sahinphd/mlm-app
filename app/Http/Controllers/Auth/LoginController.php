@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Helpers\PhoneHelper;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class LoginController extends Controller
 {
@@ -15,14 +18,16 @@ class LoginController extends Controller
             'password' => 'required|string',
         ]);
 
-        $loginField = filter_var($data['email'], FILTER_VALIDATE_EMAIL) ? 'email' : 'phone';
-        $credentials = [
-            $loginField => $data['email'],
-            'password' => $data['password']
-        ];
+        $input = trim($data['email']);
+        $isEmail = filter_var($input, FILTER_VALIDATE_EMAIL);
 
-        // 1. Find all users matching the input
-        $users = \App\Models\User::where($loginField, $data['email'])->get();
+        // 1. Find all users matching the input (email or phone)
+        if ($isEmail) {
+            $users = User::where('email', $input)->get();
+        } else {
+            // Flexible phone matching: handles 10-digit, +91, spaces, 0-prefix, etc.
+            $users = User::wherePhone($input)->get();
+        }
 
         if ($users->isEmpty()) {
             return back()->withErrors(['email' => 'No account found with these credentials.'])->withInput();
@@ -31,7 +36,7 @@ class LoginController extends Controller
         // 2. Filter users by password matching
         $matchingUsers = [];
         foreach ($users as $user) {
-            if (\Illuminate\Support\Facades\Hash::check($data['password'], $user->password)) {
+            if (Hash::check($data['password'], $user->password)) {
                 $matchingUsers[] = $user;
             }
         }
@@ -84,7 +89,7 @@ class LoginController extends Controller
             return redirect()->route('login');
         }
 
-        $user = \App\Models\User::find($request->user_id);
+        $user = User::find($request->user_id);
         Auth::login($user, $remember);
 
         $request->session()->forget(['login_accounts', 'login_remember']);
