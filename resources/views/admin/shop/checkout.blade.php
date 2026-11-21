@@ -133,6 +133,14 @@
                                     <span class="text-sm">Place order on EMI</span>
                                 </div>
                             </label>
+
+                            <label class="flex cursor-pointer select-none items-center gap-4 rounded border border-stroke p-4 dark:border-strokedark">
+                                <input type="radio" name="payment_method" value="split" class="h-5 w-5">
+                                <div class="flex flex-col">
+                                    <span class="font-medium text-black dark:text-white">Split Payment (Wallet + Credit Limit)</span>
+                                    <span class="text-sm">Deduct available wallet balance and charge remainder to credit limit (EMI)</span>
+                                </div>
+                            </label>
                         </div>
 
                         <button type="submit" class="mt-8 flex w-full justify-center rounded bg-primary py-3 px-6 font-medium text-gray hover:bg-opacity-90">

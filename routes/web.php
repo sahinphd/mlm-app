@@ -382,6 +382,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/admin/customer-lookup/{user}/transactions', [\App\Http\Controllers\Admin\CustomerLookupController::class, 'transactions'])->name('admin.customer-lookup.transactions');
         Route::post('/admin/customer-lookup/{user}/add-money', [\App\Http\Controllers\Admin\CustomerLookupController::class, 'addMoney'])->name('admin.customer-lookup.add-money');
         Route::post('/admin/customer-lookup/{user}/shop-deduct', [\App\Http\Controllers\Admin\CustomerLookupController::class, 'shopDeduct'])->name('admin.customer-lookup.shop-deduct');
+        Route::post('/admin/customer-lookup/{user}/update-credit-limit', [\App\Http\Controllers\Admin\CustomerLookupController::class, 'updateCreditLimit'])->name('admin.customer-lookup.update-credit-limit');
         Route::get('/admin/customer-lookup/{user}/qr', [\App\Http\Controllers\QrCodeController::class, 'customerQr'])->name('admin.customer-qr');
 
         // Admin Products

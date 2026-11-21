@@ -3,9 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\CreditAccount;
+use App\Models\CreditTransaction;
 use App\Models\Order;
 use App\Models\User;
 use App\Models\Wallet;
+use App\Models\WalletLedger;
 use App\Models\WalletTransaction;
 use App\Services\LedgerService;
 use App\Services\MLMService;
@@ -158,7 +161,7 @@ class CustomerLookupController extends Controller
         $isNumeric = (ctype_digit($query) || (is_numeric($query) && (int) $query > 0));
 
         $userQuery = User::query()
-            ->with(['wallet', 'referralRecord'])
+            ->with(['wallet', 'creditAccount', 'referralRecord'])
             ->where(function($q) use ($query, $cleanPhone, $isNumeric) {
                 if ($isNumeric) {
                     $q->orWhere('id', (int) $query);
@@ -190,6 +193,7 @@ class CustomerLookupController extends Controller
 
         return $users->map(function ($u) {
             $wallet = $u->wallet;
+            $creditAccount = $u->creditAccount;
             return [
                 'id' => $u->id,
                 'name' => $u->name,
@@ -199,6 +203,9 @@ class CustomerLookupController extends Controller
                 'avatar_url' => $u->avatar_url,
                 'main_balance' => (float) ($wallet->main_balance ?? 0),
                 'main_balance_formatted' => '₹' . number_format($wallet->main_balance ?? 0, 2),
+                'available_credit' => (float) ($creditAccount?->available_credit ?? 0),
+                'available_credit_formatted' => '₹' . number_format($creditAccount?->available_credit ?? 0, 2),
+                'credit_limit' => (float) ($creditAccount?->credit_limit ?? 0),
                 'referral_code' => $u->referralRecord?->referral_code ?: '',
             ];
         })->toArray();
@@ -262,8 +269,9 @@ class CustomerLookupController extends Controller
     }
 
     /**
-     * Deduct shop purchase amount (Debit) from customer's wallet
-     * and distribute upline commissions (repurchase & BV) via MLMService.
+     * Deduct shop purchase amount (Debit) from customer's wallet.
+     * When amount exceeds main balance, the rest is covered from available credit limit.
+     * Distributes upline commissions (repurchase & BV) and generates EMI schedules for credit portion.
      */
     public function shopDeduct(Request $request, User $user)
     {
@@ -280,20 +288,53 @@ class CustomerLookupController extends Controller
         $admin = Auth::user();
 
         try {
-            $order = DB::transaction(function () use ($user, $amount, $bv, $validated, $admin) {
-                // Check balance with lock
-                $wallet = Wallet::where('user_id', $user->id)->lockForUpdate()->first();
-                if (!$wallet || (float) $wallet->main_balance < $amount) {
-                    $curBal = $wallet ? (float) $wallet->main_balance : 0;
-                    throw new \RuntimeException('Insufficient wallet balance. Current balance is ₹' . number_format($curBal, 2) . ', cannot deduct ₹' . number_format($amount, 2) . '.');
+            $deductionResult = DB::transaction(function () use ($user, $amount, $bv, $validated, $admin) {
+                // 1. Lock and fetch Wallet
+                $wallet = Wallet::firstOrCreate(
+                    ['user_id' => $user->id],
+                    ['main_balance' => 0, 'earning_balance' => 0, 'credit_balance' => 0]
+                );
+                $wallet = Wallet::where('id', $wallet->id)->lockForUpdate()->first();
+
+                // 2. Lock and fetch Credit Account
+                $ca = CreditAccount::where('user_id', $user->id)->lockForUpdate()->first();
+
+                $mainBal = (float) ($wallet->main_balance ?? 0);
+                $availCredit = ($ca && $ca->approval_status === 'approved') ? (float) $ca->available_credit : 0.0;
+
+                // 3. Determine split between main wallet and credit wallet
+                $mainDeduct = min($amount, max(0.0, $mainBal));
+                $creditDeduct = round($amount - $mainDeduct, 2);
+
+                if ($creditDeduct > 0 && $creditDeduct > $availCredit) {
+                    $shortfall = $creditDeduct - $availCredit;
+                    throw new \RuntimeException(
+                        'Amount exceeds available balance! Main wallet covers ₹' . number_format($mainDeduct, 2) .
+                        ', but remaining ₹' . number_format($creditDeduct, 2) . ' exceeds available credit limit of ₹' .
+                        number_format($availCredit, 2) . ' (Short by ₹' . number_format($shortfall, 2) . '). You can increase the credit limit to proceed.'
+                    );
                 }
+
+                // Deduct from Credit Wallet
+                if ($creditDeduct > 0) {
+                    $ca->used_credit = (float) $ca->used_credit + $creditDeduct;
+                    $ca->available_credit = max(0.0, (float) $ca->credit_limit - (float) $ca->used_credit);
+                    $ca->save();
+                }
+
+                // Determine payment method
+                $paymentMethod = $creditDeduct > 0
+                    ? ($mainDeduct > 0 ? 'split' : 'credit_wallet')
+                    : 'main_wallet';
 
                 // Create completed Order record for this shop purchase
                 $order = Order::create([
                     'user_id' => $user->id,
                     'total_amount' => $amount,
                     'total_bv' => $bv,
-                    'payment_method' => 'main_wallet',
+                    'paid_amount' => $mainDeduct,
+                    'credit_amount' => $creditDeduct,
+                    'payment_method' => $paymentMethod,
                     'status' => 'completed',
                 ]);
 
@@ -303,30 +344,62 @@ class CustomerLookupController extends Controller
                     $amount,
                     $order,
                     $validated['note'] ?? null,
-                    $admin
+                    $admin,
+                    $mainDeduct,
+                    $creditDeduct
                 );
+
+                // If credit was used, create CreditTransaction and generate EMI schedule
+                if ($creditDeduct > 0) {
+                    CreditTransaction::create([
+                        'credit_account_id' => $ca->id,
+                        'type' => 'debit',
+                        'amount' => $creditDeduct,
+                        'source' => 'purchase',
+                        'reference_id' => 'ORDER-' . $order->id,
+                        'description' => ($validated['note'] ?? "Shop purchase") . " (Order #{$order->id} - Credit Wallet portion)",
+                    ]);
+
+                    $this->mlmService->generateEmiSchedules($user, $order, $creditDeduct);
+                }
 
                 // Distribute upline repurchase & BV commissions
                 $this->mlmService->distributeOrderCommissions($order);
 
-                return $order;
+                return [
+                    'order' => $order,
+                    'main_deduct' => $mainDeduct,
+                    'credit_deduct' => $creditDeduct,
+                ];
             });
+
+            $order = $deductionResult['order'];
+            $mainDeduct = $deductionResult['main_deduct'];
+            $creditDeduct = $deductionResult['credit_deduct'];
 
             // Check how many upline commissions were distributed
             $commCount = \App\Models\Commission::where('order_id', $order->id)->where('amount', '>', 0)->count();
 
-            $updatedCustomer = $this->formatCustomerData($user);
+            $updatedCustomer = $this->formatCustomerData($user->fresh(['wallet', 'creditAccount', 'referralRecord']));
             $txData = $this->getCustomerTransactions($user, $request);
 
-            $msg = 'Successfully deducted ₹' . number_format($amount, 2) . ' from ' . $user->name . "'s wallet (Order #" . $order->id . ").";
+            $msg = 'Successfully processed ₹' . number_format($amount, 2) . ' for ' . $user->name . " (Order #" . $order->id . ").";
+            if ($creditDeduct > 0) {
+                $msg .= ' [Paid: ₹' . number_format($mainDeduct, 2) . ' Main Wallet + ₹' . number_format($creditDeduct, 2) . ' Credit Wallet]';
+            }
             if ($commCount > 0) {
                 $msg .= ' Upline repurchase commission credited to ' . $commCount . ' sponsor level(s).';
+            }
+            if ($creditDeduct > 0) {
+                $msg .= ' (Remaining commission on ₹' . number_format($creditDeduct, 2) . ' credit will be distributed when EMIs are repaid).';
             }
 
             return response()->json([
                 'success' => true,
                 'message' => $msg,
                 'order_id' => $order->id,
+                'main_deducted' => $mainDeduct,
+                'credit_deducted' => $creditDeduct,
                 'commissions_count' => $commCount,
                 'customer' => $updatedCustomer,
                 'transactions' => $txData['data'],
@@ -336,6 +409,58 @@ class CustomerLookupController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage(),
+            ], 422);
+        }
+    }
+
+    /**
+     * Update or increase customer's credit limit via AJAX without leaving the page.
+     */
+    public function updateCreditLimit(Request $request, User $user)
+    {
+        $this->ensureAdmin();
+
+        $validated = $request->validate([
+            'credit_limit' => 'required|numeric|min:0|max:10000000',
+        ]);
+
+        $newLimit = (float) $validated['credit_limit'];
+        $admin = Auth::user();
+
+        try {
+            DB::transaction(function () use ($user, $newLimit, $admin) {
+                $ca = CreditAccount::firstOrNew(['user_id' => $user->id]);
+                $oldLimit = (float) ($ca->credit_limit ?? 0);
+                $used = (float) ($ca->used_credit ?? 0);
+
+                $ca->credit_limit = $newLimit;
+                $ca->available_credit = max(0.0, $newLimit - $used);
+                $ca->approval_status = 'approved';
+                $ca->save();
+
+                $diff = $newLimit - $oldLimit;
+                if ($diff != 0) {
+                    CreditTransaction::create([
+                        'credit_account_id' => $ca->id,
+                        'type' => $diff > 0 ? 'credit' : 'debit',
+                        'amount' => abs($diff),
+                        'source' => 'manual',
+                        'description' => "Credit limit updated to ₹" . number_format($newLimit, 2) . " by Admin ({$admin->name})",
+                    ]);
+                }
+            });
+
+            $updatedCustomer = $this->formatCustomerData($user->fresh(['wallet', 'creditAccount', 'referralRecord']));
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Credit limit successfully updated to ₹' . number_format($newLimit, 2) . '.',
+                'customer' => $updatedCustomer,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update credit limit: ' . $e->getMessage(),
             ], 422);
         }
     }
@@ -422,6 +547,10 @@ class CustomerLookupController extends Controller
             'available_credit' => (float) ($creditAccount?->available_credit ?? 0),
             'available_credit_formatted' => '₹ ' . number_format($creditAccount?->available_credit ?? 0, 2),
             'credit_limit' => (float) ($creditAccount?->credit_limit ?? 0),
+            'credit_limit_formatted' => '₹ ' . number_format($creditAccount?->credit_limit ?? 0, 2),
+            'used_credit' => (float) ($creditAccount?->used_credit ?? 0),
+            'used_credit_formatted' => '₹ ' . number_format($creditAccount?->used_credit ?? 0, 2),
+            'credit_approval_status' => $creditAccount?->approval_status ?? 'pending',
             'created_at' => $user->created_at ? $user->created_at->format('d M Y') : 'N/A',
         ];
     }

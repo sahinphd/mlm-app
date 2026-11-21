@@ -46,7 +46,7 @@ class ApplyEmiPenalties extends Command
         $this->info("Found " . $emisToProcess->count() . " EMIs to process (Due today or Overdue).");
 
         foreach ($emisToProcess as $emi) {
-            DB::transaction(function () use ($emi, $penaltyAmount, $today) {
+            DB::transaction(function () use ($emi, $penaltyAmount, $today, $mlmService) {
                 $user = User::find($emi->user_id);
                 if (!$user) return;
 
@@ -89,6 +89,9 @@ class ApplyEmiPenalties extends Command
                     // Finalize EMI Status
                     $emi->status = 'paid';
                     $emi->save();
+
+                    // Distribute pro-rata repurchase and BV commission for this installment
+                    $mlmService->distributeEmiRepaymentCommissions($emi);
 
                     $this->line("Successfully auto-paid EMI #{$emi->id} for User #{$emi->user_id}. Amount: ₹{$emiAmount}");
                 } 

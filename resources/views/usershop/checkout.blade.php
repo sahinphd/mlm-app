@@ -89,6 +89,32 @@
                                     @endif
                                 </div>
                             </label>
+
+                            @php
+                                $totalOrder = $item->price * $quantity;
+                                $canSplit = ($wallet->main_balance > 0 && $wallet->main_balance < $totalOrder && $creditAccount && $creditAccount->approval_status === 'approved' && ($wallet->main_balance + $creditAccount->available_credit) >= $totalOrder);
+                                $splitCreditNeeded = max(0, $totalOrder - $wallet->main_balance);
+                            @endphp
+
+                            <!-- Split Payment (Main Wallet + Credit Wallet) -->
+                            <label class="relative flex cursor-pointer select-none items-center gap-4 rounded border border-stroke p-4 dark:border-strokedark {{ $canSplit ? 'border-primary bg-primary/5' : '' }}">
+                                <input type="radio" name="payment_method" value="split" required class="h-5 w-5" {{ $canSplit ? ($wallet->main_balance < $totalOrder && (!($creditAccount && $creditAccount->available_credit >= $totalOrder)) ? 'checked' : '') : 'disabled' }}>
+                                <div class="flex flex-col">
+                                    <span class="font-medium text-black dark:text-white flex items-center gap-2">
+                                        Split Payment (Wallet + Credit Limit)
+                                        @if($canSplit)
+                                            <span class="text-[10px] bg-primary text-white font-bold px-1.5 py-0.5 rounded">Recommended</span>
+                                        @endif
+                                    </span>
+                                    @if($canSplit)
+                                        <span class="text-sm text-gray-700 dark:text-gray-300">
+                                            Pay <strong>Rs.{{ number_format($wallet->main_balance, 2) }}</strong> from Wallet + remaining <strong>Rs.{{ number_format($splitCreditNeeded, 2) }}</strong> from Credit Limit (EMI)
+                                        </span>
+                                    @else
+                                        <span class="text-xs text-gray-500">Combine wallet balance and credit limit</span>
+                                    @endif
+                                </div>
+                            </label>
                         </div>
                     </div>
 

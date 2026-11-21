@@ -75,7 +75,7 @@ class ShopController extends Controller
             'item_id' => 'required',
             'type' => 'required|in:product,package',
             'quantity' => 'required|integer|min:1',
-            'payment_method' => 'required|in:main_wallet,credit_wallet'
+            'payment_method' => 'required|in:main_wallet,credit_wallet,split'
         ]);
 
         $user = Auth::user();
@@ -96,6 +96,8 @@ class ShopController extends Controller
         $total_bv = $item->bv * $quantity;
 
         return DB::transaction(function() use($user, $item, $quantity, $total, $total_bv, $request, $name){
+            $creditPortion = 0;
+
             // Payment handling
             if($request->payment_method === 'main_wallet'){
                 $wallet = Wallet::firstOrCreate(['user_id' => $user->id], ['main_balance' => 0, 'earning_balance' => 0, 'credit_balance' => 0]);
@@ -103,7 +105,7 @@ class ShopController extends Controller
                 $wallet->main_balance -= $total;
                 $wallet->save();
                 WalletTransaction::create(['wallet_id' => $wallet->id, 'type' => 'debit', 'source' => 'purchase', 'amount' => $total, 'description' => 'Order purchase: ' . $name]);
-            } else {
+            } elseif ($request->payment_method === 'credit_wallet') {
                 $ca = CreditAccount::where('user_id', $user->id)->first();
                 if(!$ca || $ca->approval_status !== 'approved') return back()->with('error', 'Your credit account is not approved.');
                 if($ca->available_credit < $total) return back()->with('error', 'Insufficient credit limit.');
@@ -119,15 +121,60 @@ class ShopController extends Controller
                     'source' => 'purchase',
                     'description' => 'Purchase of ' . $name
                 ]);
+
+                $creditPortion = $total;
+            } elseif ($request->payment_method === 'split') {
+                $wallet = Wallet::firstOrCreate(['user_id' => $user->id], ['main_balance' => 0, 'earning_balance' => 0, 'credit_balance' => 0]);
+                $ca = CreditAccount::where('user_id', $user->id)->first();
+                if(!$ca || $ca->approval_status !== 'approved') return back()->with('error', 'Your credit account is not approved.');
+
+                $mainBal = (float) $wallet->main_balance;
+                $mainDeduct = min($total, max(0.0, $mainBal));
+                $creditDeduct = round($total - $mainDeduct, 2);
+
+                if ($ca->available_credit < $creditDeduct) {
+                    return back()->with('error', 'Insufficient combined balance and credit limit. Need Rs.' . number_format($creditDeduct, 2) . ' from credit, but only Rs.' . number_format($ca->available_credit, 2) . ' is available.');
+                }
+
+                if ($mainDeduct > 0) {
+                    $wallet->main_balance -= $mainDeduct;
+                    $wallet->save();
+                    WalletTransaction::create([
+                        'wallet_id' => $wallet->id,
+                        'type' => 'debit',
+                        'source' => 'purchase',
+                        'amount' => $mainDeduct,
+                        'description' => 'Order purchase (Wallet portion): ' . $name
+                    ]);
+                }
+
+                if ($creditDeduct > 0) {
+                    $ca->used_credit += $creditDeduct;
+                    $ca->available_credit = max(0, $ca->credit_limit - $ca->used_credit);
+                    $ca->save();
+
+                    \App\Models\CreditTransaction::create([
+                        'credit_account_id' => $ca->id,
+                        'type' => 'debit',
+                        'amount' => $creditDeduct,
+                        'source' => 'purchase',
+                        'description' => 'Purchase of ' . $name . ' (Credit portion)'
+                    ]);
+
+                    $creditPortion = $creditDeduct;
+                }
             }
 
             $settings = $this->mlmService->getSettings();
             $defaultStatus = $settings['default_order_status'] ?? 'processing';
 
+            $paidPortion = max(0, (float)$total - (float)$creditPortion);
             $order = Order::create([
                 'user_id' => $user->id, 
                 'total_amount' => $total, 
                 'total_bv' => $total_bv, 
+                'paid_amount' => $paidPortion,
+                'credit_amount' => $creditPortion,
                 'payment_method' => $request->payment_method, 
                 'status' => $defaultStatus
             ]);
@@ -142,9 +189,9 @@ class ShopController extends Controller
                 OrderItem::create(['order_id' => $order->id, 'package_id' => $item->id, 'quantity' => $quantity, 'price' => $item->price, 'bv' => $total_bv]);
             }
             
-            // EMI generation if paid via credit
-            if($request->payment_method === 'credit_wallet'){
-                $this->mlmService->generateEmiSchedules($user, $order);
+            // EMI generation if paid via credit or split
+            if($creditPortion > 0){
+                $this->mlmService->generateEmiSchedules($user, $order, $creditPortion);
             }
 
             // Commission distribution ONLY if status is completed

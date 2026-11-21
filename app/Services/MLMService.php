@@ -53,13 +53,40 @@ class MLMService
         }
     }
 
-    public function distributeOrderCommissions($order)
+    public function distributeOrderCommissions($order, ?float $customAmount = null, ?float $customBv = null)
     {
         $settings = $this->getSettings();
-        $totalBv = $order->total_bv;
-        $totalAmount = $order->total_amount;
         $buyerId = $order->user_id;
-        
+
+        // Determine upfront basis for amount and BV
+        if ($customAmount !== null) {
+            $amountBasis = (float) $customAmount;
+            $bvBasis = $customBv !== null ? (float) $customBv : (($order->total_amount > 0 && $amountBasis > 0) ? round((float) $order->total_bv * ($amountBasis / (float) $order->total_amount), 4) : 0.0);
+        } elseif ($order->paid_amount !== null) {
+            $amountBasis = (float) $order->paid_amount;
+            $bvBasis = ($order->total_amount > 0 && $amountBasis > 0) ? round((float) $order->total_bv * ($amountBasis / (float) $order->total_amount), 4) : 0.0;
+        } elseif ($order->payment_method === 'main_wallet') {
+            $amountBasis = (float) $order->total_amount;
+            $bvBasis = (float) $order->total_bv;
+        } elseif ($order->payment_method === 'credit_wallet') {
+            // Pure credit orders defer 100% of commission to EMI repayments
+            $amountBasis = 0.0;
+            $bvBasis = 0.0;
+        } elseif ($order->payment_method === 'split') {
+            // Fallback for split orders without explicit paid_amount
+            $creditTotal = \App\Models\EmiSchedule::where('order_id', $order->id)->sum('installment_amount');
+            $amountBasis = max(0.0, (float) $order->total_amount - (float) $creditTotal);
+            $bvBasis = ($order->total_amount > 0 && $amountBasis > 0) ? round((float) $order->total_bv * ($amountBasis / (float) $order->total_amount), 4) : 0.0;
+        } else {
+            $amountBasis = (float) $order->total_amount;
+            $bvBasis = (float) $order->total_bv;
+        }
+
+        // If no cash was paid upfront (e.g. 100% credit), defer commission to EMI repayment
+        if ($amountBasis <= 0 && $bvBasis <= 0) {
+            return;
+        }
+
         $current = $buyerId;
         $level = 1;
 
@@ -74,30 +101,104 @@ class MLMService
 
             if ($uplineUser) {
                 $isActive = ($uplineUser->status === 'active');
-                $note = $isActive ? null : 'Commission skipped as not active user';
 
-                // 1. Repurchase Commission (Percentage of total order amount)
+                // 1. Repurchase Commission (Percentage of cash/upfront order amount)
                 $percKey = 'repurchase_commission_level_' . $level;
                 $percentage = (float) ($settings[$percKey] ?? 0);
-                $repurchaseCommission = ($totalAmount * $percentage) / 100;
+                $repurchaseCommission = ($amountBasis * $percentage) / 100;
 
                 if ($repurchaseCommission > 0) {
+                    $note = $isActive ? ($order->payment_method === 'split' ? 'Split payment upfront cash commission for Order #' . $order->id : null) : 'Commission skipped as not active user';
                     $this->creditCommission($uplineId, $buyerId, $order->id, $level, $isActive ? $repurchaseCommission : 0, 'repurchase', $note);
                 }
 
-                // 2. BV Commission (Rate per BV point)
+                // 2. BV Commission (Rate per BV point on upfront BV)
                 $rateKey = 'order_commission_level_' . $level;
                 $rate = (float) ($settings[$rateKey] ?? 0);
-                $bvCommission = $totalBv * $rate;
+                $bvCommission = $bvBasis * $rate;
 
                 if ($bvCommission > 0) {
-                    $this->creditCommission($uplineId, $buyerId, $order->id, $level, $isActive ? $bvCommission : 0, 'bv', $note);
+                    $bvNote = $isActive ? ($order->payment_method === 'split' ? 'Split payment upfront BV commission for Order #' . $order->id : null) : 'Commission skipped as not active user';
+                    $this->creditCommission($uplineId, $buyerId, $order->id, $level, $isActive ? $bvCommission : 0, 'bv', $bvNote);
                 }
             }
 
             $current = $uplineId;
             $level++;
         }
+    }
+
+    public function distributeEmiRepaymentCommissions(\App\Models\EmiSchedule $emi): bool
+    {
+        if ($emi->commission_distributed) {
+            return false;
+        }
+
+        $order = $emi->order;
+        if (!$order || in_array($order->status, ['cancelled', 'returned', 'failed'])) {
+            return false;
+        }
+
+        $settings = $this->getSettings();
+        $installmentAmount = (float) $emi->installment_amount;
+        if ($installmentAmount <= 0) {
+            return false;
+        }
+
+        // Calculate BV proportion for this EMI
+        $emiBv = ($order->total_amount > 0 && (float) $order->total_bv > 0)
+            ? round(((float) $order->total_bv * ($installmentAmount / (float) $order->total_amount)), 4)
+            : 0.0;
+
+        $buyerId = $emi->user_id;
+        $current = $buyerId;
+        $level = 1;
+
+        while ($level <= 5) {
+            $ref = DB::table('referrals')->where('user_id', $current)->first();
+            if (!$ref || !$ref->parent_id) {
+                break;
+            }
+
+            $uplineId = $ref->parent_id;
+            $uplineUser = User::find($uplineId);
+
+            if ($uplineUser) {
+                $isActive = ($uplineUser->status === 'active');
+
+                // 1. Repurchase Commission for this EMI installment
+                $percKey = 'repurchase_commission_level_' . $level;
+                $percentage = (float) ($settings[$percKey] ?? 0);
+                $repurchaseCommission = ($installmentAmount * $percentage) / 100;
+
+                if ($repurchaseCommission > 0) {
+                    $note = $isActive 
+                        ? 'Repurchase commission for EMI #' . $emi->id . ' repayment (Order #' . $order->id . ')' 
+                        : 'Commission skipped as not active user';
+                    $this->creditCommission($uplineId, $buyerId, $order->id, $level, $isActive ? $repurchaseCommission : 0, 'repurchase', $note);
+                }
+
+                // 2. BV Commission for this EMI installment
+                $rateKey = 'order_commission_level_' . $level;
+                $rate = (float) ($settings[$rateKey] ?? 0);
+                $bvCommission = $emiBv * $rate;
+
+                if ($bvCommission > 0) {
+                    $bvNote = $isActive 
+                        ? 'BV commission for EMI #' . $emi->id . ' repayment (Order #' . $order->id . ')' 
+                        : 'Commission skipped as not active user';
+                    $this->creditCommission($uplineId, $buyerId, $order->id, $level, $isActive ? $bvCommission : 0, 'bv', $bvNote);
+                }
+            }
+
+            $current = $uplineId;
+            $level++;
+        }
+
+        $emi->commission_distributed = true;
+        $emi->save();
+
+        return true;
     }
 
     public function reverseOrderCommissions($order)
@@ -230,12 +331,12 @@ class MLMService
         });
     }
 
-    public function generateEmiSchedules($user, $order)
+    public function generateEmiSchedules($user, $order, ?float $customAmount = null)
     {
         $settings = $this->getSettings();
         $emiAmount = (float) ($settings['default_emi_amount'] ?? 500);
         $interval = (int) ($settings['emi_frequency'] ?? 7);
-        $total = $order->total_amount;
+        $total = $customAmount !== null ? $customAmount : $order->total_amount;
         
         $remainingBalance = $total;
         $i = 1;

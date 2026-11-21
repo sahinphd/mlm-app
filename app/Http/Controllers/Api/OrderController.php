@@ -79,7 +79,17 @@ class OrderController extends Controller
                 ]);
             }
 
-            $order = Order::create(['user_id'=>$user->id,'total_amount'=>$total,'total_bv'=>$total_bv,'payment_method'=>$data['payment_method'],'status'=>'completed']);
+            $paidPortion = $data['payment_method'] === 'credit_wallet' ? 0 : $total;
+            $creditPortion = $data['payment_method'] === 'credit_wallet' ? $total : 0;
+            $order = Order::create([
+                'user_id' => $user->id,
+                'total_amount' => $total,
+                'total_bv' => $total_bv,
+                'paid_amount' => $paidPortion,
+                'credit_amount' => $creditPortion,
+                'payment_method' => $data['payment_method'],
+                'status' => 'completed'
+            ]);
 
             foreach($items as $it){
                 OrderItem::create(['order_id'=>$order->id,'product_id'=>$it['product']->id,'quantity'=>$it['quantity'],'price'=>$it['product']->price,'bv'=>$it['bv']]);

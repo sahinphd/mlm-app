@@ -400,23 +400,39 @@ class LedgerService
     /**
      * Record Admin "Shop Amount" deduction atomically with resulting balance and immutable ledger entry.
      */
-    public function recordAdminShopDeduct(User $user, float $amount, Order $order, ?string $note = null, ?User $admin = null): array
-    {
+    public function recordAdminShopDeduct(
+        User $user,
+        float $amount,
+        Order $order,
+        ?string $note = null,
+        ?User $admin = null,
+        ?float $mainDeduct = null,
+        ?float $creditDeduct = null
+    ): array {
         $adminName = $admin ? $admin->name : 'Admin';
+        $mainAmount = $mainDeduct !== null ? $mainDeduct : $amount;
 
-        return DB::transaction(function () use ($user, $amount, $order, $note, $adminName, $admin) {
+        return DB::transaction(function () use ($user, $amount, $order, $note, $adminName, $admin, $mainAmount, $creditDeduct) {
             $wallet = Wallet::where('user_id', $user->id)->lockForUpdate()->first();
-            if (!$wallet || (float) $wallet->main_balance < $amount) {
+            if (!$wallet || (float) $wallet->main_balance < $mainAmount) {
                 throw new \RuntimeException('Insufficient wallet balance.');
             }
 
             // Deduct
-            $wallet->main_balance = (float) $wallet->main_balance - $amount;
-            $wallet->save();
+            if ($mainAmount > 0) {
+                $wallet->main_balance = (float) $wallet->main_balance - $mainAmount;
+                $wallet->save();
+            }
 
             $cleanNote = !empty($note)
                 ? trim($note)
                 : "Shop purchase deducted by Admin ({$adminName})";
+
+            if ($creditDeduct !== null && $creditDeduct > 0 && $mainAmount > 0) {
+                $cleanNote .= " (₹" . number_format($mainAmount, 2) . " Wallet + ₹" . number_format($creditDeduct, 2) . " Credit)";
+            } elseif ($creditDeduct !== null && $creditDeduct > 0 && $mainAmount == 0) {
+                $cleanNote .= " (Paid ₹" . number_format($creditDeduct, 2) . " from Credit Wallet)";
+            }
 
             $refId = 'ORDER-' . $order->id;
 
@@ -425,7 +441,7 @@ class LedgerService
                 'wallet_id' => $wallet->id,
                 'type' => 'debit',
                 'source' => 'purchase',
-                'amount' => $amount,
+                'amount' => $mainAmount,
                 'balance' => $wallet->main_balance,
                 'counterparty_id' => $admin?->id,
                 'reference_id' => $refId,
@@ -442,13 +458,16 @@ class LedgerService
                 'counterparty_name' => "Admin ({$adminName})",
                 'type' => 'debit',
                 'source' => 'purchase',
-                'amount' => $amount,
+                'amount' => $mainAmount,
                 'resulting_balance' => $wallet->main_balance,
                 'reference_id' => $refId,
                 'status' => 'completed',
                 'description' => $cleanNote,
                 'metadata' => [
                     'order_id' => $order->id,
+                    'total_amount' => $amount,
+                    'main_deduct' => $mainAmount,
+                    'credit_deduct' => $creditDeduct ?? 0,
                     'admin_id' => $admin?->id,
                     'admin_name' => $adminName,
                 ],

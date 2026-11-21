@@ -74,7 +74,7 @@ class AdminShopController extends Controller
             'item_id' => 'required',
             'type' => 'required|in:product,package',
             'quantity' => 'required|integer|min:1',
-            'payment_method' => 'required|in:main_wallet,credit_wallet,manual_cash'
+            'payment_method' => 'required|in:main_wallet,credit_wallet,manual_cash,split'
         ]);
 
         $targetUser = User::findOrFail($request->user_id);
@@ -95,6 +95,8 @@ class AdminShopController extends Controller
         $total_bv = $item->bv * $quantity;
 
         return DB::transaction(function() use($targetUser, $item, $quantity, $total, $total_bv, $request, $name){
+            $creditPortion = 0;
+
             // Payment handling
             if($request->payment_method === 'main_wallet'){
                 $wallet = Wallet::firstOrCreate(['user_id' => $targetUser->id], ['main_balance' => 0, 'earning_balance' => 0, 'credit_balance' => 0]);
@@ -118,11 +120,62 @@ class AdminShopController extends Controller
                     'source' => 'purchase',
                     'description' => 'Admin Order purchase: ' . $name
                 ]);
+
+                $creditPortion = $total;
+            } elseif ($request->payment_method === 'split') {
+                $wallet = Wallet::firstOrCreate(['user_id' => $targetUser->id], ['main_balance' => 0, 'earning_balance' => 0, 'credit_balance' => 0]);
+                $ca = CreditAccount::where('user_id', $targetUser->id)->first();
+                if(!$ca || $ca->approval_status !== 'approved') return back()->with('error', 'User credit account is not approved.');
+
+                $mainBal = (float) $wallet->main_balance;
+                $mainDeduct = min($total, max(0.0, $mainBal));
+                $creditDeduct = round($total - $mainDeduct, 2);
+
+                if ($ca->available_credit < $creditDeduct) {
+                    return back()->with('error', 'Insufficient user combined balance and credit limit. Need Rs.' . number_format($creditDeduct, 2) . ' from credit, but only Rs.' . number_format($ca->available_credit, 2) . ' is available.');
+                }
+
+                if ($mainDeduct > 0) {
+                    $wallet->main_balance -= $mainDeduct;
+                    $wallet->save();
+                    WalletTransaction::create([
+                        'wallet_id' => $wallet->id,
+                        'type' => 'debit',
+                        'source' => 'purchase',
+                        'amount' => $mainDeduct,
+                        'description' => 'Admin Order purchase (Wallet portion): ' . $name
+                    ]);
+                }
+
+                if ($creditDeduct > 0) {
+                    $ca->used_credit += $creditDeduct;
+                    $ca->available_credit = max(0, $ca->credit_limit - $ca->used_credit);
+                    $ca->save();
+
+                    \App\Models\CreditTransaction::create([
+                        'credit_account_id' => $ca->id,
+                        'type' => 'debit',
+                        'amount' => $creditDeduct,
+                        'source' => 'purchase',
+                        'description' => 'Admin Order purchase: ' . $name . ' (Credit portion)'
+                    ]);
+
+                    $creditPortion = $creditDeduct;
+                }
             } else {
                 // manual_cash -> No wallet deduction, no wallet transaction record
             }
 
-            $order = Order::create(['user_id' => $targetUser->id, 'total_amount' => $total, 'total_bv' => $total_bv, 'payment_method' => $request->payment_method, 'status' => 'completed']);
+            $paidPortion = max(0, (float)$total - (float)$creditPortion);
+            $order = Order::create([
+                'user_id' => $targetUser->id,
+                'total_amount' => $total,
+                'total_bv' => $total_bv,
+                'paid_amount' => $paidPortion,
+                'credit_amount' => $creditPortion,
+                'payment_method' => $request->payment_method,
+                'status' => 'completed',
+            ]);
             
             if ($request->type === 'product') {
                 OrderItem::create(['order_id' => $order->id, 'product_id' => $item->id, 'quantity' => $quantity, 'price' => $item->price, 'bv' => $total_bv]);
@@ -131,9 +184,9 @@ class AdminShopController extends Controller
                 OrderItem::create(['order_id' => $order->id, 'package_id' => $item->id, 'quantity' => $quantity, 'price' => $item->price, 'bv' => $total_bv]);
             }
             
-            // EMI generation if paid via credit
-            if($request->payment_method === 'credit_wallet'){
-                $this->mlmService->generateEmiSchedules($targetUser, $order);
+            // EMI generation if paid via credit or split
+            if($creditPortion > 0){
+                $this->mlmService->generateEmiSchedules($targetUser, $order, $creditPortion);
             }
 
             // Commission distribution (Skip if manual_cash)

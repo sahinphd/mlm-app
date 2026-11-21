@@ -2,6 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\CreditAccount;
+use App\Models\CreditTransaction;
+use App\Models\EmiSchedule;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Models\WalletTransaction;
@@ -305,6 +308,150 @@ class CustomerLookupTest extends TestCase
             ]);
 
         $this->assertEquals(500, $this->customer->fresh()->wallet->main_balance);
+    }
+
+    public function test_admin_can_deduct_shop_amount_with_credit_wallet_when_exceeding_main_balance(): void
+    {
+        // Give customer an approved credit account with 2000 credit limit
+        $ca = CreditAccount::create([
+            'user_id' => $this->customer->id,
+            'credit_limit' => 2000,
+            'used_credit' => 0,
+            'available_credit' => 2000,
+            'approval_status' => 'approved',
+        ]);
+
+        // Customer has 500 in main balance; admin deducts 800 (500 main + 300 credit)
+        $response = $this->actingAs($this->admin)->postJson('/admin/customer-lookup/' . $this->customer->id . '/shop-deduct', [
+            'amount' => 800,
+            'note' => 'Split purchase test',
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'main_deducted' => 500,
+                'credit_deducted' => 300,
+            ]);
+
+        // Wallet balance drained to 0
+        $this->assertEquals(0, $this->customer->fresh()->wallet->main_balance);
+
+        // Credit account used 300, available 1700
+        $caFresh = $ca->fresh();
+        $this->assertEquals(300, $caFresh->used_credit);
+        $this->assertEquals(1700, $caFresh->available_credit);
+
+        // Order created with payment_method 'split'
+        $this->assertDatabaseHas('orders', [
+            'user_id' => $this->customer->id,
+            'total_amount' => 800,
+            'payment_method' => 'split',
+            'status' => 'completed',
+        ]);
+
+        // Credit transaction recorded
+        $this->assertDatabaseHas('credit_transactions', [
+            'credit_account_id' => $ca->id,
+            'type' => 'debit',
+            'amount' => 300,
+        ]);
+
+        // EMI schedules generated for 300 credit portion
+        $emiTotal = EmiSchedule::where('user_id', $this->customer->id)->sum('installment_amount');
+        $this->assertEquals(300, $emiTotal);
+    }
+
+    public function test_admin_cannot_deduct_when_amount_exceeds_main_and_available_credit(): void
+    {
+        // Credit account with only 200 available credit
+        CreditAccount::create([
+            'user_id' => $this->customer->id,
+            'credit_limit' => 200,
+            'used_credit' => 0,
+            'available_credit' => 200,
+            'approval_status' => 'approved',
+        ]);
+
+        // Total available is 500 (main) + 200 (credit) = 700. Admin tries to deduct 850 (short by 150).
+        $response = $this->actingAs($this->admin)->postJson('/admin/customer-lookup/' . $this->customer->id . '/shop-deduct', [
+            'amount' => 850,
+            'note' => 'Over limit attempt',
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJson([
+                'success' => false,
+            ]);
+
+        $this->assertStringContainsString('Short by ₹150.00', $response->json('message'));
+        $this->assertEquals(500, $this->customer->fresh()->wallet->main_balance);
+    }
+
+    public function test_admin_can_update_credit_limit_without_leaving_page(): void
+    {
+        $response = $this->actingAs($this->admin)->postJson('/admin/customer-lookup/' . $this->customer->id . '/update-credit-limit', [
+            'credit_limit' => 7500,
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+            ]);
+
+        $ca = CreditAccount::where('user_id', $this->customer->id)->first();
+        $this->assertNotNull($ca);
+        $this->assertEquals(7500, $ca->credit_limit);
+        $this->assertEquals(7500, $ca->available_credit);
+        $this->assertEquals('approved', $ca->approval_status);
+
+        // Audit credit transaction created
+        $this->assertDatabaseHas('credit_transactions', [
+            'credit_account_id' => $ca->id,
+            'type' => 'credit',
+            'amount' => 7500,
+        ]);
+
+        // Customer response contains updated formatted values
+        $this->assertEquals(7500, $response->json('customer.credit_limit'));
+        $this->assertEquals(7500, $response->json('customer.available_credit'));
+    }
+
+    public function test_admin_can_deduct_full_amount_from_credit_wallet_when_main_balance_is_zero(): void
+    {
+        // Drain main balance to 0
+        $this->customer->wallet->update(['main_balance' => 0]);
+
+        $ca = CreditAccount::create([
+            'user_id' => $this->customer->id,
+            'credit_limit' => 3000,
+            'used_credit' => 0,
+            'available_credit' => 3000,
+            'approval_status' => 'approved',
+        ]);
+
+        $response = $this->actingAs($this->admin)->postJson('/admin/customer-lookup/' . $this->customer->id . '/shop-deduct', [
+            'amount' => 450,
+            'note' => '100% Credit purchase',
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'main_deducted' => 0,
+                'credit_deducted' => 450,
+            ]);
+
+        $this->assertEquals(0, $this->customer->fresh()->wallet->main_balance);
+        $this->assertEquals(450, $ca->fresh()->used_credit);
+        $this->assertEquals(2550, $ca->fresh()->available_credit);
+
+        $this->assertDatabaseHas('orders', [
+            'user_id' => $this->customer->id,
+            'total_amount' => 450,
+            'payment_method' => 'credit_wallet',
+            'status' => 'completed',
+        ]);
     }
 
     public function test_transactions_paginate_10_by_default_and_support_filters(): void

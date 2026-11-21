@@ -8,12 +8,20 @@ use App\Models\Wallet;
 use App\Models\WalletTransaction;
 use App\Models\CreditAccount;
 use App\Models\CreditTransaction;
+use App\Services\MLMService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class EmiController extends Controller
 {
+    protected MLMService $mlmService;
+
+    public function __construct(MLMService $mlmService)
+    {
+        $this->mlmService = $mlmService;
+    }
+
     public function index()
     {
         return view('credit.emis', [
@@ -150,6 +158,9 @@ class EmiController extends Controller
             // Update EMI status
             $emi->status = 'paid';
             $emi->save();
+
+            // Distribute pro-rata repurchase and BV commission for this installment
+            $this->mlmService->distributeEmiRepaymentCommissions($emi);
 
             return back()->with('success', 'EMI paid successfully.');
         });
