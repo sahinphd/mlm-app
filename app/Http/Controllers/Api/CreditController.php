@@ -12,10 +12,13 @@ class CreditController extends Controller
     public function show()
     {
         $user = Auth::user();
+        $settings = \App\Http\Controllers\Admin\SettingController::getSystemSettings();
+        $defaultLimit = (float) ($settings['default_credit_limit'] ?? 5000);
+
         $ca = CreditAccount::firstOrCreate(['user_id' => $user->id], [
-            'credit_limit' => 5000,
+            'credit_limit' => $defaultLimit,
             'used_credit' => 0,
-            'available_credit' => 5000,
+            'available_credit' => $defaultLimit,
             'approval_status' => 'pending',
         ]);
 

@@ -106,41 +106,51 @@ class SettingController extends Controller
         return back()->with('success', 'Settings and logos updated successfully.');
     }
 
-    protected function getSettings()
+    public static function getSystemSettings(): array
     {
-        if (!Storage::disk('local')->exists($this->settingsFile)) {
-            return [
-                'site_name' => config('app.name', 'MLM App'),
-                'contact_email' => 'admin@example.com',
-                'currency' => 'INR',
-                'min_withdrawal' => 500,
-                'maintenance_mode' => 'off',
-                'registration_enabled' => 'on',
-                'enable_bv_commission' => 'on',
-                'default_emi_amount' => 500,
-                'emi_frequency' => 7, // days (weekly)
-                'late_penalty_amount' => 80,
-                'enable_push_notifications' => 'off',
-                'truecaller_login' => 'off',
-                'fcm_project_id' => '',
-                'joining_commission_level_1' => 100,
-                'joining_commission_level_2' => 50,
-                'joining_commission_level_3' => 30,
-                'joining_commission_level_4' => 20,
-                'joining_commission_level_5' => 10,
-                'repurchase_commission_level_1' => 20,
-                'repurchase_commission_level_2' => 10,
-                'repurchase_commission_level_3' => 5,
-                'repurchase_commission_level_4' => 3,
-                'repurchase_commission_level_5' => 2,
-                'order_commission_level_1' => 2.0,
-                'order_commission_level_2' => 1.0,
-                'order_commission_level_3' => 0.3,
-                'order_commission_level_4' => 0.2,
-                'order_commission_level_5' => 0.1,
-            ];
+        $settingsFile = 'settings.json';
+        $defaults = [
+            'site_name' => config('app.name', 'MLM App'),
+            'contact_email' => 'admin@example.com',
+            'currency' => 'INR',
+            'min_withdrawal' => 500,
+            'default_credit_limit' => 5000,
+            'maintenance_mode' => 'off',
+            'registration_enabled' => 'on',
+            'enable_bv_commission' => 'on',
+            'default_emi_amount' => 500,
+            'emi_frequency' => 7, // days (weekly)
+            'late_penalty_amount' => 80,
+            'enable_push_notifications' => 'off',
+            'truecaller_login' => 'off',
+            'fcm_project_id' => '',
+            'joining_commission_level_1' => 100,
+            'joining_commission_level_2' => 50,
+            'joining_commission_level_3' => 30,
+            'joining_commission_level_4' => 20,
+            'joining_commission_level_5' => 10,
+            'repurchase_commission_level_1' => 20,
+            'repurchase_commission_level_2' => 10,
+            'repurchase_commission_level_3' => 5,
+            'repurchase_commission_level_4' => 3,
+            'repurchase_commission_level_5' => 2,
+            'order_commission_level_1' => 2.0,
+            'order_commission_level_2' => 1.0,
+            'order_commission_level_3' => 0.3,
+            'order_commission_level_4' => 0.2,
+            'order_commission_level_5' => 0.1,
+        ];
+
+        if (Storage::disk('local')->exists($settingsFile)) {
+            $saved = json_decode(Storage::disk('local')->get($settingsFile), true) ?: [];
+            return array_merge($defaults, $saved);
         }
 
-        return json_decode(Storage::disk('local')->get($this->settingsFile), true);
+        return $defaults;
+    }
+
+    public function getSettings()
+    {
+        return self::getSystemSettings();
     }
 }

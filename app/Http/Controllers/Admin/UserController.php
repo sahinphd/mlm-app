@@ -35,8 +35,108 @@ class UserController extends Controller
     {
         $this->ensureAdmin();
         $status = $request->query('status', 'pending');
-        $users = User::where('kyc_status', $status)->orderBy('updated_at', 'desc')->paginate(25);
-        return view('admin.kyc_index', compact('users', 'status'));
+
+        $stats = [
+            'pending' => User::where('kyc_status', 'pending')->count(),
+            'approved' => User::where('kyc_status', 'approved')->count(),
+            'rejected' => User::where('kyc_status', 'rejected')->count(),
+            'unfilled' => User::where('kyc_status', 'unfilled')->count(),
+        ];
+
+        $settings = \App\Http\Controllers\Admin\SettingController::getSystemSettings();
+        $defaultCreditLimit = (float) ($settings['default_credit_limit'] ?? 5000);
+
+        $users = User::with(['creditAccount', 'wallet', 'referralRecord.parent'])
+            ->where('kyc_status', $status)
+            ->orderBy('updated_at', 'desc')
+            ->paginate(25);
+
+        return view('admin.kyc_index', compact('users', 'status', 'stats', 'defaultCreditLimit'));
+    }
+
+    public function quickOnboard(Request $request, User $user)
+    {
+        $this->ensureAdmin();
+
+        $validated = $request->validate([
+            'credit_limit' => 'nullable|numeric|min:0',
+            'kyc_status' => 'nullable|string|in:approved,pending,rejected',
+            'status' => 'nullable|string|in:active,pending,blocked',
+            'credit_approval' => 'nullable|string|in:approved,pending,rejected',
+            'kyc_notes' => 'nullable|string|max:500',
+        ]);
+
+        $oldStatus = $user->status;
+        $oldKycStatus = $user->kyc_status;
+
+        $settings = \App\Http\Controllers\Admin\SettingController::getSystemSettings();
+        $defaultLimit = (float) ($settings['default_credit_limit'] ?? 5000);
+        $creditLimit = isset($validated['credit_limit']) ? (float) $validated['credit_limit'] : $defaultLimit;
+
+        \Illuminate\Support\Facades\DB::transaction(function() use ($request, $user, $validated, $oldStatus, $creditLimit) {
+            $user->kyc_status = $validated['kyc_status'] ?? 'approved';
+            $user->status = $validated['status'] ?? 'active';
+            if (array_key_exists('kyc_notes', $validated)) {
+                $user->kyc_notes = $validated['kyc_notes'];
+            }
+            $user->save();
+
+            $creditApproval = $validated['credit_approval'] ?? 'approved';
+
+            $ca = \App\Models\CreditAccount::firstOrNew(['user_id' => $user->id]);
+            $oldCreditStatus = $ca->exists ? $ca->approval_status : 'pending';
+
+            $ca->credit_limit = $creditLimit;
+            $ca->available_credit = max(0, $creditLimit - ($ca->used_credit ?? 0));
+            $ca->approval_status = $creditApproval;
+            $ca->save();
+
+            if ($creditApproval === 'approved' && $oldCreditStatus !== 'approved') {
+                \App\Models\CreditTransaction::create([
+                    'credit_account_id' => $ca->id,
+                    'type' => 'credit',
+                    'amount' => $creditLimit,
+                    'source' => 'manual',
+                    'description' => 'Initial credit limit approved during onboarding'
+                ]);
+            }
+
+            // Trigger MLM joining commission if user status is active and credit is approved
+            if ($user->status === 'active' && $ca->approval_status === 'approved') {
+                $this->mlmService->distributeJoiningCommissions($user->id);
+            }
+        });
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'User ' . $user->name . ' successfully onboarded: KYC approved, account activated, and credit limit granted!'
+            ]);
+        }
+
+        return back()->with('success', 'User ' . $user->name . ' successfully onboarded: KYC approved, account activated, and credit limit granted!');
+    }
+
+    public function quickReject(Request $request, User $user)
+    {
+        $this->ensureAdmin();
+
+        $validated = $request->validate([
+            'kyc_notes' => 'required|string|max:500',
+        ]);
+
+        $user->kyc_status = 'rejected';
+        $user->kyc_notes = $validated['kyc_notes'];
+        $user->save();
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'KYC marked as rejected. The user has been notified to correct their details.'
+            ]);
+        }
+
+        return back()->with('success', 'KYC marked as rejected. The user has been notified to correct their details.');
     }
 
     public function genealogyIndex(Request $request)
@@ -65,7 +165,8 @@ class UserController extends Controller
             3 => 'email',
             4 => 'role',
             5 => 'status',
-            8 => 'created_at'
+            6 => 'kyc_status',
+            9 => 'created_at'
         ];
 
         $query = User::with(['wallet', 'creditAccount', 'referralRecord.parent'])
@@ -101,12 +202,22 @@ class UserController extends Controller
 
         $data = $query->skip($start)->take($length)->get();
 
-        $rows = $data->map(function($u){
+        $settings = \App\Http\Controllers\Admin\SettingController::getSystemSettings();
+        $defaultLimit = (float) ($settings['default_credit_limit'] ?? 5000);
+
+        $rows = $data->map(function($u) use ($defaultLimit){
             $statusBadge = match($u->status) {
                 'active' => '<span class="px-2 py-1 rounded-full text-xs font-semibold bg-success-50 text-success-600">Active</span>',
                 'pending' => '<span class="px-2 py-1 rounded-full text-xs font-semibold bg-warning-50 text-warning-600">Pending</span>',
                 'blocked' => '<span class="px-2 py-1 rounded-full text-xs font-semibold bg-danger-50 text-danger-600">Blocked</span>',
                 default => e($u->status)
+            };
+
+            $kycBadge = match($u->kyc_status) {
+                'approved' => '<span class="px-2 py-1 rounded-full text-xs font-semibold bg-success-50 text-success-600">Approved</span>',
+                'pending' => '<span class="px-2 py-1 rounded-full text-xs font-semibold bg-warning-50 text-warning-600">Pending</span>',
+                'rejected' => '<span class="px-2 py-1 rounded-full text-xs font-semibold bg-danger-50 text-danger-600">Rejected</span>',
+                default => '<span class="px-2 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-500">Unfilled</span>'
             };
 
             $cs = $u->creditAccount->approval_status ?? 'N/A';
@@ -119,6 +230,12 @@ class UserController extends Controller
 
             $parentName = $u->referralRecord?->parent?->name ?? 'None';
             $referralCode = $u->referralRecord?->referral_code ?? '-';
+
+            $userLimit = (float) ($u->creditAccount->credit_limit ?? $defaultLimit);
+
+            $canQuickOnboard = ($u->status === 'pending' || $u->kyc_status === 'pending');
+            $quickOnboardBtn = $canQuickOnboard ? 
+                '<button type="button" class="js-quick-onboard-btn text-xs font-semibold bg-primary/10 text-primary hover:bg-primary hover:text-white px-2 py-1 rounded transition-colors mr-2 inline-flex items-center gap-1" data-id="'.$u->id.'" data-name="'.e($u->name).'" data-email="'.e($u->email).'" data-phone="'.e($u->phone ?? '-').'" data-aadhaar="'.e($u->aadhaar_number ?? 'N/A').'" data-pan="'.e($u->pan_number ?? 'N/A').'" data-address="'.e($u->address ?? 'N/A').'" data-nominee-name="'.e($u->nominee_name ?? 'N/A').'" data-nominee-rel="'.e($u->nominee_relation ?? 'N/A').'" data-kyc-status="'.e($u->kyc_status).'" data-status="'.e($u->status).'" data-credit-limit="'.$userLimit.'" data-upline="'.e($parentName).'" data-avatar="'.e($u->avatar_url).'" title="Quick Complete Approval">⚡ Onboard</button>' : '';
 
             return [
                 $u->id,
@@ -136,14 +253,23 @@ class UserController extends Controller
                       data-bv="'.number_format($u->total_bv ?? 0, 2).'"
                       data-credit-used="'.number_format($u->creditAccount->used_credit ?? 0, 2).'"
                       data-overdue="'.number_format($u->overdue_amount ?? 0, 2).'"
+                      data-kyc-status="'.e($u->kyc_status).'"
+                      data-aadhaar="'.e($u->aadhaar_number ?? 'N/A').'"
+                      data-pan="'.e($u->pan_number ?? 'N/A').'"
+                      data-address="'.e($u->address ?? 'N/A').'"
+                      data-nominee="'.e(($u->nominee_name ? $u->nominee_name . ' (' . ($u->nominee_relation ?? 'Nominee') . ')' : 'N/A')).'"
+                      data-credit-limit="'.$userLimit.'"
+                      data-can-onboard="'.($canQuickOnboard ? '1' : '0').'"
                 />',
                 e($u->name),
                 '<a href="mailto:'.e($u->email).'" class="text-blue-600 truncate inline-block max-w-[150px]">'.e($u->email).'</a>',
                 e($u->role ?? 'user'),
                 $statusBadge,
+                $kycBadge,
                 'Rs.' . number_format($u->creditAccount->credit_limit ?? 0, 2),
                 $creditStatusBadge,
                 $u->created_at?->format('Y-m-d'),
+                $quickOnboardBtn .
                 '<a href="'.route('admin.users.show', $u->id).'" class="text-sm text-primary mr-2">View</a>' .
                 ((!$u->isAdmin()) ? '<form action="'.route('admin.impersonate', $u->id).'?redirect=profile" method="POST" class="inline mr-2">'.csrf_field().'<button type="submit" class="text-sm text-emerald-600 font-semibold hover:underline" title="Login as User">Login</button></form>' : '') .
                 '<a href="'.route('admin.users.genealogy', $u->id).'" class="text-sm text-success mr-2">Genealogy</a>' .

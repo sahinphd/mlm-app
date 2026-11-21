@@ -178,12 +178,24 @@
                     <div class="mb-5.5 flex flex-col gap-5.5 sm:flex-row">
                         <div class="w-full sm:w-1/2">
                             <label class="mb-3 block text-sm font-medium text-black dark:text-white">Currency Symbol</label>
-                            <input type="text" name="currency" value="{{ $settings['currency'] ?? 'INR' }}" placeholder="INR / $ / $" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
+                            <input type="text" name="currency" value="{{ $settings['currency'] ?? 'INR' }}" placeholder="INR / $ / ₹" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
                         </div>
                         <div class="w-full sm:w-1/2">
                             <label class="mb-3 block text-sm font-medium text-black dark:text-white">Min. Withdrawal</label>
                             <input type="number" name="min_withdrawal" value="{{ $settings['min_withdrawal'] ?? 500 }}" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
                         </div>
+                    </div>
+
+                    <div class="border-b border-stroke py-4 dark:border-strokedark mb-5.5">
+                        <h3 class="font-medium text-black dark:text-white">Credit & User Onboarding Configuration</h3>
+                    </div>
+
+                    <div class="mb-5.5">
+                        <label class="mb-3 block text-sm font-medium text-black dark:text-white">
+                            Default User Credit Limit (₹)
+                        </label>
+                        <input type="number" step="100" min="0" name="default_credit_limit" value="{{ $settings['default_credit_limit'] ?? 5000 }}" placeholder="5000" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
+                        <p class="text-xs text-gray-500 mt-1">Default credit limit automatically assigned when a new user registers or is approved in the 1-Click User Onboarding & KYC Center.</p>
                     </div>
 
                     <div class="border-b border-stroke py-4 dark:border-strokedark mb-5.5">

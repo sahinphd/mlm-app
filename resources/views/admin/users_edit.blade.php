@@ -9,6 +9,32 @@
         </h2>
     </div>
 
+    @if($user->kyc_status === 'pending' || $user->status === 'pending')
+    <div class="mb-6 rounded-xl border border-warning/40 bg-warning/10 p-5 shadow-sm dark:bg-meta-4 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-warning text-white">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+            </div>
+            <div>
+                <h4 class="text-sm font-bold text-black dark:text-white">This user is pending approval!</h4>
+                <p class="text-xs text-gray-600 dark:text-gray-300">You don't need to manually configure each section. Approve KYC, activate account status, and grant credit limit in one click.</p>
+            </div>
+        </div>
+        <form action="{{ route('admin.users.quick-onboard', $user->id) }}" method="POST" class="shrink-0" onsubmit="return confirm('1-Click Complete Onboard:\n\nApprove KYC, activate account status, and grant ₹5,000 credit limit?\n\nProceed?');">
+            @csrf
+            <input type="hidden" name="status" value="active">
+            <input type="hidden" name="kyc_status" value="approved">
+            <input type="hidden" name="credit_limit" value="{{ $user->creditAccount->credit_limit ?? 5000 }}">
+            <input type="hidden" name="credit_approval" value="approved">
+            <button type="submit" class="inline-flex items-center gap-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 py-2.5 px-5 text-sm font-bold text-white shadow transition">
+                ⚡ 1-Click Approve & Activate
+            </button>
+        </form>
+    </div>
+    @endif
+
     <div class="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
         <div class="border-b border-stroke py-4 px-7 dark:border-strokedark">
             <h3 class="font-medium text-black dark:text-white">User Information</h3>

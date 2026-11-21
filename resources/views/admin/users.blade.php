@@ -37,6 +37,7 @@
                         <th class="px-3 py-4 font-medium text-black dark:text-white">Email</th>
                         <th class="px-3 py-4 font-medium text-black dark:text-white">Role</th>
                         <th class="px-3 py-4 font-medium text-black dark:text-white">Status</th>
+                        <th class="px-3 py-4 font-medium text-black dark:text-white text-center">KYC Status</th>
                         <th class="px-3 py-4 font-medium text-black dark:text-white text-right">Credit Limit</th>
                         <th class="px-3 py-4 font-medium text-black dark:text-white text-center">Credit Status</th>
                         <th class="px-3 py-4 font-medium text-black dark:text-white">Created</th>
@@ -113,10 +114,11 @@
                 { data: 3, name: 'email' },
                 { data: 4, name: 'role' },
                 { data: 5, name: 'status' },
-                { data: 6, name: 'credit_limit', className: 'text-right' },
-                { data: 7, name: 'credit_status', className: 'text-center' },
-                { data: 8, name: 'created_at' },
-                { data: 9, name: 'actions', orderable: false, searchable: false }
+                { data: 6, name: 'kyc_status', className: 'text-center' },
+                { data: 7, name: 'credit_limit', className: 'text-right' },
+                { data: 8, name: 'credit_status', className: 'text-center' },
+                { data: 9, name: 'created_at' },
+                { data: 10, name: 'actions', orderable: false, searchable: false }
             ],
             order: [[0, 'desc']],
             pageLength: 25,
@@ -168,6 +170,14 @@
                                 <span class="text-black dark:text-white font-medium">${data.phone}</span>
                             </div>
                             <div class="flex justify-between border-b border-stroke dark:border-strokedark pb-2">
+                                <span class="font-semibold text-gray-600 dark:text-gray-300">KYC Status:</span>
+                                <span class="font-bold uppercase text-xs ${data.kycStatus === 'approved' ? 'text-success' : (data.kycStatus === 'rejected' ? 'text-danger' : 'text-warning')}">${data.kycStatus || 'Unfilled'}</span>
+                            </div>
+                            <div class="flex justify-between border-b border-stroke dark:border-strokedark pb-2">
+                                <span class="font-semibold text-gray-600 dark:text-gray-300">Aadhaar / PAN:</span>
+                                <span class="text-black dark:text-white font-mono text-xs">${data.aadhaar || 'N/A'} / ${data.pan || 'N/A'}</span>
+                            </div>
+                            <div class="flex justify-between border-b border-stroke dark:border-strokedark pb-2">
                                 <span class="font-semibold text-gray-600 dark:text-gray-300">Total BV:</span>
                                 <span class="text-black dark:text-white font-medium">${data.bv}</span>
                             </div>
@@ -180,6 +190,26 @@
                                 <span class="text-black dark:text-white font-mono bg-white dark:bg-boxdark px-2 rounded border border-stroke dark:border-strokedark">${data.refCode}</span>
                             </div>
                         </div>
+
+                        ${data.canOnboard === 1 ? `
+                            <button type="button" class="w-full py-2.5 px-4 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow transition flex items-center justify-center gap-2" onclick="Swal.close(); openOnboardModal({
+                                id: '${data.id}',
+                                name: '${data.name}',
+                                email: '',
+                                phone: '${data.phone}',
+                                avatar: '${data.avatar}',
+                                aadhaar: '${data.aadhaar}',
+                                pan: '${data.pan}',
+                                address: '${data.address}',
+                                nominee: '${data.nominee}',
+                                upline: '${data.refBy}',
+                                creditLimit: ${data.creditLimit || 5000},
+                                kycStatus: '${data.kycStatus}',
+                                status: 'pending'
+                            })">
+                                ⚡ Quick Onboard & Activate User
+                            </button>
+                        ` : ''}
                     </div>
                 `,
                 showCancelButton: true,
@@ -236,5 +266,7 @@
         });
     });
 </script>
+
+@include('admin.partials.onboard_modal')
 
 @endsection
