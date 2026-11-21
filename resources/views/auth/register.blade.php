@@ -41,25 +41,7 @@
               @enderror
             </div>
 
-            <!-- Email -->
-            <div>
-              <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                Email<span class="text-error-500">*</span>
-              </label>
-              <input
-                type="email"
-                name="email"
-                value="{{ old('email') }}"
-                required
-                placeholder="info@gmail.com"
-                class="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
-              />
-              @error('email')
-                <p class="mt-1 text-xs text-error-500">{{ $message }}</p>
-              @enderror
-            </div>
-
-            <!-- Phone -->
+            <!-- Phone Number -->
             <div>
                 <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
                   Phone Number<span class="text-error-500">*</span>
@@ -92,37 +74,98 @@
                 @enderror
             </div>
 
-           
+            <!-- Email -->
+            <div>
+              <div class="flex items-center justify-between mb-1.5">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-400">
+                  Email<span class="text-error-500">*</span>
+                </label>
+                <span class="text-xs text-gray-400 dark:text-gray-500">Auto-generated, editable</span>
+              </div>
+              <input
+                type="email"
+                id="email-input"
+                name="email"
+                value="{{ old('email') }}"
+                required
+                placeholder="phonenumber@domain.com"
+                class="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+              />
+              @error('email')
+                <p class="mt-1 text-xs text-error-500">{{ $message }}</p>
+              @enderror
+            </div>
 
             <!-- Password -->
-            <div>
-              <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                Password<span class="text-error-500">*</span>
-              </label>
-              <input
-                type="password"
-                name="password"
-                required
-                placeholder="Enter your password"
-                class="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 px-4 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
-              />
+            <div x-data="{ showPass: false }">
+              <div class="flex items-center justify-between mb-1.5">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-400">
+                  Password<span class="text-error-500">*</span>
+                </label>
+                <span class="text-xs text-gray-400 dark:text-gray-500">Default is phone number, editable</span>
+              </div>
+              <div class="relative">
+                <input
+                  :type="showPass ? 'text' : 'password'"
+                  type="password"
+                  id="password-input"
+                  name="password"
+                  required
+                  placeholder="Enter your password"
+                  class="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 px-4 pr-11 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+                />
+                <button
+                  type="button"
+                  @click="showPass = !showPass"
+                  class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-hidden"
+                  tabindex="-1"
+                  aria-label="Toggle password visibility"
+                >
+                  <svg x-show="!showPass" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                  <svg x-show="showPass" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display: none;">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                  </svg>
+                </button>
+              </div>
               @error('password')
                 <p class="mt-1 text-xs text-error-500">{{ $message }}</p>
               @enderror
             </div>
 
             <!-- Confirm Password -->
-            <div>
+            <div x-data="{ showPassConfirm: false }">
               <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
                 Confirm Password<span class="text-error-500">*</span>
               </label>
-              <input
-                type="password"
-                name="password_confirmation"
-                required
-                placeholder="Re-enter your password"
-                class="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 px-4 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
-              />
+              <div class="relative">
+                <input
+                  :type="showPassConfirm ? 'text' : 'password'"
+                  type="password"
+                  id="password-confirm-input"
+                  name="password_confirmation"
+                  required
+                  placeholder="Re-enter your password"
+                  class="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 px-4 pr-11 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+                />
+                <button
+                  type="button"
+                  @click="showPassConfirm = !showPassConfirm"
+                  class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-hidden"
+                  tabindex="-1"
+                  aria-label="Toggle confirm password visibility"
+                >
+                  <svg x-show="!showPassConfirm" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                  <svg x-show="showPassConfirm" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display: none;">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                  </svg>
+                </button>
+              </div>
             </div>
 
              <!-- Referral -->
@@ -180,8 +223,23 @@
 document.addEventListener('DOMContentLoaded', function() {
     const countrySelect = document.getElementById('country-select');
     const phoneInput = document.getElementById('phone-input');
+    const emailInput = document.getElementById('email-input');
+    const passwordInput = document.getElementById('password-input');
+    const confirmPasswordInput = document.getElementById('password-confirm-input');
 
     if (!countrySelect || !phoneInput) return;
+
+    function getAutoDomain() {
+        let host = window.location.hostname;
+        if (host) {
+            host = host.replace(/^www\./i, '');
+        }
+        // If accessed via localhost, loopback IP, or empty, fallback to app domain
+        if (!host || host === 'localhost' || host === '127.0.0.1' || /^(\d{1,3}\.){3}\d{1,3}$/.test(host) || host === '::1') {
+            return 'duaredokandar.in';
+        }
+        return host;
+    }
 
     function cleanPhone() {
         let val = phoneInput.value;
@@ -215,11 +273,107 @@ document.addEventListener('DOMContentLoaded', function() {
         phoneInput.value = val;
     }
 
-    phoneInput.addEventListener('input', cleanPhone);
-    phoneInput.addEventListener('paste', function() { setTimeout(cleanPhone, 0); });
-    countrySelect.addEventListener('change', cleanPhone);
-    
-    cleanPhone();
+    let emailUserEdited = false;
+    let passwordUserEdited = false;
+    let confirmPasswordUserEdited = false;
+
+    // Detect if fields already had initial values on load (e.g. from old() after validation redirect)
+    const initialDomain = getAutoDomain();
+    const initialPhone = phoneInput.value.trim();
+
+    if (emailInput && emailInput.value.trim()) {
+        const expectedAutoEmail = initialPhone ? `${initialPhone}@${initialDomain}` : '';
+        if (expectedAutoEmail && emailInput.value.trim().toLowerCase() !== expectedAutoEmail.toLowerCase()) {
+            emailUserEdited = true;
+        } else if (!expectedAutoEmail) {
+            emailUserEdited = true;
+        }
+    }
+
+    if (passwordInput && passwordInput.value) {
+        if (!initialPhone || passwordInput.value !== initialPhone) {
+            passwordUserEdited = true;
+        }
+    }
+
+    if (confirmPasswordInput && confirmPasswordInput.value) {
+        if (!initialPhone || confirmPasswordInput.value !== initialPhone) {
+            confirmPasswordUserEdited = true;
+        }
+    }
+
+    // Event listeners to detect manual user edits
+    if (emailInput) {
+        emailInput.addEventListener('input', function() {
+            const phone = phoneInput.value.trim();
+            const expectedAuto = phone ? `${phone}@${getAutoDomain()}` : '';
+            if (!this.value.trim()) {
+                // If user clears the input completely, re-enable auto-fill from phone
+                emailUserEdited = false;
+            } else if (this.value.trim().toLowerCase() !== expectedAuto.toLowerCase()) {
+                emailUserEdited = true;
+            }
+        });
+    }
+
+    if (passwordInput) {
+        passwordInput.addEventListener('input', function() {
+            const phone = phoneInput.value.trim();
+            if (!this.value) {
+                passwordUserEdited = false;
+                if (!confirmPasswordUserEdited && confirmPasswordInput) {
+                    confirmPasswordInput.value = '';
+                }
+            } else {
+                if (this.value !== phone) {
+                    passwordUserEdited = true;
+                }
+                // Keep confirmation in sync with custom password unless user manually modified confirmation
+                if (!confirmPasswordUserEdited && confirmPasswordInput) {
+                    confirmPasswordInput.value = this.value;
+                }
+            }
+        });
+    }
+
+    if (confirmPasswordInput) {
+        confirmPasswordInput.addEventListener('input', function() {
+            const currentPass = passwordInput ? passwordInput.value : '';
+            if (!this.value) {
+                confirmPasswordUserEdited = false;
+            } else if (this.value !== currentPass) {
+                confirmPasswordUserEdited = true;
+            }
+        });
+    }
+
+    function syncFields() {
+        cleanPhone();
+        const phone = phoneInput.value.trim();
+        const domain = getAutoDomain();
+
+        // Auto-generate email if not manually edited
+        if (emailInput && !emailUserEdited) {
+            emailInput.value = phone ? `${phone}@${domain}` : '';
+        }
+
+        // Auto-fill password with phone number if not manually edited
+        if (passwordInput && !passwordUserEdited) {
+            passwordInput.value = phone;
+        }
+
+        // Auto-fill confirm password with phone number if not manually edited
+        if (confirmPasswordInput && !confirmPasswordUserEdited) {
+            confirmPasswordInput.value = passwordInput ? passwordInput.value : phone;
+        }
+    }
+
+    phoneInput.addEventListener('input', syncFields);
+    phoneInput.addEventListener('paste', function() { setTimeout(syncFields, 0); });
+    countrySelect.addEventListener('change', syncFields);
+
+    // Initial run
+    syncFields();
 });
 </script>
 @endsection

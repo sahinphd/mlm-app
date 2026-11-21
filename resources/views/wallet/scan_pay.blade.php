@@ -16,6 +16,23 @@
      x-init="init()"
      x-cloak>
 
+    <style>
+        #qr-reader {
+            width: 100% !important;
+            height: 100% !important;
+            border: none !important;
+        }
+        #qr-reader video {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+            border-radius: 0.75rem;
+        }
+    </style>
+
+    <!-- Hidden mount element for file scanning worker -->
+    <div id="qr-hidden-scanner" style="display:none;" aria-hidden="true"></div>
+
     <!-- Global Floating Toast Notification -->
     <div x-show="toast.show" 
          x-transition:enter="transition ease-out duration-200"
@@ -24,12 +41,12 @@
          x-transition:leave="transition ease-in duration-150"
          x-transition:leave-start="opacity-100 translate-y-0"
          x-transition:leave-end="opacity-0 -translate-y-2"
-         class="fixed top-6 right-6 z-99999 max-w-sm rounded-lg p-4 shadow-xl flex items-center justify-between text-sm font-semibold"
-         :class="toast.type === 'success' ? 'bg-[#15803d] text-white' : 'bg-[#b91c1c] text-white'">
+         class="fixed top-6 right-6 z-99999 max-w-sm rounded-xl p-4 shadow-xl flex items-center justify-between text-sm font-semibold border"
+         :class="toast.type === 'success' ? 'bg-[#15803d] text-white border-green-500' : 'bg-[#b91c1c] text-white border-red-500'">
         <div class="flex items-center gap-2">
             <span x-text="toast.message"></span>
         </div>
-        <button @click="toast.show = false" class="text-white/80 hover:text-white font-bold ml-4">✕</button>
+        <button @click="toast.show = false" class="text-white/80 hover:text-white font-bold ml-4 p-1">✕</button>
     </div>
 
     <!-- Header & Available Balance Strip -->
@@ -60,39 +77,53 @@
             
             <div class="flex items-center justify-between mb-3">
                 <span class="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
-                    <span class="inline-block w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                    <span class="inline-block w-2 h-2 rounded-full" :class="scannerActive ? 'bg-red-500 animate-pulse' : 'bg-gray-400'"></span>
                     <span>Live Camera Scanner</span>
                 </span>
                 
                 <div class="flex items-center gap-2">
-                    <!-- Switch Camera Button -->
-                    <button type="button" 
-                            x-show="cameras.length > 1"
-                            @click="switchCamera()" 
-                            title="Flip Camera"
-                            class="p-1.5 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 text-xs">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                    </button>
                     <!-- Toggle Scanner Button -->
                     <button type="button" 
                             @click="scannerActive ? stopScanner() : startScanner()" 
-                            class="px-2.5 py-1 rounded-lg text-xs font-bold transition"
-                            :class="scannerActive ? 'bg-red-50 text-red-600 border border-red-200 dark:bg-red-950/30' : 'bg-primary text-white'">
+                            class="px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1"
+                            :class="scannerActive ? 'bg-red-50 text-red-600 border border-red-200 dark:bg-red-950/30' : 'bg-[#1555a8] text-white'">
                         <span x-text="scannerActive ? 'Pause Camera' : 'Start Camera'"></span>
                     </button>
                 </div>
             </div>
 
-            <!-- Viewfinder Element -->
+            <!-- Viewfinder Element (Always Mounted) -->
             <div class="relative w-full rounded-xl overflow-hidden bg-black flex items-center justify-center min-h-[260px] sm:min-h-[300px]">
                 
-                <!-- HTML5 QRCode Video Mount Point -->
+                <!-- HTML5 QRCode Video Mount Point (Always Mounted) -->
                 <div id="qr-reader" class="w-full h-full"></div>
 
-                <!-- Laser scan animation overlay -->
-                <div x-show="scannerActive && !resolving" class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+                <!-- Uploaded Image Preview (Visible when image is picked) -->
+                <div x-show="uploadedImage" 
+                     class="absolute inset-0 bg-black flex flex-col items-center justify-center z-10 p-3">
+                    <img :src="uploadedImage" 
+                         alt="Uploaded QR Code" 
+                         class="max-h-[230px] max-w-full object-contain rounded-lg">
+                    
+                    <div x-show="imageScanError" 
+                         class="mt-2 text-center text-xs text-red-400 bg-red-950/90 px-3 py-1.5 rounded-lg border border-red-800">
+                        <span x-text="imageScanError"></span>
+                    </div>
+
+                    <div class="mt-2.5 flex items-center gap-3 text-xs">
+                        <label class="cursor-pointer font-bold text-white underline">
+                            Choose Another Image
+                            <input type="file" accept="image/*" class="hidden" @change="scanFromFile($event)">
+                        </label>
+                        <span class="text-gray-400">•</span>
+                        <button type="button" @click="startScanner()" class="font-bold text-blue-400 underline">
+                            Use Camera Instead
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Laser scan animation overlay (shown when camera is active) -->
+                <div x-show="scannerActive && !uploadedImage && !resolving" class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
                     <div class="w-56 h-56 border-2 border-white/60 rounded-2xl relative shadow-[0_0_0_9999px_rgba(0,0,0,0.55)]">
                         <!-- Corner guides -->
                         <div class="absolute -top-1 -left-1 w-6 h-6 border-t-4 border-l-4 border-brand-500 rounded-tl"></div>
@@ -108,16 +139,22 @@
                     </p>
                 </div>
 
-                <!-- Camera Error / Permission Notice -->
-                <div x-show="cameraError" class="p-6 text-center text-white space-y-2">
+                <!-- Camera Error Notice (Shown only if camera fails and no image is uploaded) -->
+                <div x-show="cameraError && !uploadedImage && !scannerActive" class="absolute inset-0 bg-black/90 p-6 text-center text-white flex flex-col items-center justify-center space-y-2 z-15">
                     <svg class="w-10 h-10 text-yellow-400 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                     </svg>
                     <p class="text-sm font-bold" x-text="cameraError"></p>
-                    <p class="text-xs text-gray-300">Allow camera permission in browser settings, or use the manual Customer ID input below.</p>
-                    <button type="button" @click="startScanner()" class="mt-2 px-3 py-1.5 rounded-lg bg-white/20 hover:bg-white/30 text-xs font-semibold">
-                        Try Again
-                    </button>
+                    <p class="text-xs text-gray-300">Allow camera permission in browser settings, or upload a QR image from gallery.</p>
+                    <div class="flex items-center gap-2 pt-2">
+                        <button type="button" @click="startScanner()" class="px-3 py-1.5 rounded-lg bg-white/20 hover:bg-white/30 text-xs font-semibold">
+                            Try Again
+                        </button>
+                        <label class="cursor-pointer px-3 py-1.5 rounded-lg bg-[#1555a8] hover:bg-[#12468d] text-white text-xs font-semibold">
+                            Upload Image
+                            <input type="file" accept="image/*" class="hidden" @change="scanFromFile($event)">
+                        </label>
+                    </div>
                 </div>
 
                 <!-- Resolving Spinner -->
@@ -429,12 +466,18 @@
 
 @push('scripts')
 <script src="{{ asset('vendor/html5-qrcode/html5-qrcode.min.js') }}"></script>
+<script src="{{ asset('vendor/jsqr.min.js') }}"></script>
 <script>
-// Fallback if local vendor script fails
+// Fallback if local scripts fail
 if (typeof Html5Qrcode === 'undefined') {
     const s = document.createElement('script');
     s.src = 'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js';
     document.head.appendChild(s);
+}
+if (typeof jsQR === 'undefined') {
+    const s2 = document.createElement('script');
+    s2.src = 'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js';
+    document.head.appendChild(s2);
 }
 
 function scanAndPayApp(config) {
@@ -447,12 +490,12 @@ function scanAndPayApp(config) {
         
         scannerActive: false,
         scannerInstance: null,
-        cameras: [],
-        currentCameraIndex: 0,
         cameraError: '',
+        uploadedImage: null,
+        imageScanError: '',
+        
         resolving: false,
         resolveError: '',
-        
         confirmModal: false,
         transferLoading: false,
         transferError: '',
@@ -491,6 +534,9 @@ function scanAndPayApp(config) {
 
         async startScanner() {
             this.cameraError = '';
+            this.imageScanError = '';
+            this.uploadedImage = null;
+
             const initLib = async () => {
                 if (typeof Html5Qrcode === 'undefined') {
                     setTimeout(initLib, 100);
@@ -498,30 +544,17 @@ function scanAndPayApp(config) {
                 }
 
                 try {
+                    if (this.scannerActive) {
+                        await this.stopScanner();
+                    }
+
                     if (!this.scannerInstance) {
                         this.scannerInstance = new Html5Qrcode("qr-reader");
                     }
 
-                    // Get available cameras
-                    const devices = await Html5Qrcode.getCameras();
-                    if (!devices || devices.length === 0) {
-                        this.cameraError = 'No camera found on this device.';
-                        return;
-                    }
-                    this.cameras = devices;
-
-                    // Prefer back/environment camera
-                    let selectedCam = devices[0].id;
-                    for (let i = 0; i < devices.length; i++) {
-                        if (devices[i].label.toLowerCase().includes('back') || devices[i].label.toLowerCase().includes('rear')) {
-                            selectedCam = devices[i].id;
-                            this.currentCameraIndex = i;
-                            break;
-                        }
-                    }
-
+                    // Start camera simply using environment facingMode
                     await this.scannerInstance.start(
-                        selectedCam,
+                        { facingMode: "environment" },
                         {
                             fps: 10,
                             qrbox: { width: 250, height: 250 },
@@ -531,11 +564,12 @@ function scanAndPayApp(config) {
                             this.onQrCodeScanned(decodedText);
                         },
                         (errorMessage) => {
-                            // Ignored frame-level parse errors
+                            // Frame scan attempt (ignore)
                         }
                     );
 
                     this.scannerActive = true;
+                    this.cameraError = '';
                 } catch (err) {
                     console.error('Camera startup error:', err);
                     this.scannerActive = false;
@@ -557,41 +591,146 @@ function scanAndPayApp(config) {
             }
         },
 
-        async switchCamera() {
-            if (this.cameras.length <= 1) return;
-            await this.stopScanner();
-            this.currentCameraIndex = (this.currentCameraIndex + 1) % this.cameras.length;
-            const targetCamId = this.cameras[this.currentCameraIndex].id;
-
-            try {
-                await this.scannerInstance.start(
-                    targetCamId,
-                    { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 },
-                    (decodedText) => this.onQrCodeScanned(decodedText),
-                    () => {}
-                );
-                this.scannerActive = true;
-            } catch (err) {
-                console.error('Flip error:', err);
-            }
-        },
-
         async scanFromFile(e) {
-            const file = e.target.files[0];
+            const input = e.target;
+            const file = input.files && input.files[0];
             if (!file) return;
 
+            // Clear camera error immediately
+            this.cameraError = '';
+            this.imageScanError = '';
+
+            // Stop camera if running
+            await this.stopScanner();
+
+            // Display the uploaded image preview in viewfinder
+            if (this.uploadedImage) {
+                URL.revokeObjectURL(this.uploadedImage);
+            }
+            this.uploadedImage = URL.createObjectURL(file);
+
+            this.resolving = true;
             try {
-                if (!this.scannerInstance) {
-                    this.scannerInstance = new Html5Qrcode("qr-reader");
+                const decodedText = await this.decodeQr(file);
+                if (decodedText) {
+                    // Directly resolve the recipient without triggering early exit check
+                    await this.resolveCode(decodedText);
+                } else {
+                    throw new Error('No QR code detected');
                 }
-                this.resolving = true;
-                const result = await this.scannerInstance.scanFile(file, true);
-                this.onQrCodeScanned(result);
             } catch (err) {
+                console.warn('Image scan error:', err);
+                this.imageScanError = 'No readable QR code found in this image.';
                 this.showToast('No readable QR code found in the image.', 'error');
             } finally {
                 this.resolving = false;
+                input.value = '';
             }
+        },
+
+        async decodeQr(file) {
+            // Strategy 1: Fresh Html5Qrcode instance (ZXing)
+            try {
+                let hiddenEl = document.getElementById('qr-hidden-scanner');
+                if (!hiddenEl) {
+                    hiddenEl = document.createElement('div');
+                    hiddenEl.id = 'qr-hidden-scanner';
+                    hiddenEl.style.display = 'none';
+                    document.body.appendChild(hiddenEl);
+                }
+                const fileScanner = new Html5Qrcode('qr-hidden-scanner');
+                const text = await fileScanner.scanFile(file, false);
+                try { fileScanner.clear(); } catch(e) {}
+                if (text) return text;
+            } catch (e) {
+                console.log('Html5Qrcode file scan attempt:', e);
+            }
+
+            // Strategy 2: Load into Image element
+            let img;
+            try {
+                img = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = (evt) => {
+                        const image = new Image();
+                        image.onload = () => resolve(image);
+                        image.onerror = reject;
+                        image.src = evt.target.result;
+                    };
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
+            } catch (e) {
+                return null;
+            }
+
+            // Strategy 3: Native BarcodeDetector (Chrome/Edge/Android)
+            if ('BarcodeDetector' in window) {
+                try {
+                    const detector = new BarcodeDetector({ formats: ['qr_code'] });
+                    const barcodes = await detector.detect(img);
+                    if (barcodes && barcodes.length > 0 && barcodes[0].rawValue) {
+                        return barcodes[0].rawValue;
+                    }
+                } catch (e) {}
+            }
+
+            // Strategy 4: jsQR on canvas
+            if (typeof jsQR !== 'undefined') {
+                const origW = img.naturalWidth || img.width;
+                const origH = img.naturalHeight || img.height;
+
+                // Scaled down canvas (max 1000px)
+                const maxDim = 1000;
+                let targetW = origW;
+                let targetH = origH;
+                if (origW > maxDim || origH > maxDim) {
+                    if (origW > origH) {
+                        targetW = maxDim;
+                        targetH = Math.round((origH * maxDim) / origW);
+                    } else {
+                        targetH = maxDim;
+                        targetW = Math.round((origW * maxDim) / origH);
+                    }
+                }
+
+                const canvas = document.createElement('canvas');
+                canvas.width = targetW;
+                canvas.height = targetH;
+                const ctx = canvas.getContext('2d', { willReadFrequently: true });
+                ctx.drawImage(img, 0, 0, targetW, targetH);
+
+                let imgData = ctx.getImageData(0, 0, targetW, targetH);
+                let code = jsQR(imgData.data, targetW, targetH, { inversionAttempts: "attemptBoth" });
+                if (code && code.data) return code.data;
+
+                // Full resolution canvas
+                if (origW <= 2200 && origH <= 2200 && (origW !== targetW || origH !== targetH)) {
+                    const fullCanvas = document.createElement('canvas');
+                    fullCanvas.width = origW;
+                    fullCanvas.height = origH;
+                    const fullCtx = fullCanvas.getContext('2d', { willReadFrequently: true });
+                    fullCtx.drawImage(img, 0, 0, origW, origH);
+                    imgData = fullCtx.getImageData(0, 0, origW, origH);
+                    code = jsQR(imgData.data, origW, origH, { inversionAttempts: "attemptBoth" });
+                    if (code && code.data) return code.data;
+                }
+
+                // Central crop canvas (75%)
+                const cropSize = Math.min(targetW, targetH) * 0.75;
+                const cropX = (targetW - cropSize) / 2;
+                const cropY = (targetH - cropSize) / 2;
+                const cropCanvas = document.createElement('canvas');
+                cropCanvas.width = 600;
+                cropCanvas.height = 600;
+                const cropCtx = cropCanvas.getContext('2d', { willReadFrequently: true });
+                cropCtx.drawImage(canvas, cropX, cropY, cropSize, cropSize, 0, 0, 600, 600);
+                imgData = cropCtx.getImageData(0, 0, 600, 600);
+                code = jsQR(imgData.data, 600, 600, { inversionAttempts: "attemptBoth" });
+                if (code && code.data) return code.data;
+            }
+
+            return null;
         },
 
         async onQrCodeScanned(decodedText) {
@@ -636,7 +775,6 @@ function scanAndPayApp(config) {
                 } else {
                     this.resolveError = data.message || 'Customer lookup failed.';
                     this.showToast(this.resolveError, 'error');
-                    // Restart scanner if resolve failed
                     this.startScanner();
                 }
             } catch (err) {
@@ -654,6 +792,7 @@ function scanAndPayApp(config) {
             this.transferRemarks = '';
             this.transferError = '';
             this.receipt = null;
+            this.uploadedImage = null;
             this.startScanner();
         },
 
@@ -722,6 +861,7 @@ function scanAndPayApp(config) {
             this.transferRemarks = '';
             this.transferError = '';
             this.manualInput = '';
+            this.uploadedImage = null;
             this.startScanner();
         }
     };

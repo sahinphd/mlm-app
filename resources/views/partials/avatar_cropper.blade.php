@@ -1,7 +1,7 @@
 <!-- Cropper.js Styles -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css" />
 
-<!-- Avatar Cropper & Compressor Modal -->
+<!-- Avatar / Image Cropper & Compressor Modal -->
 <div id="avatarCropperModal" class="fixed inset-0 z-99999 hidden items-center justify-center bg-black/75 p-3 sm:p-5 backdrop-blur-xs">
     <div class="relative w-full max-w-lg rounded-2xl bg-white shadow-2xl dark:bg-gray-800 dark:border dark:border-gray-700 flex flex-col max-h-[94vh] overflow-hidden animate-fadeIn">
         
@@ -14,8 +14,8 @@
                     </svg>
                 </div>
                 <div>
-                    <h3 class="text-base font-semibold text-gray-800 dark:text-white">Edit & Compress Photo</h3>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">Crop, zoom, and reduce file size on the spot</p>
+                    <h3 id="cropperModalTitle" class="text-base font-semibold text-gray-800 dark:text-white">Edit &amp; Compress Photo</h3>
+                    <p id="cropperModalSubtitle" class="text-xs text-gray-500 dark:text-gray-400">Crop, zoom, and reduce file size on the spot</p>
                 </div>
             </div>
             <button type="button" onclick="window.avatarCropperCloseModal()" class="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-700 dark:hover:text-white transition">
@@ -30,8 +30,8 @@
                 <img id="avatarCropperSourceImg" src="" alt="Source preview" class="max-w-full block" style="display: block; max-height: 290px;">
             </div>
 
-            <!-- Toolbar Controls (Zoom, Rotate, Reset) -->
-            <div class="flex items-center justify-between bg-gray-50 dark:bg-gray-900/60 p-2.5 rounded-xl border border-gray-100 dark:border-gray-700/60 text-xs">
+            <!-- Toolbar Controls (Zoom, Rotate, Aspect Ratio, Reset) -->
+            <div class="flex flex-wrap items-center justify-between gap-2 bg-gray-50 dark:bg-gray-900/60 p-2.5 rounded-xl border border-gray-100 dark:border-gray-700/60 text-xs">
                 <div class="flex items-center gap-1 sm:gap-1.5">
                     <button type="button" onclick="window.avatarCropperZoom(-0.1)" title="Zoom Out" class="p-1.5 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-100 text-gray-700 dark:text-gray-300 font-medium transition shadow-2xs">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
@@ -46,6 +46,11 @@
                     <button type="button" onclick="window.avatarCropperRotate(90)" title="Rotate Right" class="p-1.5 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-100 text-gray-700 dark:text-gray-300 font-medium transition shadow-2xs">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 10H11a8 8 0 00-8 8v2m18-10l-6 6m6-6l-6-6"/></svg>
                     </button>
+                    <div class="h-4 w-px bg-gray-300 dark:bg-gray-700 mx-1"></div>
+                    <!-- Aspect Ratios -->
+                    <button type="button" id="cropper-aspect-1" onclick="window.avatarCropperSetAspectRatio(1, this)" title="1:1 Square" class="cropper-aspect-btn px-2 py-1 rounded-lg bg-brand-50 text-brand-700 border border-brand-300 dark:bg-brand-900/40 dark:text-brand-300 dark:border-brand-600 font-semibold transition">1:1</button>
+                    <button type="button" id="cropper-aspect-43" onclick="window.avatarCropperSetAspectRatio(4/3, this)" title="4:3 Landscape" class="cropper-aspect-btn px-2 py-1 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-100 text-gray-700 dark:text-gray-300 font-semibold transition">4:3</button>
+                    <button type="button" id="cropper-aspect-free" onclick="window.avatarCropperSetAspectRatio(NaN, this)" title="Free crop" class="cropper-aspect-btn px-2 py-1 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-100 text-gray-700 dark:text-gray-300 font-semibold transition">Free</button>
                 </div>
 
                 <button type="button" onclick="window.avatarCropperReset()" class="px-2.5 py-1.5 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-100 text-gray-600 dark:text-gray-300 font-medium transition shadow-2xs">
@@ -55,9 +60,12 @@
 
             <!-- Size & Compression Options -->
             <div class="space-y-2">
-                <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
-                    Target File Size Limit
-                </label>
+                <div class="flex items-center justify-between">
+                    <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+                        Target File Size Limit
+                    </label>
+                    <span id="cropperCurrentLimitNotice" class="text-xs font-semibold text-brand-600 dark:text-brand-400">Target: &lt; 10 KB</span>
+                </div>
                 <div class="grid grid-cols-3 gap-2 text-xs">
                     <button type="button" id="cropper-target-10" onclick="window.avatarCropperSetTarget(9.8, this)" class="cropper-target-btn flex flex-col items-center justify-center p-2 rounded-xl border-2 border-brand-500 bg-brand-50/70 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300 font-medium transition">
                         <span class="font-bold text-sm">Ultra Compact</span>
@@ -95,9 +103,9 @@
 
             <div class="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
                 <!-- Option 2: Quick Auto-Compress & Apply -->
-                <button type="button" onclick="window.avatarCropperQuickAutoFit()" title="Automatically crops center and compresses to < 10 KB without manual tweaking" class="w-full sm:w-auto px-4 py-2.5 rounded-lg border border-amber-300 dark:border-amber-700/60 bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 text-sm font-semibold hover:bg-amber-100 transition shadow-2xs flex items-center justify-center gap-1.5">
+                <button type="button" id="cropperQuickAutoBtn" onclick="window.avatarCropperQuickAutoFit()" title="Automatically crops center and compresses without manual tweaking" class="w-full sm:w-auto px-4 py-2.5 rounded-lg border border-amber-300 dark:border-amber-700/60 bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 text-sm font-semibold hover:bg-amber-100 transition shadow-2xs flex items-center justify-center gap-1.5">
                     <svg class="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                    Auto-Fit &amp; Compress (&lt; 10 KB)
+                    <span id="cropperQuickAutoText">Auto-Fit &amp; Compress (&lt; 10 KB)</span>
                 </button>
 
                 <!-- Option 1: Crop & Apply -->
@@ -119,21 +127,47 @@
     let cropperInstance = null;
     let originalImageFile = null;
     let targetKB = 9.8; // Default < 10 KB
+    let currentAspectRatio = 1; // Default 1:1 square
     let boundFileInput = null;
     let boundPreviewImg = null;
     let boundPlaceholder = null;
     let boundStatusBadge = null;
     let hasApplied = false;
+    let activeOptions = {};
 
     // Initialize Cropper for a given file input
-    window.initAvatarCropper = function(options) {
-        const fileInput = document.getElementById(options.inputId);
+    window.initAvatarCropper = window.initImageCropper = function(options) {
+        activeOptions = Object.assign({
+            defaultTargetKB: 9.8,
+            aspectRatio: 1,
+            title: 'Edit & Compress Photo',
+            subtitle: 'Crop, zoom, and reduce file size on the spot'
+        }, options || {});
+
+        const fileInput = document.getElementById(activeOptions.inputId);
         if (!fileInput) return;
 
         boundFileInput = fileInput;
-        boundPreviewImg = document.getElementById(options.previewId);
-        boundPlaceholder = options.placeholderId ? document.getElementById(options.placeholderId) : null;
-        boundStatusBadge = options.statusBadgeId ? document.getElementById(options.statusBadgeId) : null;
+        boundPreviewImg = document.getElementById(activeOptions.previewId);
+        boundPlaceholder = activeOptions.placeholderId ? document.getElementById(activeOptions.placeholderId) : null;
+        boundStatusBadge = activeOptions.statusBadgeId ? document.getElementById(activeOptions.statusBadgeId) : null;
+
+        // Set configured default target KB
+        if (activeOptions.defaultTargetKB) {
+            targetKB = activeOptions.defaultTargetKB;
+        }
+        if (activeOptions.aspectRatio !== undefined) {
+            currentAspectRatio = activeOptions.aspectRatio;
+        }
+
+        // Apply UI titles if present
+        const titleEl = document.getElementById('cropperModalTitle');
+        const subEl = document.getElementById('cropperModalSubtitle');
+        if (titleEl && activeOptions.title) titleEl.innerText = activeOptions.title;
+        if (subEl && activeOptions.subtitle) subEl.innerText = activeOptions.subtitle;
+
+        // Pre-activate target size button (e.g. < 30 KB for products)
+        syncTargetUi();
 
         fileInput.addEventListener('change', function(e) {
             if (!e.target.files || !e.target.files[0]) return;
@@ -145,6 +179,38 @@
             window.openAvatarCropper(file);
         });
     };
+
+    function syncTargetUi() {
+        const btn10 = document.getElementById('cropper-target-10');
+        const btn30 = document.getElementById('cropper-target-30');
+        const btn80 = document.getElementById('cropper-target-80');
+        const notice = document.getElementById('cropperCurrentLimitNotice');
+        const autoText = document.getElementById('cropperQuickAutoText');
+
+        if (!btn10 || !btn30 || !btn80) return;
+
+        [btn10, btn30, btn80].forEach(b => {
+            b.classList.remove('border-2', 'border-brand-500', 'bg-brand-50/70', 'text-brand-700', 'dark:bg-brand-500/15', 'dark:text-brand-300');
+            b.classList.add('border', 'border-gray-200', 'dark:border-gray-700', 'bg-white', 'dark:bg-gray-800', 'text-gray-700', 'dark:text-gray-300');
+        });
+
+        let activeBtn = btn10;
+        let limitLabel = '< 10 KB';
+        if (targetKB >= 20 && targetKB <= 35) {
+            activeBtn = btn30;
+            limitLabel = '< 30 KB (Recommended)';
+        } else if (targetKB > 35) {
+            activeBtn = btn80;
+            limitLabel = '< 80 KB';
+        }
+
+        activeBtn.classList.add('border-2', 'border-brand-500', 'bg-brand-50/70', 'text-brand-700', 'dark:bg-brand-500/15', 'dark:text-brand-300');
+        activeBtn.classList.remove('border', 'border-gray-200', 'dark:border-gray-700', 'bg-white', 'dark:bg-gray-800', 'text-gray-700', 'dark:text-gray-300');
+
+        if (notice) notice.innerText = 'Target: ' + limitLabel;
+        if (autoText) autoText.innerText = 'Auto-Fit & Compress (' + limitLabel.replace(' (Recommended)', '') + ')';
+        window.avatarCropperUpdateEstimate();
+    }
 
     window.openAvatarCropper = function(file) {
         originalImageFile = file;
@@ -171,10 +237,13 @@
                 cropperInstance = null;
             }
 
+            // Sync target size and aspect ratio UI
+            syncTargetUi();
+
             // Check if Cropper library is loaded
             if (typeof Cropper !== 'undefined') {
                 cropperInstance = new Cropper(imgSource, {
-                    aspectRatio: 1, // Square for avatar
+                    aspectRatio: currentAspectRatio,
                     viewMode: 1,
                     dragMode: 'move',
                     autoCropArea: 0.9,
@@ -198,6 +267,21 @@
             }
         };
         reader.readAsDataURL(file);
+    };
+
+    // Open cropper from an existing URL (e.g. current product image)
+    window.openCropperFromUrl = async function(url, fileName) {
+        try {
+            const res = await fetch(url);
+            if (!res.ok) throw new Error('Fetch failed');
+            const blob = await res.blob();
+            const file = new File([blob], fileName || 'current_image.jpg', { type: blob.type || 'image/jpeg' });
+            window.openAvatarCropper(file);
+        } catch (err) {
+            // If CORS or local fetch fails, trigger standard file chooser
+            console.warn('Could not load image directly via fetch, opening file picker instead', err);
+            if (boundFileInput) boundFileInput.click();
+        }
     };
 
     window.avatarCropperCloseModal = function() {
@@ -233,40 +317,60 @@
         if (cropperInstance) cropperInstance.reset();
     };
 
+    window.avatarCropperSetAspectRatio = function(ratio, btn) {
+        currentAspectRatio = ratio;
+        if (cropperInstance) {
+            cropperInstance.setAspectRatio(ratio);
+        }
+        document.querySelectorAll('.cropper-aspect-btn').forEach(b => {
+            b.classList.remove('bg-brand-50', 'text-brand-700', 'border-brand-300', 'dark:bg-brand-900/40', 'dark:text-brand-300', 'dark:border-brand-600');
+            b.classList.add('bg-white', 'dark:bg-gray-800', 'border-gray-200', 'dark:border-gray-700', 'text-gray-700', 'dark:text-gray-300');
+        });
+        if (btn) {
+            btn.classList.add('bg-brand-50', 'text-brand-700', 'border-brand-300', 'dark:bg-brand-900/40', 'dark:text-brand-300', 'dark:border-brand-600');
+            btn.classList.remove('bg-white', 'dark:bg-gray-800', 'border-gray-200', 'dark:border-gray-700', 'text-gray-700', 'dark:text-gray-300');
+        }
+    };
+
     window.avatarCropperSetTarget = function(kb, btn) {
         targetKB = kb;
-        document.querySelectorAll('.cropper-target-btn').forEach(b => {
-            b.classList.remove('border-2', 'border-brand-500', 'bg-brand-50/70', 'text-brand-700', 'dark:bg-brand-500/15', 'dark:text-brand-300');
-            b.classList.add('border', 'border-gray-200', 'dark:border-gray-700', 'bg-white', 'dark:bg-gray-800', 'text-gray-700', 'dark:text-gray-300');
-        });
-        btn.classList.add('border-2', 'border-brand-500', 'bg-brand-50/70', 'text-brand-700', 'dark:bg-brand-500/15', 'dark:text-brand-300');
-        btn.classList.remove('border', 'border-gray-200', 'dark:border-gray-700', 'bg-white', 'dark:bg-gray-800', 'text-gray-700', 'dark:text-gray-300');
-
-        window.avatarCropperUpdateEstimate();
+        syncTargetUi();
     };
 
     window.avatarCropperUpdateEstimate = function() {
         const estDisplay = document.getElementById('avatarEstimatedSizeDisplay');
         if (estDisplay) {
-            estDisplay.innerText = targetKB <= 10 ? '~8.5 KB' : (targetKB <= 30 ? '~24 KB' : '~65 KB');
+            estDisplay.innerText = targetKB <= 10 ? '~8.5 KB' : (targetKB <= 30 ? '~25.5 KB' : '~65 KB');
         }
     };
 
-    // Compress HTML Canvas to guaranteed target KB
+    // Compress HTML Canvas to guaranteed target KB while preserving aspect ratio
     async function compressCanvas(sourceCanvas, maxKB) {
-        // Dimension selection based on target limit
-        let dim = maxKB <= 10 ? 250 : (maxKB <= 30 ? 350 : 500);
+        let maxDim = maxKB <= 10 ? 250 : (maxKB <= 30 ? 420 : 650);
+        let w = sourceCanvas.width;
+        let h = sourceCanvas.height;
+
+        if (w > maxDim || h > maxDim) {
+            if (w >= h) {
+                h = Math.round((h * maxDim) / w);
+                w = maxDim;
+            } else {
+                w = Math.round((w * maxDim) / h);
+                h = maxDim;
+            }
+        }
+
         const canvas = document.createElement('canvas');
-        canvas.width = dim;
-        canvas.height = dim;
+        canvas.width = w;
+        canvas.height = h;
         const ctx = canvas.getContext('2d');
         
-        // Solid background (prevent black PNG transparency issues)
+        // Solid white background (prevent transparent PNG black artifact)
         ctx.fillStyle = '#FFFFFF';
-        ctx.fillRect(0, 0, dim, dim);
-        ctx.drawImage(sourceCanvas, 0, 0, dim, dim);
+        ctx.fillRect(0, 0, w, h);
+        ctx.drawImage(sourceCanvas, 0, 0, w, h);
 
-        let minQ = 0.25;
+        let minQ = 0.20;
         let maxQ = 0.90;
         let bestBlob = null;
 
@@ -283,15 +387,17 @@
             }
         }
 
-        // If complex image still exceeds limit, scale down resolution slightly
-        if (!bestBlob || (bestBlob.size / 1024) > maxKB) {
-            dim = Math.max(160, Math.round(dim * 0.75));
-            canvas.width = dim;
-            canvas.height = dim;
+        // If complex image still exceeds limit, scale down resolution progressively
+        while (!bestBlob || (bestBlob.size / 1024) > maxKB) {
+            w = Math.max(120, Math.round(w * 0.8));
+            h = Math.max(120, Math.round(h * 0.8));
+            canvas.width = w;
+            canvas.height = h;
             ctx.fillStyle = '#FFFFFF';
-            ctx.fillRect(0, 0, dim, dim);
-            ctx.drawImage(sourceCanvas, 0, 0, dim, dim);
+            ctx.fillRect(0, 0, w, h);
+            ctx.drawImage(sourceCanvas, 0, 0, w, h);
             bestBlob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.65));
+            if (w <= 120 && h <= 120) break;
         }
 
         return bestBlob;
@@ -322,8 +428,8 @@
                 // Fallback to source image
                 const img = document.getElementById('avatarCropperSourceImg');
                 canvas = document.createElement('canvas');
-                canvas.width = img.naturalWidth;
-                canvas.height = img.naturalHeight;
+                canvas.width = img.naturalWidth || 400;
+                canvas.height = img.naturalHeight || 400;
                 canvas.getContext('2d').drawImage(img, 0, 0);
             }
 
@@ -338,9 +444,8 @@
         }
     };
 
-    // Quick Auto-Fit & Compress (< 10 KB) without manual tweaking
+    // Quick Auto-Fit & Compress without manual tweaking
     window.avatarCropperQuickAutoFit = async function() {
-        targetKB = 9.8;
         if (cropperInstance) {
             cropperInstance.reset();
         }
@@ -350,7 +455,7 @@
     function applyCompressedResult(blob) {
         const fileName = (originalImageFile && originalImageFile.name) 
             ? originalImageFile.name.replace(/\.[^/.]+$/, "") + ".jpg" 
-            : "avatar.jpg";
+            : "photo.jpg";
 
         const file = new File([blob], fileName, { type: 'image/jpeg', lastModified: Date.now() });
 
@@ -383,10 +488,10 @@
 
         if (boundStatusBadge) {
             boundStatusBadge.innerHTML = `
-                <div class="mt-2 flex flex-wrap items-center gap-2">
+                <div class="mt-2.5 flex flex-wrap items-center gap-2">
                     <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800">
                         <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
-                        <span>Optimized: <strong>${finalKB} KB</strong> (reduced from ${origKB})</span>
+                        <span>Optimized: <strong>${finalKB} KB</strong> (reduced from ${origKB}) &bull; Ready to save</span>
                     </span>
                     <button type="button" onclick="window.reopenAvatarCropper()" class="text-xs text-brand-600 hover:text-brand-700 dark:text-brand-400 underline font-medium cursor-pointer">
                         Edit / Crop again
