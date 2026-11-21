@@ -88,6 +88,17 @@ class CustomerLookupTest extends TestCase
         $response->assertSee(route('admin.customer-lookup.index'));
     }
 
+    public function test_dashboard_renders_formatted_referral_link_card(): void
+    {
+        $response = $this->actingAs($this->customer)->get('/dashboard');
+        $response->assertStatus(200);
+        $response->assertSee('Your Referral Link');
+        $response->assertSee('refLinkInputDash');
+        $response->assertSee('copyRefLinkDash()');
+        $response->assertSee('shareRefLinkDash()');
+        $response->assertSee('WhatsApp');
+    }
+
     public function test_search_by_id_returns_customer_and_transactions(): void
     {
         $response = $this->actingAs($this->admin)->getJson('/admin/customer-lookup/search?q=' . $this->customer->id);
