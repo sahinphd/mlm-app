@@ -13,7 +13,7 @@
 		</div>
 
 		<div class="flex items-center gap-3">
-			@if(auth()->user()->isAdmin())
+			@if(auth()->check() && auth()->user()->isAdmin())
 			<!-- Admin Scan Customer QR One-Click Button -->
 			<a href="{{ route('admin.customer-lookup.index', ['scan' => 1]) }}" 
 			   @click.prevent="window.openAdminCustomerQrScanner ? window.openAdminCustomerQrScanner() : (window.location.href='{{ route('admin.customer-lookup.index', ['scan' => 1]) }}')"
@@ -24,7 +24,6 @@
 				</svg>
 				<span class="hidden md:inline">Scan QR</span>
 			</a>
-			@endif
 
 			<!-- Customer Lookup Direct One-Click Button -->
 			<a href="{{ route('admin.customer-lookup.index') }}" 
@@ -42,6 +41,7 @@
 				</span>
 				<input type="text" name="q" placeholder="Lookup customer ID / phone..." class="rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-white/5 pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1555a8]/20 focus:border-[#1555a8] w-64 transition-all text-gray-800 dark:text-gray-100 placeholder-gray-400" />
 			</form>
+			@endif
 
 			<!-- Dark Mode Toggler -->
 			<button

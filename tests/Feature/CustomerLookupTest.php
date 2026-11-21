@@ -72,6 +72,22 @@ class CustomerLookupTest extends TestCase
         $response->assertSee(route('admin.customer-lookup.index'));
     }
 
+    public function test_customer_lookup_button_not_visible_in_header_for_regular_user_on_dashboard(): void
+    {
+        $response = $this->actingAs($this->customer)->get('/dashboard');
+        $response->assertStatus(200);
+        $response->assertDontSee('Customer Lookup');
+        $response->assertDontSee(route('admin.customer-lookup.index'));
+    }
+
+    public function test_customer_lookup_button_visible_in_header_for_admin(): void
+    {
+        $response = $this->actingAs($this->admin)->get('/admin');
+        $response->assertStatus(200);
+        $response->assertSee('Customer Lookup');
+        $response->assertSee(route('admin.customer-lookup.index'));
+    }
+
     public function test_search_by_id_returns_customer_and_transactions(): void
     {
         $response = $this->actingAs($this->admin)->getJson('/admin/customer-lookup/search?q=' . $this->customer->id);
