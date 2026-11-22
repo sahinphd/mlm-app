@@ -109,6 +109,16 @@ class ShopController extends Controller
                 $ca = CreditAccount::where('user_id', $user->id)->first();
                 if(!$ca || $ca->approval_status !== 'approved') return back()->with('error', 'Your credit account is not approved.');
                 if($ca->available_credit < $total) return back()->with('error', 'Insufficient credit limit.');
+
+                $settings = \App\Http\Controllers\Admin\SettingController::getSystemSettings();
+                $poolLimit = (float) ($settings['shop_initial_balance'] ?? 0);
+                if (($settings['enforce_shop_credit_pool_limit'] ?? 'off') === 'on' && $poolLimit > 0) {
+                    $activeCredit = (float) CreditAccount::where('approval_status', 'approved')->sum('used_credit');
+                    if (($activeCredit + $total) > $poolLimit) {
+                        $remaining = max(0.0, $poolLimit - $activeCredit);
+                        return back()->with('error', 'Shop maximum allowable credit limit pool reached. Remaining system credit capacity is Rs.' . number_format($remaining, 2) . '.');
+                    }
+                }
                 
                 $ca->used_credit += $total;
                 $ca->available_credit = max(0, $ca->credit_limit - $ca->used_credit);
@@ -134,6 +144,16 @@ class ShopController extends Controller
 
                 if ($ca->available_credit < $creditDeduct) {
                     return back()->with('error', 'Insufficient combined balance and credit limit. Need Rs.' . number_format($creditDeduct, 2) . ' from credit, but only Rs.' . number_format($ca->available_credit, 2) . ' is available.');
+                }
+
+                $settings = \App\Http\Controllers\Admin\SettingController::getSystemSettings();
+                $poolLimit = (float) ($settings['shop_initial_balance'] ?? 0);
+                if (($settings['enforce_shop_credit_pool_limit'] ?? 'off') === 'on' && $poolLimit > 0) {
+                    $activeCredit = (float) CreditAccount::where('approval_status', 'approved')->sum('used_credit');
+                    if (($activeCredit + $creditDeduct) > $poolLimit) {
+                        $remaining = max(0.0, $poolLimit - $activeCredit);
+                        return back()->with('error', 'Shop maximum allowable credit limit pool reached. Remaining system credit capacity is Rs.' . number_format($remaining, 2) . '.');
+                    }
                 }
 
                 if ($mainDeduct > 0) {

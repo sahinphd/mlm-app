@@ -1,74 +1,321 @@
 @extends('admin.layout')
 
 @section('content')
-<div class="container mx-auto p-4">
-    <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 class="text-title-md2 font-bold text-black dark:text-white">
-            Users
-        </h2>
-        <a href="{{ route('admin.users.create') }}" class="inline-flex items-center justify-center rounded-md bg-primary py-2 px-6 text-center font-medium text-white hover:bg-opacity-90 lg:px-8 xl:px-10">
-            Create New User
-        </a>
+<div class="container mx-auto p-3 sm:p-4 space-y-3 sm:space-y-4">
+    <!-- Top Header & Action Buttons -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+            <h1 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <span>User Directory &amp; Khatabook Report</span>
+            </h1>
+            <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                Real-time ledger overview of customer accounts, active creditors, and cash non-creditors.
+            </p>
+        </div>
+        <div class="grid grid-cols-2 sm:flex sm:items-center gap-2 w-full sm:w-auto">
+            <a href="{{ route('admin.customer-lookup.index') }}" 
+               class="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-[#1555a8] hover:bg-[#12468d] text-white text-xs sm:text-sm font-semibold rounded-xl shadow-2xs hover:shadow transition-all">
+                <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                </svg>
+                <span>Single-Screen Khata</span>
+            </a>
+
+            <a href="{{ route('admin.users.create') }}" 
+               class="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-semibold rounded-xl shadow-2xs hover:shadow transition-all">
+                <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                <span>Create New User</span>
+            </a>
+        </div>
     </div>
 
     @if(session('success'))
-        <div class="mb-6 flex w-full border-l-6 border-[#34D399] bg-[#34D399] bg-opacity-[15%] px-7 py-4 shadow-md dark:bg-[#1b1b1b] md:p-5">
-            <div class="mr-5 flex h-9 w-full max-w-[36px] items-center justify-center rounded-lg bg-[#34D399]">
-                <svg width="16" height="12" viewBox="0 0 16 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M15.2984 0.826822L15.2868 0.811827L15.2741 0.797751C14.9173 0.401837 14.3238 0.400754 13.9657 0.794406L5.91888 9.53233L2.02771 5.41173C1.6655 5.02795 1.07402 5.02206 0.704179 5.39847C0.334339 5.77488 0.328449 6.37722 0.69066 6.761L5.24211 11.5956L5.24355 11.5972C5.60196 11.9751 6.18434 11.9744 6.54194 11.5953L15.3035 1.95661C15.6669 1.56494 15.6644 0.957512 15.2984 0.826822Z" fill="white" stroke="white"></path>
-                </svg>
-            </div>
-            <div class="w-full">
-                <p class="text-base leading-relaxed text-body">
+        <div class="flex w-full border-l-4 border-emerald-500 bg-emerald-50/90 dark:bg-emerald-950/30 p-3 sm:p-3.5 rounded-r-xl shadow-xs">
+            <div class="flex items-center gap-2.5">
+                <div class="h-7 w-7 rounded-lg bg-emerald-500 text-white flex items-center justify-center shrink-0">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                </div>
+                <p class="text-xs sm:text-sm font-medium text-emerald-900 dark:text-emerald-200">
                     {{ session('success') }}
                 </p>
             </div>
         </div>
     @endif
 
-    <div class="bg-white rounded shadow p-4 dark:bg-boxdark">
-        <div class="max-w-full overflow-x-auto">
-            <table id="usersTable" class="min-w-full divide-y border-collapse" style="width:100%">
-                <thead>
-                    <tr class="bg-gray-2 text-left dark:bg-meta-4">
-                        <th class="px-3 py-4 font-medium text-black dark:text-white">ID</th>
-                        <th class="px-3 py-4 font-medium text-black dark:text-white">Avatar</th>
-                        <th class="px-3 py-4 font-medium text-black dark:text-white">Name</th>
-                        <th class="px-3 py-4 font-medium text-black dark:text-white">Email</th>
-                        <th class="px-3 py-4 font-medium text-black dark:text-white">Role</th>
-                        <th class="px-3 py-4 font-medium text-black dark:text-white">Status</th>
-                        <th class="px-3 py-4 font-medium text-black dark:text-white text-center">KYC Status</th>
-                        <th class="px-3 py-4 font-medium text-black dark:text-white text-right">Credit Limit</th>
-                        <th class="px-3 py-4 font-medium text-black dark:text-white text-center">Credit Status</th>
-                        <th class="px-3 py-4 font-medium text-black dark:text-white">Created</th>
-                        <th class="px-3 py-4 font-medium text-black dark:text-white">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                </tbody>
-            </table>
+    <!-- ======================================================== -->
+    <!-- KHATABOOK COMPACT TOP SUMMARY & SLIDING TOGGLE BAR -->
+    <!-- ======================================================== -->
+    <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-xs p-3 sm:p-4 space-y-3">
+        <!-- Top Row: Sliding Tab Switcher & Active State -->
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 border-b border-gray-100 dark:border-gray-700/80 pb-3">
+            <div class="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
+                <!-- Segmented Sliding Switcher (Screen Sliding Glider) -->
+                <div class="relative bg-gray-100 dark:bg-gray-900 p-1 rounded-xl flex items-center shadow-inner border border-gray-200/80 dark:border-gray-700 w-full sm:w-auto overflow-hidden" id="sliderNavContainer">
+                    <!-- Sliding Glider Pill -->
+                    <div id="slidingGlider" 
+                         class="absolute top-1 bottom-1 rounded-lg bg-white dark:bg-[#1555a8] shadow-sm transition-all duration-300 ease-out pointer-events-none"
+                         style="left: 4px; width: 32%;"></div>
+
+                    <!-- Tab 1: All Users -->
+                    <button type="button" 
+                            id="tabBtnAll" 
+                            onclick="switchTab('all')" 
+                            class="tab-btn flex-1 sm:flex-initial relative z-10 px-2.5 sm:px-3.5 py-1.5 text-[11px] sm:text-xs font-bold rounded-lg transition-colors duration-200 text-[#1555a8] dark:text-white flex items-center justify-center gap-1 sm:gap-1.5 whitespace-nowrap">
+                        <span>All Users</span>
+                        <span class="text-[10px] sm:text-[11px] px-1.5 py-0.2 rounded-full bg-blue-100 dark:bg-blue-900/60 text-[#1555a8] dark:text-blue-200 font-semibold">
+                            {{ number_format($khataSummary['total_users'] ?? 0) }}
+                        </span>
+                    </button>
+
+                    <!-- Tab 2: Creditors -->
+                    <button type="button" 
+                            id="tabBtnCreditor" 
+                            onclick="switchTab('creditor')" 
+                            class="tab-btn flex-1 sm:flex-initial relative z-10 px-2.5 sm:px-3.5 py-1.5 text-[11px] sm:text-xs font-bold rounded-lg transition-colors duration-200 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white flex items-center justify-center gap-1 sm:gap-1.5 whitespace-nowrap">
+                        <span>Creditors</span>
+                        <span class="text-[10px] sm:text-[11px] px-1.5 py-0.2 rounded-full bg-orange-100 dark:bg-orange-900/60 text-orange-800 dark:text-orange-200 font-semibold">
+                            {{ number_format($khataSummary['creditors_count'] ?? 0) }}
+                        </span>
+                    </button>
+
+                    <!-- Tab 3: Non-Creditors -->
+                    <button type="button" 
+                            id="tabBtnNonCreditor" 
+                            onclick="switchTab('non_creditor')" 
+                            class="tab-btn flex-1 sm:flex-initial relative z-10 px-2.5 sm:px-3.5 py-1.5 text-[11px] sm:text-xs font-bold rounded-lg transition-colors duration-200 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white flex items-center justify-center gap-1 sm:gap-1.5 whitespace-nowrap">
+                        <span>Non-Creditors</span>
+                        <span class="text-[10px] sm:text-[11px] px-1.5 py-0.2 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold">
+                            {{ number_format($khataSummary['non_creditors_count'] ?? 0) }}
+                        </span>
+                    </button>
+                </div>
+
+                <div class="hidden md:flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+                    <span class="font-semibold text-gray-800 dark:text-gray-200" id="activeFilterHeading">Showing All Customers</span>
+                    <span class="text-[11px] text-gray-400">(Swipe screen or click tabs)</span>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between sm:justify-end gap-2 text-xs text-gray-500 dark:text-gray-400">
+                <span class="md:hidden text-[11px] text-gray-400" id="mobileFilterHeading">Showing All Customers</span>
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-gray-100 dark:bg-gray-900 rounded-lg text-[11px] font-medium shrink-0">
+                    <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span>Live Khata Sync</span>
+                </span>
+            </div>
+        </div>
+
+        <!-- Bottom Row: Compact Horizontal Khatabook Ledger Strip -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
+            <!-- 1. Total Udhar (Due) / You'll Get -->
+            <div onclick="switchTab('creditor')" 
+                 class="cursor-pointer h-full flex flex-col justify-between p-2.5 sm:p-3 rounded-xl bg-red-50/70 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50 hover:bg-red-100/60 dark:hover:bg-red-950/50 transition-all group shadow-2xs">
+                <div class="flex items-start justify-between gap-1.5">
+                    <span class="text-xs font-bold text-red-700 dark:text-red-400 truncate" title="Total Udhar (Due)">Total Udhar (Due)</span>
+                    <div class="h-6 w-6 sm:h-7 sm:w-7 rounded-lg bg-red-500 text-white flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+                    </div>
+                </div>
+                <div class="my-1 sm:my-1.5">
+                    <div class="text-sm sm:text-base md:text-lg font-black text-red-600 dark:text-red-400 truncate tracking-tight">
+                        {{ ($symbol ?? '₹') . number_format($khataSummary['total_credit_used'] ?? 0, 2) }}
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <span class="text-[9px] sm:text-[10px] bg-red-100 dark:bg-red-900/80 text-red-700 dark:text-red-300 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+                        You'll Get ↙
+                    </span>
+                </div>
+            </div>
+
+            <!-- 2. Available Credit Balance -->
+            <div class="h-full flex flex-col justify-between p-2.5 sm:p-3 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 shadow-2xs">
+                <div class="flex items-start justify-between gap-1.5">
+                    <span class="text-xs font-bold text-emerald-700 dark:text-emerald-400 truncate" title="Available Credit">Available Credit</span>
+                    <div class="h-6 w-6 sm:h-7 sm:w-7 rounded-lg bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-2xs">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+                    </div>
+                </div>
+                <div class="my-1 sm:my-1.5">
+                    <div class="text-sm sm:text-base md:text-lg font-black text-emerald-600 dark:text-emerald-400 truncate tracking-tight">
+                        {{ ($symbol ?? '₹') . number_format($khataSummary['total_available_credit'] ?? 0, 2) }}
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <span class="text-[9px] sm:text-[10px] bg-emerald-100 dark:bg-emerald-900/80 text-emerald-700 dark:text-emerald-300 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+                        Limit Pool ↗
+                    </span>
+                </div>
+            </div>
+
+            <!-- 3. Total Shopping Done -->
+            <div class="h-full flex flex-col justify-between p-2.5 sm:p-3 rounded-xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/50 shadow-2xs">
+                <div class="flex items-start justify-between gap-1.5">
+                    <span class="text-xs font-bold text-blue-700 dark:text-blue-400 truncate" title="Total Shopping Done">Total Shopping Done</span>
+                    <div class="h-6 w-6 sm:h-7 sm:w-7 rounded-lg bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                    </div>
+                </div>
+                <div class="my-1 sm:my-1.5">
+                    <div class="text-sm sm:text-base md:text-lg font-black text-blue-700 dark:text-blue-300 truncate tracking-tight">
+                        {{ ($symbol ?? '₹') . number_format($khataSummary['total_shopping_done'] ?? 0, 2) }}
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <span class="text-[9px] sm:text-[10px] bg-blue-100 dark:bg-blue-900/80 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+                        Orders
+                    </span>
+                </div>
+            </div>
+
+            <!-- 4. Overdue EMIs -->
+            <div class="h-full flex flex-col justify-between p-2.5 sm:p-3 rounded-xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 shadow-2xs">
+                <div class="flex items-start justify-between gap-1.5">
+                    <span class="text-xs font-bold text-amber-800 dark:text-amber-400 truncate" title="Overdue EMIs">Overdue EMIs</span>
+                    <div class="h-6 w-6 sm:h-7 sm:w-7 rounded-lg bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-2xs">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                </div>
+                <div class="my-1 sm:my-1.5">
+                    <div class="text-sm sm:text-base md:text-lg font-black text-amber-700 dark:text-amber-400 truncate tracking-tight">
+                        {{ ($symbol ?? '₹') . number_format($khataSummary['overdue_total'] ?? 0, 2) }}
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <span class="text-[9px] sm:text-[10px] bg-amber-100 dark:bg-amber-900/80 text-amber-800 dark:text-amber-300 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+                        {{ $khataSummary['overdue_count'] ?? 0 }} Due
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- COMPACT CUSTOMER VIEW WRAPPER (TABLE & CARDS) -->
+    <!-- ======================================================== -->
+    <div id="slidingTableWrapper" class="relative overflow-hidden transition-all duration-300 space-y-3">
+        <!-- View Toolbar: View Mode Toggle (Cards vs Table) & Live Search -->
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xs border border-gray-200 dark:border-gray-700 p-3 sm:p-4">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 pb-3 border-b border-gray-100 dark:border-gray-700/80">
+                <div class="flex items-center justify-between sm:justify-start gap-2">
+                    <!-- View Mode Switcher -->
+                    <div class="inline-flex items-center p-1 rounded-xl bg-gray-100 dark:bg-gray-900 border border-gray-200/80 dark:border-gray-700 shadow-inner">
+                        <button type="button" 
+                                id="btnViewCards" 
+                                onclick="setUserViewMode('cards')" 
+                                class="px-2.5 sm:px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                            </svg>
+                            <span>Cards View</span>
+                        </button>
+                        <button type="button" 
+                                id="btnViewTable" 
+                                onclick="setUserViewMode('table')" 
+                                class="px-2.5 sm:px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            <span>Table View</span>
+                        </button>
+                    </div>
+
+                    <div class="hidden sm:flex items-center gap-2">
+                        <select id="customPageLength" onchange="onPageLengthChange(this.value)" class="text-xs bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 text-gray-700 dark:text-gray-300">
+                            <option value="10">10 / page</option>
+                            <option value="25" selected>25 / page</option>
+                            <option value="50">50 / page</option>
+                            <option value="100">100 / page</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Custom Quick Search Bar -->
+                <div class="relative flex-1 sm:max-w-xs">
+                    <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
+                    <input type="text" 
+                           id="customUserSearchInput" 
+                           placeholder="Search customer, mobile, email..." 
+                           autocomplete="off"
+                           class="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/80 dark:bg-gray-900 py-1.5 pl-9 pr-8 text-xs text-gray-900 dark:text-white outline-none focus:border-[#1555a8] focus:bg-white dark:focus:bg-gray-900 transition-all">
+                    <button type="button" 
+                            id="clearSearchBtn" 
+                            onclick="clearUserSearch()"
+                            class="hidden absolute inset-y-0 right-0 pr-2.5 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- VIEW 1: COMPACT CARDS VIEW (DEFAULT ON MOBILE) -->
+            <div id="mobileCardsViewWrapper" class="pt-3">
+                <div id="mobileCardsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3 transition-transform duration-300 ease-out">
+                    <!-- Populated dynamically via DataTables drawCallback -->
+                </div>
+                <div id="cardsEmptyState" class="hidden p-8 text-center text-xs text-gray-500 bg-gray-50/60 dark:bg-gray-900/40 rounded-xl border border-gray-200 dark:border-gray-700">
+                    No customers found matching current filters.
+                </div>
+            </div>
+
+            <!-- VIEW 2: COMPACT TABLE VIEW (WITH HORIZONTAL SCROLL) -->
+            <div id="tableViewWrapper" class="hidden pt-3">
+                <div id="slidingTableContainer" class="max-w-full overflow-x-auto rounded-xl border border-gray-100 dark:border-gray-700/80 shadow-2xs transition-transform duration-300 ease-out">
+                    <table id="usersTable" class="min-w-full divide-y divide-gray-100 dark:divide-gray-700 border-collapse text-left" style="width:100%">
+                        <thead>
+                            <tr class="bg-gray-50/80 dark:bg-meta-4 text-[11px] sm:text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                <th class="w-8 px-2 py-2.5 text-center"></th>
+                                <th class="w-10 px-2 py-2.5 text-center">Avatar</th>
+                                <th class="px-2.5 py-2.5 text-left min-w-[140px]">Customer / Mobile</th>
+                                <th class="px-2.5 py-2.5 text-center whitespace-nowrap">Khata Type</th>
+                                <th class="px-2.5 py-2.5 text-right whitespace-nowrap">Khata Due (Udhar)</th>
+                                <th class="px-2.5 py-2.5 text-right whitespace-nowrap">Credit Balance</th>
+                                <th class="px-2.5 py-2.5 text-right whitespace-nowrap">Main Balance</th>
+                                <th class="px-2.5 py-2.5 text-right whitespace-nowrap">Shop Done</th>
+                                <th class="px-2.5 py-2.5 text-right whitespace-nowrap">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100 dark:divide-gray-700/60 text-xs">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Unified Bottom Pagination & Info Bar (Synchronized for Both Views) -->
+            <div id="unifiedPaginationBar" class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 pt-3 mt-3 border-t border-gray-100 dark:border-gray-700/80 text-xs text-gray-500">
+                <div id="customTableInfo" class="text-center sm:text-left text-[11px] sm:text-xs text-gray-500 dark:text-gray-400">
+                    <!-- Populated dynamically via DataTables -->
+                </div>
+                <div id="customPaginationButtons" class="flex items-center justify-center sm:justify-end gap-1 flex-wrap">
+                    <!-- Populated dynamically via DataTables -->
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- DataTables CDN -->
+<!-- DataTables & Responsive CSS -->
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
 <style>
-    .dataTables_wrapper .dataTables_length select {
-        @apply bg-transparent border border-stroke rounded px-2 py-1 dark:border-strokedark dark:text-white;
+    /* Clean up default DataTables native containers */
+    .dataTables_wrapper {
+        position: relative;
+        clear: both;
     }
-    .dataTables_wrapper .dataTables_filter input {
-        @apply bg-transparent border border-stroke rounded px-3 py-1 ml-2 dark:border-strokedark dark:text-white;
-    }
-    .dataTables_wrapper .dataTables_paginate .paginate_button {
-        @apply border-0 bg-transparent text-body dark:text-bodydark;
-    }
-    .dataTables_wrapper .dataTables_paginate .paginate_button.current {
-        @apply bg-primary text-white border-primary rounded;
-    }
-    .dataTables_wrapper .dataTables_info {
-        @apply text-body dark:text-bodydark;
+    .dataTables_wrapper .dataTables_length,
+    .dataTables_wrapper .dataTables_filter,
+    .dataTables_wrapper .dataTables_info,
+    .dataTables_wrapper .dataTables_paginate {
+        display: none !important; /* Managed via unified custom UI controls */
     }
     table.dataTable.no-footer {
         border-bottom: 1px solid #e2e8f0;
@@ -82,106 +329,477 @@
     .dark table.dataTable thead th {
         border-bottom: 1px solid #2e3a47;
     }
-    /* Responsive adjustment */
     #usersTable {
         width: 100% !important;
+        font-size: 0.8125rem;
     }
-    /* Tooltip container needs to be visible over table */
     #usersTable td {
         overflow: visible !important;
+        vertical-align: middle;
+        padding: 0.5rem 0.625rem;
     }
-    .dataTables_scrollBody {
-        overflow: visible !important;
+    #usersTable tbody tr {
+        cursor: pointer;
+        transition: background-color 0.15s ease-in-out;
+    }
+    #usersTable tbody tr:hover {
+        background-color: rgba(243, 244, 246, 0.6);
+    }
+    .dark #usersTable tbody tr:hover {
+        background-color: rgba(36, 48, 63, 0.6);
+    }
+    tr.details-shown {
+        background-color: rgba(239, 246, 255, 0.6) !important;
+    }
+    .dark tr.details-shown {
+        background-color: rgba(30, 58, 138, 0.15) !important;
+    }
+    tr.details-shown > td {
+        border-bottom: 0 !important;
+    }
+
+    /* Screen sliding animations */
+    .slide-left-out {
+        transform: translateX(-30px);
+        opacity: 0.3;
+    }
+    .slide-right-out {
+        transform: translateX(30px);
+        opacity: 0.3;
+    }
+    .slide-in {
+        transform: translateX(0);
+        opacity: 1;
+    }
+
+    /* Custom scrollbar for horizontal table */
+    #slidingTableContainer::-webkit-scrollbar {
+        height: 6px;
+    }
+    #slidingTableContainer::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.04);
+        border-radius: 9999px;
+    }
+    #slidingTableContainer::-webkit-scrollbar-thumb {
+        background: rgba(156, 163, 175, 0.5);
+        border-radius: 9999px;
+    }
+    .dark #slidingTableContainer::-webkit-scrollbar-thumb {
+        background: rgba(75, 85, 99, 0.6);
+    }
+
+    /* User card hover effect */
+    .user-mobile-card {
+        backface-visibility: hidden;
     }
 </style>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
+    let currentCreditType = 'all';
+    let usersDataTable = null;
+    let currentUserView = 'cards';
+    const tabOrder = ['all', 'creditor', 'non_creditor'];
+
+    // Detect initial view: on screens < 768px default to 'cards', otherwise use stored preference or 'table'
+    function initUserViewMode() {
+        const stored = localStorage.getItem('admin_users_view');
+        if (stored === 'cards' || stored === 'table') {
+            currentUserView = stored;
+        } else {
+            currentUserView = window.innerWidth < 768 ? 'cards' : 'table';
+        }
+        applyUserViewMode(currentUserView, false);
+    }
+
+    function setUserViewMode(mode) {
+        if (currentUserView === mode) return;
+        currentUserView = mode;
+        localStorage.setItem('admin_users_view', mode);
+        applyUserViewMode(mode, true);
+    }
+
+    function applyUserViewMode(mode, animate = true) {
+        const btnCards = document.getElementById('btnViewCards');
+        const btnTable = document.getElementById('btnViewTable');
+        const cardsWrapper = document.getElementById('mobileCardsViewWrapper');
+        const tableWrapper = document.getElementById('tableViewWrapper');
+
+        if (mode === 'cards') {
+            if (cardsWrapper) cardsWrapper.classList.remove('hidden');
+            if (tableWrapper) tableWrapper.classList.add('hidden');
+
+            if (btnCards) {
+                btnCards.classList.remove('text-gray-600', 'dark:text-gray-400');
+                btnCards.classList.add('bg-white', 'dark:bg-[#1555a8]', 'text-[#1555a8]', 'dark:text-white', 'shadow-xs');
+            }
+            if (btnTable) {
+                btnTable.classList.remove('bg-white', 'dark:bg-[#1555a8]', 'text-[#1555a8]', 'dark:text-white', 'shadow-xs');
+                btnTable.classList.add('text-gray-600', 'dark:text-gray-400');
+            }
+        } else {
+            if (cardsWrapper) cardsWrapper.classList.add('hidden');
+            if (tableWrapper) tableWrapper.classList.remove('hidden');
+
+            if (btnTable) {
+                btnTable.classList.remove('text-gray-600', 'dark:text-gray-400');
+                btnTable.classList.add('bg-white', 'dark:bg-[#1555a8]', 'text-[#1555a8]', 'dark:text-white', 'shadow-xs');
+            }
+            if (btnCards) {
+                btnCards.classList.remove('bg-white', 'dark:bg-[#1555a8]', 'text-[#1555a8]', 'dark:text-white', 'shadow-xs');
+                btnCards.classList.add('text-gray-600', 'dark:text-gray-400');
+            }
+        }
+    }
+
+    function updateGliderPosition(tabType) {
+        const glider = document.getElementById('slidingGlider');
+        const container = document.getElementById('sliderNavContainer');
+        let targetBtn = document.getElementById('tabBtnAll');
+
+        if (tabType === 'creditor') targetBtn = document.getElementById('tabBtnCreditor');
+        if (tabType === 'non_creditor') targetBtn = document.getElementById('tabBtnNonCreditor');
+
+        if (glider && targetBtn && container) {
+            const containerRect = container.getBoundingClientRect();
+            const btnRect = targetBtn.getBoundingClientRect();
+            const leftOffset = btnRect.left - containerRect.left;
+            
+            glider.style.left = `${leftOffset}px`;
+            glider.style.width = `${btnRect.width}px`;
+        }
+
+        // Update button text styling
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('text-[#1555a8]', 'dark:text-white');
+            btn.classList.add('text-gray-600', 'dark:text-gray-400');
+        });
+        targetBtn.classList.remove('text-gray-600', 'dark:text-gray-400');
+        targetBtn.classList.add('text-[#1555a8]', 'dark:text-white');
+
+        // Update heading text
+        const headings = {
+            'all': 'Showing All Customers',
+            'creditor': 'Showing Creditors Only',
+            'non_creditor': 'Showing Non-Creditors Only'
+        };
+        const desktopHeadingEl = document.getElementById('activeFilterHeading');
+        const mobileHeadingEl = document.getElementById('mobileFilterHeading');
+        if (desktopHeadingEl) desktopHeadingEl.textContent = headings[tabType] || 'Customer Directory';
+        if (mobileHeadingEl) mobileHeadingEl.textContent = headings[tabType] || 'Customer Directory';
+    }
+
+    function switchTab(tabType, direction = null) {
+        if (currentCreditType === tabType && usersDataTable) return;
+
+        const oldIndex = tabOrder.indexOf(currentCreditType);
+        const newIndex = tabOrder.indexOf(tabType);
+        const slideDir = direction || (newIndex > oldIndex ? 'left' : 'right');
+
+        currentCreditType = tabType;
+        updateGliderPosition(tabType);
+
+        // Visual screen sliding animation
+        const tableContainer = document.getElementById('slidingTableContainer');
+        const cardsContainer = document.getElementById('mobileCardsContainer');
+        const activeContainer = currentUserView === 'cards' ? cardsContainer : tableContainer;
+
+        if (activeContainer) {
+            activeContainer.classList.add(slideDir === 'left' ? 'slide-left-out' : 'slide-right-out');
+            setTimeout(() => {
+                activeContainer.classList.remove('slide-left-out', 'slide-right-out');
+                activeContainer.classList.add('slide-in');
+                if (usersDataTable) {
+                    usersDataTable.ajax.reload(null, false);
+                }
+            }, 180);
+        } else if (usersDataTable) {
+            usersDataTable.ajax.reload();
+        }
+    }
+
+    function toggleChildRow(tr) {
+        if (!usersDataTable) return;
+        const row = usersDataTable.row(tr);
+        if (!row) return;
+
+        if (row.child.isShown()) {
+            row.child.hide();
+            tr.removeClass('details-shown');
+            tr.find('.main-chevron, .detail-chevron').removeClass('rotate-180');
+        } else {
+            const rowData = row.data();
+            if (rowData && rowData[13]) {
+                const childContainer = $('<div class="p-2 sm:p-3"></div>').html(rowData[13]);
+                row.child(childContainer, 'p-0 bg-transparent border-t-0').show();
+                tr.addClass('details-shown');
+                tr.find('.main-chevron, .detail-chevron').addClass('rotate-180');
+            }
+        }
+    }
+
+    function renderMobileCards(api) {
+        const cardsContainer = $('#mobileCardsContainer');
+        const emptyState = $('#cardsEmptyState');
+        cardsContainer.empty();
+
+        const data = api.rows({ page: 'current' }).data();
+        if (data.length === 0) {
+            emptyState.removeClass('hidden');
+        } else {
+            emptyState.addClass('hidden');
+            data.each(function(rowData) {
+                // If rowData has pre-rendered card at index 14, append it
+                if (rowData[14]) {
+                    cardsContainer.append(rowData[14]);
+                }
+            });
+        }
+    }
+
+    function renderCustomPagination(api) {
+        const info = api.page.info();
+        const infoEl = $('#customTableInfo');
+        const buttonsEl = $('#customPaginationButtons');
+
+        if (info.recordsDisplay === 0) {
+            infoEl.text('Showing 0 customers');
+            buttonsEl.empty();
+            return;
+        }
+
+        const start = info.start + 1;
+        const end = info.end;
+        const total = info.recordsDisplay;
+        infoEl.html(`Showing <span class="font-bold text-gray-800 dark:text-gray-200">${start}</span> to <span class="font-bold text-gray-800 dark:text-gray-200">${end}</span> of <span class="font-bold text-gray-800 dark:text-gray-200">${total}</span> customers`);
+
+        buttonsEl.empty();
+
+        // Prev Button
+        const prevBtn = $(`<button type="button" class="px-2.5 py-1 text-xs font-semibold rounded-lg transition-colors ${info.page === 0 ? 'opacity-40 cursor-not-allowed bg-gray-100 dark:bg-gray-800 text-gray-400' : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200'}">Previous</button>`);
+        if (info.page > 0) {
+            prevBtn.on('click', () => usersDataTable.page('previous').draw('page'));
+        }
+        buttonsEl.append(prevBtn);
+
+        // Numeric Page Pill
+        const pagePill = $(`<span class="px-2.5 py-1 text-xs font-bold rounded-lg bg-[#1555a8] text-white">${info.page + 1} / ${info.pages || 1}</span>`);
+        buttonsEl.append(pagePill);
+
+        // Next Button
+        const nextBtn = $(`<button type="button" class="px-2.5 py-1 text-xs font-semibold rounded-lg transition-colors ${info.page >= info.pages - 1 ? 'opacity-40 cursor-not-allowed bg-gray-100 dark:bg-gray-800 text-gray-400' : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200'}">Next</button>`);
+        if (info.page < info.pages - 1) {
+            nextBtn.on('click', () => usersDataTable.page('next').draw('page'));
+        }
+        buttonsEl.append(nextBtn);
+    }
+
+    function onPageLengthChange(val) {
+        if (usersDataTable) {
+            usersDataTable.page.len(parseInt(val, 10)).draw();
+        }
+    }
+
+    function clearUserSearch() {
+        const input = document.getElementById('customUserSearchInput');
+        if (input) {
+            input.value = '';
+            document.getElementById('clearSearchBtn').classList.add('hidden');
+            if (usersDataTable) {
+                usersDataTable.search('').draw();
+            }
+        }
+    }
+
     $(document).ready(function(){
-        const table = $('#usersTable').DataTable({
+        initUserViewMode();
+
+        // Initialize glider position
+        setTimeout(() => updateGliderPosition('all'), 120);
+        window.addEventListener('resize', () => {
+            updateGliderPosition(currentCreditType);
+        });
+
+        usersDataTable = $('#usersTable').DataTable({
             processing: true,
             serverSide: true,
-            responsive: true,
-            ajax: "{{ route('admin.users.data') }}",
-            columns: [
-                { data: 0, name: 'id' },
-                { data: 1, name: 'avatar', orderable: false, searchable: false },
-                { data: 2, name: 'name' },
-                { data: 3, name: 'email' },
-                { data: 4, name: 'role' },
-                { data: 5, name: 'status' },
-                { data: 6, name: 'kyc_status', className: 'text-center' },
-                { data: 7, name: 'credit_limit', className: 'text-right' },
-                { data: 8, name: 'credit_status', className: 'text-center' },
-                { data: 9, name: 'created_at' },
-                { data: 10, name: 'actions', orderable: false, searchable: false }
-            ],
-            order: [[0, 'desc']],
-            pageLength: 25,
-            language: {
-                searchPlaceholder: "Search users...",
-                search: ""
+            responsive: false,
+            ajax: {
+                url: "{{ route('admin.users.data') }}",
+                data: function(d) {
+                    d.credit_type = currentCreditType;
+                }
             },
+            columns: [
+                {
+                    className: 'dt-control text-center cursor-pointer select-none w-8',
+                    orderable: false,
+                    searchable: false,
+                    data: null,
+                    defaultContent: '<button type="button" class="child-chevron-btn p-1 text-gray-400 hover:text-[#1555a8] rounded-md transition-all"><svg class="w-4 h-4 transform transition-transform duration-200 main-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>'
+                },
+                { data: 1, name: 'avatar', orderable: false, searchable: false, className: 'text-center w-10 sm:w-12' },
+                { data: 2, name: 'name', className: 'text-left min-w-[140px]' },
+                { data: 4, name: 'khata_type', className: 'text-center', orderable: false },
+                { data: 8, name: 'used_credit', className: 'text-right' },
+                { data: 9, name: 'available_credit', className: 'text-right' },
+                { data: 5, name: 'main_balance', className: 'text-right' },
+                { data: 6, name: 'shop_done', className: 'text-right' },
+                { data: 12, name: 'actions', orderable: false, searchable: false, className: 'text-right' }
+            ],
+            order: [[2, 'asc']],
+            pageLength: 25,
             drawCallback: function() {
-                $('.dataTables_paginate > .paginate_button').addClass('px-3 py-1');
+                const api = this.api();
+                renderMobileCards(api);
+                renderCustomPagination(api);
             }
         });
 
-        // Handle avatar click for info popup
-        $('#usersTable').on('click', '.js-user-info', function() {
+        // Search input debounce sync
+        let searchDebounceTimer = null;
+        $('#customUserSearchInput').on('input', function() {
+            const query = $(this).val();
+            const clearBtn = $('#clearSearchBtn');
+            if (query.length > 0) {
+                clearBtn.removeClass('hidden');
+            } else {
+                clearBtn.addClass('hidden');
+            }
+
+            clearTimeout(searchDebounceTimer);
+            searchDebounceTimer = setTimeout(() => {
+                if (usersDataTable) {
+                    usersDataTable.search(query).draw();
+                }
+            }, 250);
+        });
+
+        // Click on chevron or control cell in Table view
+        $('#usersTable tbody').on('click', 'td.dt-control, .child-chevron-btn', function (e) {
+            e.stopPropagation();
+            toggleChildRow($(this).closest('tr'));
+        });
+
+        // Click on Details button in Table action column
+        $('#usersTable tbody').on('click', '.js-toggle-details', function (e) {
+            e.stopPropagation();
+            toggleChildRow($(this).closest('tr'));
+        });
+
+        // Click anywhere on table row except interactive links/buttons/inputs/avatar
+        $('#usersTable tbody').on('click', 'tr', function (e) {
+            if ($(e.target).closest('a, button, input, select, .js-user-info, .dt-control').length) {
+                return;
+            }
+            toggleChildRow($(this));
+        });
+
+        // Card Accordion Drawer toggle
+        $(document).on('click', '.js-toggle-card-drawer', function(e) {
+            e.stopPropagation();
+            const card = $(this).closest('.user-mobile-card');
+            const drawer = card.find('.card-child-drawer');
+            const chevron = $(this).find('.card-chevron');
+            
+            drawer.slideToggle(200);
+            chevron.toggleClass('rotate-180');
+        });
+
+        // ==========================================
+        // TOUCH SWIPE / SCREEN SLIDING GESTURE
+        // ==========================================
+        let touchStartX = 0;
+        let touchEndX = 0;
+        const swipeZone = document.getElementById('slidingTableWrapper');
+
+        if (swipeZone) {
+            swipeZone.addEventListener('touchstart', function(e) {
+                touchStartX = e.changedTouches[0].screenX;
+            }, { passive: true });
+
+            swipeZone.addEventListener('touchend', function(e) {
+                touchEndX = e.changedTouches[0].screenX;
+                handleSwipeGesture();
+            }, { passive: true });
+        }
+
+        function handleSwipeGesture() {
+            const swipeDistance = touchEndX - touchStartX;
+            const threshold = 60; // minimum swipe distance
+
+            if (Math.abs(swipeDistance) < threshold) return;
+
+            const currentIndex = tabOrder.indexOf(currentCreditType);
+
+            if (swipeDistance < -threshold) {
+                // Swiped Left -> Move to Next tab
+                if (currentIndex < tabOrder.length - 1) {
+                    switchTab(tabOrder[currentIndex + 1], 'left');
+                }
+            } else if (swipeDistance > threshold) {
+                // Swiped Right -> Move to Previous tab
+                if (currentIndex > 0) {
+                    switchTab(tabOrder[currentIndex - 1], 'right');
+                }
+            }
+        }
+
+        // Handle avatar click for quick financial popup
+        $(document).on('click', '.js-user-info', function(e) {
+            e.stopPropagation();
             const data = $(this).data();
             const symbol = '₹';
-            const isOverdue = parseFloat(data.overdue.replace(/,/g, '')) > 0;
+            const isOverdue = parseFloat((data.overdue || '0').toString().replace(/,/g, '')) > 0;
             
             Swal.fire({
-                title: `<div class="text-xl font-bold text-black dark:text-white">${data.name}</div>`,
+                title: `<div class="text-lg sm:text-xl font-bold text-black dark:text-white">${data.name}</div>`,
                 html: `
-                    <div class="flex flex-col items-center justify-center space-y-4 py-4 text-left">
-                        <img src="${data.avatar}" class="w-24 h-24 rounded-full border-4 border-primary shadow-lg mb-2" />
+                    <div class="flex flex-col items-center justify-center space-y-3.5 py-3 text-left">
+                        <img src="${data.avatar}" class="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-[#1555a8] shadow-md mb-1 object-cover" />
                         
-                        <!-- Financial Overview -->
-                        <div class="w-full grid grid-cols-2 gap-3 mb-2">
-                            <div class="p-3 rounded bg-blue-50 dark:bg-meta-4 border border-blue-100 dark:border-strokedark">
-                                <div class="text-xs text-gray-500 uppercase font-bold mb-1">Main Wallet</div>
-                                <div class="text-lg font-bold text-blue-600">${symbol}${data.wallet}</div>
+                        <!-- Financial Overview Grid -->
+                        <div class="w-full grid grid-cols-2 gap-2 sm:gap-2.5">
+                            <div class="p-2 sm:p-2.5 rounded-xl bg-blue-50/80 dark:bg-meta-4 border border-blue-100 dark:border-strokedark">
+                                <div class="text-[10px] text-gray-500 uppercase font-bold">Main Wallet</div>
+                                <div class="text-sm sm:text-base font-bold text-blue-600 mt-0.5">${symbol}${data.wallet}</div>
                             </div>
-                            <div class="p-3 rounded bg-green-50 dark:bg-meta-4 border border-green-100 dark:border-strokedark">
-                                <div class="text-xs text-gray-500 uppercase font-bold mb-1">Total Commission</div>
-                                <div class="text-lg font-bold text-green-600">${symbol}${data.commission}</div>
+                            <div class="p-2 sm:p-2.5 rounded-xl bg-green-50/80 dark:bg-meta-4 border border-green-100 dark:border-strokedark">
+                                <div class="text-[10px] text-gray-500 uppercase font-bold">Total Commission</div>
+                                <div class="text-sm sm:text-base font-bold text-green-600 mt-0.5">${symbol}${data.commission}</div>
                             </div>
-                            <div class="p-3 rounded bg-orange-50 dark:bg-meta-4 border border-orange-100 dark:border-strokedark">
-                                <div class="text-xs text-gray-500 uppercase font-bold mb-1">Credit Due</div>
-                                <div class="text-lg font-bold text-orange-600">${symbol}${data.creditUsed}</div>
+                            <div class="p-2 sm:p-2.5 rounded-xl bg-orange-50/80 dark:bg-meta-4 border border-orange-100 dark:border-strokedark">
+                                <div class="text-[10px] text-gray-500 uppercase font-bold">Credit Due (Udhar)</div>
+                                <div class="text-sm sm:text-base font-bold text-orange-600 mt-0.5">${symbol}${data.creditUsed}</div>
                             </div>
-                            <div class="p-3 rounded ${isOverdue ? 'bg-red-50' : 'bg-gray-50'} dark:bg-meta-4 border ${isOverdue ? 'border-red-200' : 'border-stroke'} dark:border-strokedark">
-                                <div class="text-xs ${isOverdue ? 'text-red-600' : 'text-gray-500'} uppercase font-bold mb-1">Overdue Amount</div>
-                                <div class="text-lg font-bold ${isOverdue ? 'text-red-600' : 'text-gray-800 dark:text-white'}">${symbol}${data.overdue}</div>
+                            <div class="p-2 sm:p-2.5 rounded-xl ${isOverdue ? 'bg-red-50' : 'bg-gray-50'} dark:bg-meta-4 border ${isOverdue ? 'border-red-200' : 'border-stroke'} dark:border-strokedark">
+                                <div class="text-[10px] ${isOverdue ? 'text-red-600' : 'text-gray-500'} uppercase font-bold">Overdue Amount</div>
+                                <div class="text-sm sm:text-base font-bold ${isOverdue ? 'text-red-600' : 'text-gray-800 dark:text-white'} mt-0.5">${symbol}${data.overdue}</div>
                             </div>
                         </div>
 
-                        <!-- User Details -->
-                        <div class="w-full bg-gray-50 dark:bg-meta-4 rounded-lg p-4 space-y-3">
-                            <div class="flex justify-between border-b border-stroke dark:border-strokedark pb-2">
+                        <!-- User Details Strip -->
+                        <div class="w-full bg-gray-50 dark:bg-meta-4 rounded-xl p-3 space-y-1.5 text-xs">
+                            <div class="flex justify-between border-b border-stroke dark:border-strokedark pb-1">
                                 <span class="font-semibold text-gray-600 dark:text-gray-300">Phone:</span>
-                                <span class="text-black dark:text-white font-medium">${data.phone}</span>
+                                <span class="text-black dark:text-white font-mono">${data.phone}</span>
                             </div>
-                            <div class="flex justify-between border-b border-stroke dark:border-strokedark pb-2">
+                            <div class="flex justify-between border-b border-stroke dark:border-strokedark pb-1">
                                 <span class="font-semibold text-gray-600 dark:text-gray-300">KYC Status:</span>
-                                <span class="font-bold uppercase text-xs ${data.kycStatus === 'approved' ? 'text-success' : (data.kycStatus === 'rejected' ? 'text-danger' : 'text-warning')}">${data.kycStatus || 'Unfilled'}</span>
+                                <span class="font-bold uppercase text-[11px] ${data.kycStatus === 'approved' ? 'text-success' : (data.kycStatus === 'rejected' ? 'text-danger' : 'text-warning')}">${data.kycStatus || 'Unfilled'}</span>
                             </div>
-                            <div class="flex justify-between border-b border-stroke dark:border-strokedark pb-2">
+                            <div class="flex justify-between border-b border-stroke dark:border-strokedark pb-1">
                                 <span class="font-semibold text-gray-600 dark:text-gray-300">Aadhaar / PAN:</span>
-                                <span class="text-black dark:text-white font-mono text-xs">${data.aadhaar || 'N/A'} / ${data.pan || 'N/A'}</span>
+                                <span class="text-black dark:text-white font-mono">${data.aadhaar || 'N/A'} / ${data.pan || 'N/A'}</span>
                             </div>
-                            <div class="flex justify-between border-b border-stroke dark:border-strokedark pb-2">
-                                <span class="font-semibold text-gray-600 dark:text-gray-300">Total BV:</span>
-                                <span class="text-black dark:text-white font-medium">${data.bv}</span>
+                            <div class="flex justify-between border-b border-stroke dark:border-strokedark pb-1">
+                                <span class="font-semibold text-gray-600 dark:text-gray-300">Credit Limit:</span>
+                                <span class="text-black dark:text-white font-bold">${symbol}${parseFloat(data.creditLimit || 0).toLocaleString()}</span>
                             </div>
-                            <div class="flex justify-between border-b border-stroke dark:border-strokedark pb-2">
+                            <div class="flex justify-between border-b border-stroke dark:border-strokedark pb-1">
                                 <span class="font-semibold text-gray-600 dark:text-gray-300">Referred By:</span>
                                 <span class="text-black dark:text-white font-medium">${data.refBy}</span>
                             </div>
@@ -191,32 +809,21 @@
                             </div>
                         </div>
 
-                        ${data.canOnboard === 1 ? `
-                            <button type="button" class="w-full py-2.5 px-4 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow transition flex items-center justify-center gap-2" onclick="Swal.close(); openOnboardModal({
-                                id: '${data.id}',
-                                name: '${data.name}',
-                                email: '',
-                                phone: '${data.phone}',
-                                avatar: '${data.avatar}',
-                                aadhaar: '${data.aadhaar}',
-                                pan: '${data.pan}',
-                                address: '${data.address}',
-                                nominee: '${data.nominee}',
-                                upline: '${data.refBy}',
-                                creditLimit: ${data.creditLimit || 5000},
-                                kycStatus: '${data.kycStatus}',
-                                status: 'pending'
-                            })">
-                                ⚡ Quick Onboard & Activate User
-                            </button>
-                        ` : ''}
+                        <!-- Direct Khata Link -->
+                        <a href="/admin/customer-lookup?user_id=${data.id}" class="w-full py-2.5 px-4 rounded-xl bg-[#1555a8] hover:bg-[#12468d] text-white font-bold text-xs shadow-xs transition flex items-center justify-center gap-2">
+                            <span>📖 Open Full Khata Statement</span>
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                        </a>
                     </div>
                 `,
                 showCancelButton: true,
                 showConfirmButton: true,
                 confirmButtonText: 'Edit Profile',
                 cancelButtonText: 'Close',
-                confirmButtonColor: '#3C50E0',
+                confirmButtonColor: '#1555a8',
+                customClass: {
+                    popup: 'rounded-2xl max-w-sm sm:max-w-md w-full'
+                },
                 background: document.documentElement.classList.contains('dark') ? '#24303F' : '#fff',
                 color: document.documentElement.classList.contains('dark') ? '#fff' : '#000'
             }).then((result) => {
@@ -226,14 +833,39 @@
             });
         });
 
-        // handle delete
-        $('#usersTable').on('click', '.js-delete', function(e){
+        // Delegate Quick Onboard Click
+        $(document).on('click', '.js-quick-onboard-btn', function(e) {
+            e.stopPropagation();
+            const btn = $(this);
+            const user = {
+                id: btn.data('id'),
+                name: btn.data('name'),
+                email: btn.data('email'),
+                phone: btn.data('phone'),
+                avatar: btn.data('avatar'),
+                aadhaar: btn.data('aadhaar'),
+                pan: btn.data('pan'),
+                address: btn.data('address'),
+                nominee: btn.data('nominee-name') ? (btn.data('nominee-name') + ' (' + (btn.data('nominee-rel') || 'Nominee') + ')') : 'N/A',
+                upline: btn.data('upline'),
+                creditLimit: btn.data('credit-limit') || 5000,
+                kycStatus: btn.data('kyc-status'),
+                status: btn.data('status')
+            };
+            if (typeof openOnboardModal === 'function') {
+                openOnboardModal(user);
+            }
+        });
+
+        // Delegate Delete Click
+        $(document).on('click', '.js-delete', function(e){
             e.preventDefault();
+            e.stopPropagation();
             const id = $(this).data('id');
             
             Swal.fire({
                 title: 'Are you sure?',
-                text: "You won't be able to revert this! All user data including commissions and wallet will be lost.",
+                text: "All user data including commissions and wallet will be lost.",
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#d33',
@@ -246,19 +878,11 @@
                         method: 'POST',
                         data: { _method: 'DELETE', _token: '{{ csrf_token() }}' },
                         success(){ 
-                            Swal.fire(
-                                'Deleted!',
-                                'User has been deleted.',
-                                'success'
-                            );
-                            table.ajax.reload();
+                            Swal.fire('Deleted!', 'User has been deleted.', 'success');
+                            usersDataTable.ajax.reload();
                         },
                         error(){ 
-                            Swal.fire(
-                                'Error!',
-                                'Delete failed. This user might have active orders or dependencies.',
-                                'error'
-                            );
+                            Swal.fire('Error!', 'Delete failed. This user might have active orders or dependencies.', 'error');
                         }
                     });
                 }

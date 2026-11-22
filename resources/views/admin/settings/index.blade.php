@@ -192,6 +192,25 @@
 
                     <div class="mb-5.5">
                         <label class="mb-3 block text-sm font-medium text-black dark:text-white">
+                            Shop Initial Balance / Maximum System Credit Pool (₹)
+                        </label>
+                        <input type="number" step="1000" min="0" name="shop_initial_balance" value="{{ $settings['shop_initial_balance'] ?? 1000000 }}" placeholder="1000000" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
+                        <p class="text-xs text-gray-500 mt-1">Maximum allowable credit pool for the entire system/shop. Tracks credit out in the market, available credit balance, and overall shopping in the Admin Dashboard.</p>
+                    </div>
+
+                    <div class="mb-5.5">
+                        <label class="mb-3 block text-sm font-medium text-black dark:text-white">
+                            Enforce System Credit Pool Limit
+                        </label>
+                        <select name="enforce_shop_credit_pool_limit" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
+                            <option value="off" {{ ($settings['enforce_shop_credit_pool_limit'] ?? 'off') === 'off' ? 'selected' : '' }}>Monitoring Only (Do not block purchases when pool is exhausted)</option>
+                            <option value="on" {{ ($settings['enforce_shop_credit_pool_limit'] ?? 'off') === 'on' ? 'selected' : '' }}>Enforce Hard Limit (Block checkout when Credit in Market reaches Shop Initial Balance)</option>
+                        </select>
+                        <p class="text-xs text-gray-500 mt-1">When set to Enforce, users and admins cannot complete purchases on credit if the total utilized credit in the market reaches the Shop Initial Balance.</p>
+                    </div>
+
+                    <div class="mb-5.5">
+                        <label class="mb-3 block text-sm font-medium text-black dark:text-white">
                             Default User Credit Limit (₹)
                         </label>
                         <input type="number" step="100" min="0" name="default_credit_limit" value="{{ $settings['default_credit_limit'] ?? 5000 }}" placeholder="5000" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">

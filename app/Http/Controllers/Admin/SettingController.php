@@ -91,7 +91,7 @@ class SettingController extends Controller
         $data = $request->except(['_token', 'logo', 'logo_dark', 'logo_icon', 'auth_logo', 'fcm_service_account', 'payment_qr_code']);
         
         // Handle checkboxes that might be missing if unchecked
-        $checkboxes = ['enable_bv_commission', 'use_custom_qr', 'truecaller_login'];
+        $checkboxes = ['enable_bv_commission', 'use_custom_qr', 'truecaller_login', 'enforce_shop_credit_pool_limit'];
         foreach ($checkboxes as $cb) {
             if (!$request->has($cb)) {
                 $data[$cb] = 'off';
@@ -115,6 +115,8 @@ class SettingController extends Controller
             'currency' => 'INR',
             'min_withdrawal' => 500,
             'default_credit_limit' => 5000,
+            'shop_initial_balance' => 1000000,
+            'enforce_shop_credit_pool_limit' => 'off',
             'maintenance_mode' => 'off',
             'registration_enabled' => 'on',
             'enable_bv_commission' => 'on',
