@@ -110,83 +110,104 @@
         </div>
 
         <!-- Bottom Row: Compact Horizontal Khatabook Ledger Strip -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-2.5">
             <!-- 1. Total Udhar (Due) / You'll Get -->
             <div onclick="switchTab('creditor')" 
-                 class="cursor-pointer h-full flex flex-col justify-between p-2.5 sm:p-3 rounded-xl bg-red-50/70 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50 hover:bg-red-100/60 dark:hover:bg-red-950/50 transition-all group shadow-2xs">
-                <div class="flex items-start justify-between gap-1.5">
-                    <span class="text-xs font-bold text-red-700 dark:text-red-400 truncate" title="Total Udhar (Due)">Total Udhar (Due)</span>
-                    <div class="h-6 w-6 sm:h-7 sm:w-7 rounded-lg bg-red-500 text-white flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
-                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+                 class="cursor-pointer flex flex-col justify-between p-2 sm:p-2.5 rounded-xl bg-white dark:bg-gray-800 border border-red-200/90 dark:border-red-900/40 hover:border-red-300 dark:hover:border-red-800 hover:bg-red-50/30 dark:hover:bg-red-950/20 shadow-2xs hover:shadow-xs transition-all active:scale-[0.98]">
+                <!-- Top Row: Label & Tonal Icon -->
+                <div class="flex items-center justify-between gap-1">
+                    <span class="text-[10px] sm:text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider truncate" title="Total Udhar (Due)">
+                        Total Udhar (Due)
+                    </span>
+                    <div class="w-5 h-5 rounded-md bg-red-50 dark:bg-red-950/60 text-red-600 dark:text-red-400 flex items-center justify-center shrink-0">
+                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+                        </svg>
                     </div>
                 </div>
-                <div class="my-1 sm:my-1.5">
-                    <div class="text-sm sm:text-base md:text-lg font-black text-red-600 dark:text-red-400 truncate tracking-tight">
+
+                <!-- Bottom Row: Amount & Micro-Badge -->
+                <div class="flex items-baseline justify-between gap-1 mt-1">
+                    <span class="text-sm sm:text-base font-black text-red-600 dark:text-red-400 tracking-tight tabular-nums truncate">
                         {{ ($symbol ?? '₹') . number_format($khataSummary['total_credit_used'] ?? 0, 2) }}
-                    </div>
-                </div>
-                <div class="flex items-center">
-                    <span class="text-[9px] sm:text-[10px] bg-red-100 dark:bg-red-900/80 text-red-700 dark:text-red-300 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+                    </span>
+                    <span class="text-[9px] font-bold text-red-700 dark:text-red-300 bg-red-100/90 dark:bg-red-900/60 px-1.5 py-0.2 rounded-full shrink-0 whitespace-nowrap">
                         You'll Get ↙
                     </span>
                 </div>
             </div>
 
             <!-- 2. Available Credit Balance -->
-            <div class="h-full flex flex-col justify-between p-2.5 sm:p-3 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 shadow-2xs">
-                <div class="flex items-start justify-between gap-1.5">
-                    <span class="text-xs font-bold text-emerald-700 dark:text-emerald-400 truncate" title="Available Credit">Available Credit</span>
-                    <div class="h-6 w-6 sm:h-7 sm:w-7 rounded-lg bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-2xs">
-                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+            <div class="flex flex-col justify-between p-2 sm:p-2.5 rounded-xl bg-white dark:bg-gray-800 border border-emerald-200/90 dark:border-emerald-900/40 hover:border-emerald-300 dark:hover:border-emerald-800 hover:bg-emerald-50/30 dark:hover:bg-emerald-950/20 shadow-2xs hover:shadow-xs transition-all">
+                <!-- Top Row: Label & Tonal Icon -->
+                <div class="flex items-center justify-between gap-1">
+                    <span class="text-[10px] sm:text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider truncate" title="Available Credit">
+                        Available Credit
+                    </span>
+                    <div class="w-5 h-5 rounded-md bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
+                        </svg>
                     </div>
                 </div>
-                <div class="my-1 sm:my-1.5">
-                    <div class="text-sm sm:text-base md:text-lg font-black text-emerald-600 dark:text-emerald-400 truncate tracking-tight">
+
+                <!-- Bottom Row: Amount & Micro-Badge -->
+                <div class="flex items-baseline justify-between gap-1 mt-1">
+                    <span class="text-sm sm:text-base font-black text-emerald-600 dark:text-emerald-400 tracking-tight tabular-nums truncate">
                         {{ ($symbol ?? '₹') . number_format($khataSummary['total_available_credit'] ?? 0, 2) }}
-                    </div>
-                </div>
-                <div class="flex items-center">
-                    <span class="text-[9px] sm:text-[10px] bg-emerald-100 dark:bg-emerald-900/80 text-emerald-700 dark:text-emerald-300 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+                    </span>
+                    <span class="text-[9px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100/90 dark:bg-emerald-900/60 px-1.5 py-0.2 rounded-full shrink-0 whitespace-nowrap">
                         Limit Pool ↗
                     </span>
                 </div>
             </div>
 
             <!-- 3. Total Shopping Done -->
-            <div class="h-full flex flex-col justify-between p-2.5 sm:p-3 rounded-xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/50 shadow-2xs">
-                <div class="flex items-start justify-between gap-1.5">
-                    <span class="text-xs font-bold text-blue-700 dark:text-blue-400 truncate" title="Total Shopping Done">Total Shopping Done</span>
-                    <div class="h-6 w-6 sm:h-7 sm:w-7 rounded-lg bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
-                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+            <div class="flex flex-col justify-between p-2 sm:p-2.5 rounded-xl bg-white dark:bg-gray-800 border border-blue-200/90 dark:border-blue-900/40 hover:border-blue-300 dark:hover:border-blue-800 hover:bg-blue-50/30 dark:hover:bg-blue-950/20 shadow-2xs hover:shadow-xs transition-all">
+                <!-- Top Row: Label & Tonal Icon -->
+                <div class="flex items-center justify-between gap-1">
+                    <span class="text-[10px] sm:text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider truncate" title="Total Shopping Done">
+                        Total Shopping Done
+                    </span>
+                    <div class="w-5 h-5 rounded-md bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                        </svg>
                     </div>
                 </div>
-                <div class="my-1 sm:my-1.5">
-                    <div class="text-sm sm:text-base md:text-lg font-black text-blue-700 dark:text-blue-300 truncate tracking-tight">
+
+                <!-- Bottom Row: Amount & Micro-Badge -->
+                <div class="flex items-baseline justify-between gap-1 mt-1">
+                    <span class="text-sm sm:text-base font-black text-blue-700 dark:text-blue-300 tracking-tight tabular-nums truncate">
                         {{ ($symbol ?? '₹') . number_format($khataSummary['total_shopping_done'] ?? 0, 2) }}
-                    </div>
-                </div>
-                <div class="flex items-center">
-                    <span class="text-[9px] sm:text-[10px] bg-blue-100 dark:bg-blue-900/80 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+                    </span>
+                    <span class="text-[9px] font-bold text-blue-700 dark:text-blue-300 bg-blue-100/90 dark:bg-blue-900/60 px-1.5 py-0.2 rounded-full shrink-0 whitespace-nowrap">
                         Orders
                     </span>
                 </div>
             </div>
 
             <!-- 4. Overdue EMIs -->
-            <div class="h-full flex flex-col justify-between p-2.5 sm:p-3 rounded-xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 shadow-2xs">
-                <div class="flex items-start justify-between gap-1.5">
-                    <span class="text-xs font-bold text-amber-800 dark:text-amber-400 truncate" title="Overdue EMIs">Overdue EMIs</span>
-                    <div class="h-6 w-6 sm:h-7 sm:w-7 rounded-lg bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-2xs">
-                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <div onclick="switchTab('creditor')" 
+                 class="cursor-pointer flex flex-col justify-between p-2 sm:p-2.5 rounded-xl bg-white dark:bg-gray-800 border border-amber-200/90 dark:border-amber-900/40 hover:border-amber-300 dark:hover:border-amber-800 hover:bg-amber-50/30 dark:hover:bg-amber-950/20 shadow-2xs hover:shadow-xs transition-all active:scale-[0.98]">
+                <!-- Top Row: Label & Tonal Icon -->
+                <div class="flex items-center justify-between gap-1">
+                    <span class="text-[10px] sm:text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider truncate" title="Overdue EMIs">
+                        Overdue EMIs
+                    </span>
+                    <div class="w-5 h-5 rounded-md bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0">
+                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
                     </div>
                 </div>
-                <div class="my-1 sm:my-1.5">
-                    <div class="text-sm sm:text-base md:text-lg font-black text-amber-700 dark:text-amber-400 truncate tracking-tight">
+
+                <!-- Bottom Row: Amount & Micro-Badge -->
+                <div class="flex items-baseline justify-between gap-1 mt-1">
+                    <span class="text-sm sm:text-base font-black text-amber-700 dark:text-amber-400 tracking-tight tabular-nums truncate">
                         {{ ($symbol ?? '₹') . number_format($khataSummary['overdue_total'] ?? 0, 2) }}
-                    </div>
-                </div>
-                <div class="flex items-center">
-                    <span class="text-[9px] sm:text-[10px] bg-amber-100 dark:bg-amber-900/80 text-amber-800 dark:text-amber-300 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+                    </span>
+                    <span class="text-[9px] font-bold text-amber-800 dark:text-amber-300 bg-amber-100/90 dark:bg-amber-900/60 px-1.5 py-0.2 rounded-full shrink-0 whitespace-nowrap">
                         {{ $khataSummary['overdue_count'] ?? 0 }} Due
                     </span>
                 </div>

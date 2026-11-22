@@ -470,17 +470,17 @@ class UserController extends Controller
 
             // High-Performance Compact Mobile User Card HTML
             $mobileCardHtml = '
-<div class="user-mobile-card bg-white dark:bg-gray-800 rounded-xl border border-gray-200/90 dark:border-gray-700 shadow-2xs hover:shadow-xs transition-all duration-200 p-3 sm:p-3.5 space-y-2.5" data-user-id="'.$u->id.'">
+<div class="user-mobile-card bg-white dark:bg-gray-800 rounded-xl border border-gray-200/90 dark:border-gray-700 shadow-2xs hover:shadow-xs transition-all duration-200 p-2.5 sm:p-3 space-y-2" data-user-id="'.$u->id.'">
     <!-- Card Header: Avatar, Name, Phone & Khata Badge -->
     <div class="flex items-center justify-between gap-2">
-        <div class="flex items-center gap-2.5 min-w-0">
+        <div class="flex items-center gap-2 min-w-0">
             '.$avatarImg.'
             <div class="min-w-0">
                 <div class="font-bold text-xs sm:text-sm text-gray-900 dark:text-white truncate flex items-center gap-1.5">
                     <span class="truncate">'.e($u->name).'</span>
                     '.($u->role === 'admin' ? '<span class="text-[9px] px-1 py-0.2 rounded bg-purple-100 text-purple-700 dark:bg-purple-900/60 dark:text-purple-300 font-bold shrink-0">Admin</span>' : '').'
                 </div>
-                '.($u->phone ? '<a href="tel:'.e($u->phone).'" class="text-[11px] text-gray-500 dark:text-gray-400 font-mono flex items-center gap-1 hover:text-blue-600 dark:hover:text-blue-400 transition-colors mt-0.5"><svg class="w-3 h-3 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg><span>'.e($u->phone).'</span></a>' : '<div class="text-[10px] text-gray-400 mt-0.5">No phone</div>').'
+                '.($u->phone ? '<a href="tel:'.e($u->phone).'" class="text-[11px] text-gray-500 dark:text-gray-400 font-mono flex items-center gap-1 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"><svg class="w-2.5 h-2.5 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg><span>'.e($u->phone).'</span></a>' : '<div class="text-[10px] text-gray-400">No phone</div>').'
             </div>
         </div>
         <div class="shrink-0">
@@ -489,10 +489,10 @@ class UserController extends Controller
     </div>
 
     <!-- Symmetrical 2x2 Financial Metrics Strip -->
-    <div class="grid grid-cols-2 gap-2 p-2 rounded-lg bg-gray-50/90 dark:bg-gray-900/60 border border-gray-100 dark:border-gray-700/60 text-xs">
+    <div class="grid grid-cols-2 gap-1.5 p-1.5 sm:p-2 rounded-lg bg-gray-50/80 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-700/60 text-xs">
         <!-- Metric 1: Khata Due (Udhar) -->
         <div class="flex flex-col min-w-0">
-            <span class="text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider truncate">Khata Due (Udhar)</span>
+            <span class="text-[9px] sm:text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider truncate">Khata Due (Udhar)</span>
             <div class="mt-0.5 flex items-baseline gap-1 flex-wrap">
                 <span class="font-extrabold text-xs sm:text-sm '.($usedCredit > 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-500 dark:text-gray-400').'">Rs.'.number_format($usedCredit, 2).'</span>
                 '.($usedCredit > 0 ? '<span class="text-[9px] bg-red-100 dark:bg-red-900/80 text-red-700 dark:text-red-300 px-1 py-0.2 rounded font-bold">You\'ll Get</span>' : '').'
@@ -501,7 +501,7 @@ class UserController extends Controller
 
         <!-- Metric 2: Credit Available / Limit -->
         <div class="flex flex-col min-w-0">
-            <span class="text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider truncate">Credit Balance</span>
+            <span class="text-[9px] sm:text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider truncate">Credit Balance</span>
             <div class="mt-0.5 flex items-baseline gap-1 flex-wrap">
                 <span class="font-bold text-xs sm:text-sm text-emerald-600 dark:text-emerald-400">Rs.'.number_format($availableCredit, 2).'</span>
                 <span class="text-[10px] text-gray-400 truncate">('.number_format($creditLimit, 0).' max)</span>
@@ -510,30 +510,30 @@ class UserController extends Controller
 
         <!-- Metric 3: Wallet Balance -->
         <div class="flex flex-col min-w-0">
-            <span class="text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider truncate">Main Wallet</span>
+            <span class="text-[9px] sm:text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider truncate">Main Wallet</span>
             <span class="font-bold text-xs text-gray-800 dark:text-gray-200 mt-0.5">Rs.'.number_format($mainBalance, 2).'</span>
         </div>
 
         <!-- Metric 4: Shopping Done -->
         <div class="flex flex-col min-w-0">
-            <span class="text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider truncate">Shop Done</span>
+            <span class="text-[9px] sm:text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider truncate">Shop Done</span>
             <span class="font-bold text-xs text-blue-600 dark:text-blue-400 mt-0.5">Rs.'.number_format($totalShopping, 2).'</span>
         </div>
     </div>
 
     <!-- Action Bar: Direct Khata + Details Accordion -->
-    <div class="flex items-center justify-between gap-2 pt-1 border-t border-gray-100 dark:border-gray-700/60">
-        <a href="'.route('admin.customer-lookup.index', ['user_id' => $u->id]).'" class="flex-1 py-1.5 px-3 rounded-lg bg-[#1555a8] hover:bg-[#12468d] text-white text-xs font-bold text-center flex items-center justify-center gap-1.5 shadow-2xs transition-colors">
+    <div class="flex items-center justify-between gap-1.5 pt-0.5">
+        <a href="'.route('admin.customer-lookup.index', ['user_id' => $u->id]).'" class="flex-1 py-1.5 px-2.5 rounded-lg bg-[#1555a8] hover:bg-[#12468d] text-white text-xs font-bold text-center flex items-center justify-center gap-1.5 shadow-2xs transition-colors">
             <span>📖 Open Khata</span>
         </a>
-        <button type="button" class="js-toggle-card-drawer py-1.5 px-3 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-xs font-semibold flex items-center gap-1 transition-colors">
+        <button type="button" class="js-toggle-card-drawer py-1.5 px-2.5 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-xs font-semibold flex items-center gap-1 transition-colors">
             <span>Details</span>
             <svg class="w-3.5 h-3.5 transform transition-transform duration-200 card-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
         </button>
     </div>
 
     <!-- Collapsible Drawer Inside Card -->
-    <div class="card-child-drawer hidden pt-2 space-y-2.5 border-t border-gray-100 dark:border-gray-700/60">
+    <div class="card-child-drawer hidden pt-2 space-y-2 border-t border-gray-100 dark:border-gray-700/60">
         '.$childDrawerHtml.'
     </div>
 </div>';
