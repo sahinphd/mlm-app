@@ -65,15 +65,7 @@
             background-color: #111827 !important;
         }
 
-        /* Floating Widget Box */
-        #google_translate_wrapper {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 9999;
-            border-radius: 6px;
-            padding: 4px;
-        }
+
     </style>
 
     @stack('styles')
@@ -121,25 +113,8 @@
 <!-- ===== Page Wrapper End ===== -->
 
 
-<!-- ===== Google Translate Widget ===== -->
-<div id="google_translate_wrapper" class="bg-white dark:bg-gray-800 shadow-lg border dark:border-gray-700 z-[9999] fixed bottom-5 right-5 rounded-lg p-2">
-    <div id="google_translate_element"></div>
-</div>
-
-
-<!-- ===== Scripts ===== -->
-<script>
-    function googleTranslateElementInit() {
-        new google.translate.TranslateElement({
-            pageLanguage: 'en',
-            includedLanguages: 'en,bn,hi',
-            autoDisplay: false
-        }, 'google_translate_element');
-    }
-</script>
-
-<!-- IMPORTANT: Always HTTPS -->
-<script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+<!-- ===== Floating Language Drawer ===== -->
+@include('partials.language_drawer')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     window.confirmSubmit = function(event, title, text) {

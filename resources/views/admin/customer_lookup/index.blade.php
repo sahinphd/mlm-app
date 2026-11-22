@@ -160,8 +160,8 @@
         <div class="bg-[#1555a8] px-4 py-3 text-white flex items-center justify-between">
             <div class="flex items-center gap-3 min-w-0">
                 <!-- Back / Clear Customer Button -->
-                <button @click="clearCustomer()" 
-                        title="Search another customer"
+                <button @click="if (window.history.length > 1 && (document.referrer.includes('/admin/users') || window.location.search.includes('user_id='))) { window.location.href = '{{ route('admin.users') }}'; } else { clearCustomer(); }" 
+                        title="Go back to users directory"
                         class="p-1 text-white hover:text-white/80 active:scale-95 transition">
                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18" />

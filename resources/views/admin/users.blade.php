@@ -1,32 +1,37 @@
 @extends('admin.layout')
 
 @section('content')
-<div class="container mx-auto p-3 sm:p-4 space-y-3 sm:space-y-4">
-    <!-- Top Header & Action Buttons -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-            <h1 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                <span>User Directory &amp; Khatabook Report</span>
+<div class="space-y-2 sm:space-y-3">
+    <!-- Top Header & Action Buttons (Compact Mobile App Bar) -->
+    <div class="flex items-center justify-between gap-2">
+        <div class="min-w-0">
+            <h1 class="text-base sm:text-xl font-bold text-gray-900 dark:text-white flex items-center gap-1.5 truncate">
+                <span>Users &amp; Khata</span>
+                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300 shrink-0">
+                    <span class="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    {{ number_format($khataSummary['total_users'] ?? 0) }}
+                </span>
             </h1>
-            <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+            <p class="hidden sm:block text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">
                 Real-time ledger overview of customer accounts, active creditors, and cash non-creditors.
             </p>
         </div>
-        <div class="grid grid-cols-2 sm:flex sm:items-center gap-2 w-full sm:w-auto">
+        <div class="flex items-center gap-1.5 shrink-0">
             <a href="{{ route('admin.customer-lookup.index') }}" 
-               class="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-[#1555a8] hover:bg-[#12468d] text-white text-xs sm:text-sm font-semibold rounded-xl shadow-2xs hover:shadow transition-all">
-                <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+               class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-[#1555a8] hover:bg-[#12468d] text-white text-[11px] sm:text-xs font-semibold rounded-lg shadow-2xs hover:shadow transition-all">
+                <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
                 </svg>
-                <span>Single-Screen Khata</span>
+                <span class="hidden xs:inline">Single Khata</span>
+                <span class="xs:hidden">Khata</span>
             </a>
 
             <a href="{{ route('admin.users.create') }}" 
-               class="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-semibold rounded-xl shadow-2xs hover:shadow transition-all">
-                <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+               class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] sm:text-xs font-semibold rounded-lg shadow-2xs hover:shadow transition-all">
+                <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                 </svg>
-                <span>Create New User</span>
+                <span>+ User</span>
             </a>
         </div>
     </div>
@@ -47,262 +52,197 @@
     @endif
 
     <!-- ======================================================== -->
-    <!-- KHATABOOK COMPACT TOP SUMMARY & SLIDING TOGGLE BAR -->
+    <!-- KHATABOOK COMPACT SPLIT LEDGER SUMMARY -->
     <!-- ======================================================== -->
-    <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-xs p-3 sm:p-4 space-y-3">
-        <!-- Top Row: Sliding Tab Switcher & Active State -->
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 border-b border-gray-100 dark:border-gray-700/80 pb-3">
-            <div class="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
-                <!-- Segmented Sliding Switcher (Screen Sliding Glider) -->
-                <div class="relative bg-gray-100 dark:bg-gray-900 p-1 rounded-xl flex items-center shadow-inner border border-gray-200/80 dark:border-gray-700 w-full sm:w-auto overflow-hidden" id="sliderNavContainer">
-                    <!-- Sliding Glider Pill -->
-                    <div id="slidingGlider" 
-                         class="absolute top-1 bottom-1 rounded-lg bg-white dark:bg-[#1555a8] shadow-sm transition-all duration-300 ease-out pointer-events-none"
-                         style="left: 4px; width: 32%;"></div>
-
-                    <!-- Tab 1: All Users -->
-                    <button type="button" 
-                            id="tabBtnAll" 
-                            onclick="switchTab('all')" 
-                            class="tab-btn flex-1 sm:flex-initial relative z-10 px-2.5 sm:px-3.5 py-1.5 text-[11px] sm:text-xs font-bold rounded-lg transition-colors duration-200 text-[#1555a8] dark:text-white flex items-center justify-center gap-1 sm:gap-1.5 whitespace-nowrap">
-                        <span>All Users</span>
-                        <span class="text-[10px] sm:text-[11px] px-1.5 py-0.2 rounded-full bg-blue-100 dark:bg-blue-900/60 text-[#1555a8] dark:text-blue-200 font-semibold">
-                            {{ number_format($khataSummary['total_users'] ?? 0) }}
-                        </span>
-                    </button>
-
-                    <!-- Tab 2: Creditors -->
-                    <button type="button" 
-                            id="tabBtnCreditor" 
-                            onclick="switchTab('creditor')" 
-                            class="tab-btn flex-1 sm:flex-initial relative z-10 px-2.5 sm:px-3.5 py-1.5 text-[11px] sm:text-xs font-bold rounded-lg transition-colors duration-200 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white flex items-center justify-center gap-1 sm:gap-1.5 whitespace-nowrap">
-                        <span>Creditors</span>
-                        <span class="text-[10px] sm:text-[11px] px-1.5 py-0.2 rounded-full bg-orange-100 dark:bg-orange-900/60 text-orange-800 dark:text-orange-200 font-semibold">
-                            {{ number_format($khataSummary['creditors_count'] ?? 0) }}
-                        </span>
-                    </button>
-
-                    <!-- Tab 3: Non-Creditors -->
-                    <button type="button" 
-                            id="tabBtnNonCreditor" 
-                            onclick="switchTab('non_creditor')" 
-                            class="tab-btn flex-1 sm:flex-initial relative z-10 px-2.5 sm:px-3.5 py-1.5 text-[11px] sm:text-xs font-bold rounded-lg transition-colors duration-200 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white flex items-center justify-center gap-1 sm:gap-1.5 whitespace-nowrap">
-                        <span>Non-Creditors</span>
-                        <span class="text-[10px] sm:text-[11px] px-1.5 py-0.2 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold">
-                            {{ number_format($khataSummary['non_creditors_count'] ?? 0) }}
-                        </span>
-                    </button>
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-2xs overflow-hidden">
+        <!-- 2-Column Primary Split Ledger -->
+        <div class="grid grid-cols-2 divide-x divide-gray-100 dark:divide-gray-700/80">
+            <!-- 1. Total Udhar (Due) / You'll Get -->
+            <div onclick="switchTab('creditor')" 
+                 class="cursor-pointer p-2 sm:p-2.5 bg-red-50/30 dark:bg-red-950/20 hover:bg-red-50/60 dark:hover:bg-red-950/40 transition-all flex flex-col justify-between active:scale-[0.99]">
+                <div class="flex items-center justify-between text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <span class="flex items-center gap-1 truncate">
+                        <span class="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0"></span>
+                        <span class="truncate">Udhar (You'll Get)</span>
+                    </span>
+                    <span class="text-red-500 font-bold shrink-0">↓</span>
                 </div>
-
-                <div class="hidden md:flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
-                    <span class="font-semibold text-gray-800 dark:text-gray-200" id="activeFilterHeading">Showing All Customers</span>
-                    <span class="text-[11px] text-gray-400">(Swipe screen or click tabs)</span>
+                <div class="mt-0.5 flex items-baseline justify-between gap-1">
+                    <span class="text-sm sm:text-base font-black text-red-600 dark:text-red-400 tracking-tight tabular-nums">
+                        {{ ($symbol ?? '₹') . number_format($khataSummary['total_credit_used'] ?? 0, 2) }}
+                    </span>
+                    <span class="text-[9px] font-bold text-red-600 dark:text-red-300 bg-red-100 dark:bg-red-900/60 px-1 py-0.2 rounded shrink-0">
+                        Due
+                    </span>
                 </div>
             </div>
 
-            <div class="flex items-center justify-between sm:justify-end gap-2 text-xs text-gray-500 dark:text-gray-400">
-                <span class="md:hidden text-[11px] text-gray-400" id="mobileFilterHeading">Showing All Customers</span>
-                <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-gray-100 dark:bg-gray-900 rounded-lg text-[11px] font-medium shrink-0">
-                    <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <span>Live Khata Sync</span>
-                </span>
+            <!-- 2. Available Credit Limit -->
+            <div class="p-2 sm:p-2.5 bg-emerald-50/30 dark:bg-emerald-950/20 hover:bg-emerald-50/60 dark:hover:bg-emerald-950/40 transition-all flex flex-col justify-between">
+                <div class="flex items-center justify-between text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <span class="flex items-center gap-1 truncate">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+                        <span class="truncate">Credit Available</span>
+                    </span>
+                    <span class="text-emerald-500 font-bold shrink-0">↑</span>
+                </div>
+                <div class="mt-0.5 flex items-baseline justify-between gap-1">
+                    <span class="text-sm sm:text-base font-black text-emerald-600 dark:text-emerald-400 tracking-tight tabular-nums">
+                        {{ ($symbol ?? '₹') . number_format($khataSummary['total_available_credit'] ?? 0, 2) }}
+                    </span>
+                    <span class="text-[9px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-900/60 px-1 py-0.2 rounded shrink-0">
+                        Pool
+                    </span>
+                </div>
             </div>
         </div>
 
-        <!-- Bottom Row: Compact Horizontal Khatabook Ledger Strip -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-2.5">
-            <!-- 1. Total Udhar (Due) / You'll Get -->
-            <div onclick="switchTab('creditor')" 
-                 class="cursor-pointer flex flex-col justify-between p-2 sm:p-2.5 rounded-xl bg-white dark:bg-gray-800 border border-red-200/90 dark:border-red-900/40 hover:border-red-300 dark:hover:border-red-800 hover:bg-red-50/30 dark:hover:bg-red-950/20 shadow-2xs hover:shadow-xs transition-all active:scale-[0.98]">
-                <!-- Top Row: Label & Tonal Icon -->
-                <div class="flex items-center justify-between gap-1">
-                    <span class="text-[10px] sm:text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider truncate" title="Total Udhar (Due)">
-                        Total Udhar (Due)
-                    </span>
-                    <div class="w-5 h-5 rounded-md bg-red-50 dark:bg-red-950/60 text-red-600 dark:text-red-400 flex items-center justify-center shrink-0">
-                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
-                        </svg>
-                    </div>
-                </div>
-
-                <!-- Bottom Row: Amount & Micro-Badge -->
-                <div class="flex items-baseline justify-between gap-1 mt-1">
-                    <span class="text-sm sm:text-base font-black text-red-600 dark:text-red-400 tracking-tight tabular-nums truncate">
-                        {{ ($symbol ?? '₹') . number_format($khataSummary['total_credit_used'] ?? 0, 2) }}
-                    </span>
-                    <span class="text-[9px] font-bold text-red-700 dark:text-red-300 bg-red-100/90 dark:bg-red-900/60 px-1.5 py-0.2 rounded-full shrink-0 whitespace-nowrap">
-                        You'll Get ↙
-                    </span>
-                </div>
+        <!-- Bottom Micro Strip: Total Shopping & Overdue EMIs -->
+        <div class="px-2.5 py-1.5 bg-gray-50/90 dark:bg-gray-900/70 border-t border-gray-100 dark:border-gray-700/80 flex items-center justify-between text-[11px] text-gray-500 dark:text-gray-400">
+            <div class="flex items-center gap-1 truncate">
+                <span class="text-gray-400">Shop Done:</span>
+                <span class="font-bold text-blue-700 dark:text-blue-300 tabular-nums">
+                    {{ ($symbol ?? '₹') . number_format($khataSummary['total_shopping_done'] ?? 0, 2) }}
+                </span>
             </div>
-
-            <!-- 2. Available Credit Balance -->
-            <div class="flex flex-col justify-between p-2 sm:p-2.5 rounded-xl bg-white dark:bg-gray-800 border border-emerald-200/90 dark:border-emerald-900/40 hover:border-emerald-300 dark:hover:border-emerald-800 hover:bg-emerald-50/30 dark:hover:bg-emerald-950/20 shadow-2xs hover:shadow-xs transition-all">
-                <!-- Top Row: Label & Tonal Icon -->
-                <div class="flex items-center justify-between gap-1">
-                    <span class="text-[10px] sm:text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider truncate" title="Available Credit">
-                        Available Credit
-                    </span>
-                    <div class="w-5 h-5 rounded-md bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
-                        </svg>
-                    </div>
-                </div>
-
-                <!-- Bottom Row: Amount & Micro-Badge -->
-                <div class="flex items-baseline justify-between gap-1 mt-1">
-                    <span class="text-sm sm:text-base font-black text-emerald-600 dark:text-emerald-400 tracking-tight tabular-nums truncate">
-                        {{ ($symbol ?? '₹') . number_format($khataSummary['total_available_credit'] ?? 0, 2) }}
-                    </span>
-                    <span class="text-[9px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100/90 dark:bg-emerald-900/60 px-1.5 py-0.2 rounded-full shrink-0 whitespace-nowrap">
-                        Limit Pool ↗
-                    </span>
-                </div>
-            </div>
-
-            <!-- 3. Total Shopping Done -->
-            <div class="flex flex-col justify-between p-2 sm:p-2.5 rounded-xl bg-white dark:bg-gray-800 border border-blue-200/90 dark:border-blue-900/40 hover:border-blue-300 dark:hover:border-blue-800 hover:bg-blue-50/30 dark:hover:bg-blue-950/20 shadow-2xs hover:shadow-xs transition-all">
-                <!-- Top Row: Label & Tonal Icon -->
-                <div class="flex items-center justify-between gap-1">
-                    <span class="text-[10px] sm:text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider truncate" title="Total Shopping Done">
-                        Total Shopping Done
-                    </span>
-                    <div class="w-5 h-5 rounded-md bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
-                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
-                        </svg>
-                    </div>
-                </div>
-
-                <!-- Bottom Row: Amount & Micro-Badge -->
-                <div class="flex items-baseline justify-between gap-1 mt-1">
-                    <span class="text-sm sm:text-base font-black text-blue-700 dark:text-blue-300 tracking-tight tabular-nums truncate">
-                        {{ ($symbol ?? '₹') . number_format($khataSummary['total_shopping_done'] ?? 0, 2) }}
-                    </span>
-                    <span class="text-[9px] font-bold text-blue-700 dark:text-blue-300 bg-blue-100/90 dark:bg-blue-900/60 px-1.5 py-0.2 rounded-full shrink-0 whitespace-nowrap">
-                        Orders
-                    </span>
-                </div>
-            </div>
-
-            <!-- 4. Overdue EMIs -->
-            <div onclick="switchTab('creditor')" 
-                 class="cursor-pointer flex flex-col justify-between p-2 sm:p-2.5 rounded-xl bg-white dark:bg-gray-800 border border-amber-200/90 dark:border-amber-900/40 hover:border-amber-300 dark:hover:border-amber-800 hover:bg-amber-50/30 dark:hover:bg-amber-950/20 shadow-2xs hover:shadow-xs transition-all active:scale-[0.98]">
-                <!-- Top Row: Label & Tonal Icon -->
-                <div class="flex items-center justify-between gap-1">
-                    <span class="text-[10px] sm:text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider truncate" title="Overdue EMIs">
-                        Overdue EMIs
-                    </span>
-                    <div class="w-5 h-5 rounded-md bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0">
-                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                    </div>
-                </div>
-
-                <!-- Bottom Row: Amount & Micro-Badge -->
-                <div class="flex items-baseline justify-between gap-1 mt-1">
-                    <span class="text-sm sm:text-base font-black text-amber-700 dark:text-amber-400 tracking-tight tabular-nums truncate">
-                        {{ ($symbol ?? '₹') . number_format($khataSummary['overdue_total'] ?? 0, 2) }}
-                    </span>
-                    <span class="text-[9px] font-bold text-amber-800 dark:text-amber-300 bg-amber-100/90 dark:bg-amber-900/60 px-1.5 py-0.2 rounded-full shrink-0 whitespace-nowrap">
-                        {{ $khataSummary['overdue_count'] ?? 0 }} Due
-                    </span>
-                </div>
+            <div class="flex items-center gap-1 cursor-pointer shrink-0" onclick="switchTab('creditor')">
+                <span class="text-gray-400">Overdue:</span>
+                <span class="font-bold {{ ($khataSummary['overdue_total'] ?? 0) > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-gray-600 dark:text-gray-300' }} tabular-nums">
+                    {{ ($symbol ?? '₹') . number_format($khataSummary['overdue_total'] ?? 0, 2) }}
+                </span>
+                <span class="text-[9px] font-bold px-1 py-0.2 rounded {{ ($khataSummary['overdue_count'] ?? 0) > 0 ? 'bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-200' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300' }}">
+                    {{ $khataSummary['overdue_count'] ?? 0 }} Due
+                </span>
             </div>
         </div>
     </div>
 
     <!-- ======================================================== -->
-    <!-- COMPACT CUSTOMER VIEW WRAPPER (TABLE & CARDS) -->
+    <!-- UNIFIED CUSTOMER CONTROLS & DIRECTORY WRAPPER -->
     <!-- ======================================================== -->
-    <div id="slidingTableWrapper" class="relative overflow-hidden transition-all duration-300 space-y-3">
-        <!-- View Toolbar: View Mode Toggle (Cards vs Table) & Live Search -->
-        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xs border border-gray-200 dark:border-gray-700 p-3 sm:p-4">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 pb-3 border-b border-gray-100 dark:border-gray-700/80">
-                <div class="flex items-center justify-between sm:justify-start gap-2">
-                    <!-- View Mode Switcher -->
-                    <div class="inline-flex items-center p-1 rounded-xl bg-gray-100 dark:bg-gray-900 border border-gray-200/80 dark:border-gray-700 shadow-inner">
-                        <button type="button" 
-                                id="btnViewCards" 
-                                onclick="setUserViewMode('cards')" 
-                                class="px-2.5 sm:px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
-                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                            </svg>
-                            <span>Cards View</span>
-                        </button>
-                        <button type="button" 
-                                id="btnViewTable" 
-                                onclick="setUserViewMode('table')" 
-                                class="px-2.5 sm:px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
-                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                            <span>Table View</span>
-                        </button>
-                    </div>
+    <div id="slidingTableWrapper" class="relative overflow-hidden transition-all duration-300">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xs border border-gray-200 dark:border-gray-700 p-2 sm:p-3 space-y-2">
+            <!-- Row 1: Segmented Sliding Glider Tabs -->
+            <div class="relative bg-gray-100 dark:bg-gray-900 p-0.5 rounded-lg flex items-center shadow-inner border border-gray-200/80 dark:border-gray-700 overflow-hidden" id="sliderNavContainer">
+                <!-- Glider Pill -->
+                <div id="slidingGlider" 
+                     class="absolute top-0.5 bottom-0.5 rounded-md bg-white dark:bg-[#1555a8] shadow-xs transition-all duration-300 ease-out pointer-events-none"
+                     style="left: 2px; width: 33.3%;"></div>
 
-                    <div class="hidden sm:flex items-center gap-2">
-                        <select id="customPageLength" onchange="onPageLengthChange(this.value)" class="text-xs bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 text-gray-700 dark:text-gray-300">
-                            <option value="10">10 / page</option>
-                            <option value="25" selected>25 / page</option>
-                            <option value="50">50 / page</option>
-                            <option value="100">100 / page</option>
-                        </select>
-                    </div>
-                </div>
+                <!-- Tab 1: All Users -->
+                <button type="button" 
+                        id="tabBtnAll" 
+                        onclick="switchTab('all')" 
+                        class="tab-btn flex-1 relative z-10 py-1 sm:py-1.5 text-xs font-bold rounded-md transition-colors text-[#1555a8] dark:text-white flex items-center justify-center gap-1">
+                    <span>All</span>
+                    <span class="text-[10px] px-1 py-0.2 rounded-full bg-blue-100 dark:bg-blue-900/60 text-[#1555a8] dark:text-blue-200 font-semibold tabular-nums">
+                        {{ number_format($khataSummary['total_users'] ?? 0) }}
+                    </span>
+                </button>
 
-                <!-- Custom Quick Search Bar -->
-                <div class="relative flex-1 sm:max-w-xs">
-                    <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <!-- Tab 2: Creditors -->
+                <button type="button" 
+                        id="tabBtnCreditor" 
+                        onclick="switchTab('creditor')" 
+                        class="tab-btn flex-1 relative z-10 py-1 sm:py-1.5 text-xs font-bold rounded-md transition-colors text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white flex items-center justify-center gap-1">
+                    <span>Creditors</span>
+                    <span class="text-[10px] px-1 py-0.2 rounded-full bg-orange-100 dark:bg-orange-900/60 text-orange-800 dark:text-orange-200 font-semibold tabular-nums">
+                        {{ number_format($khataSummary['creditors_count'] ?? 0) }}
+                    </span>
+                </button>
+
+                <!-- Tab 3: Non-Creditors / Cash -->
+                <button type="button" 
+                        id="tabBtnNonCreditor" 
+                        onclick="switchTab('non_creditor')" 
+                        class="tab-btn flex-1 relative z-10 py-1 sm:py-1.5 text-xs font-bold rounded-md transition-colors text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white flex items-center justify-center gap-1">
+                    <span>Cash</span>
+                    <span class="text-[10px] px-1 py-0.2 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold tabular-nums">
+                        {{ number_format($khataSummary['non_creditors_count'] ?? 0) }}
+                    </span>
+                </button>
+            </div>
+
+            <!-- Row 2: Search Input & View Mode Toggle (In ONE row) -->
+            <div class="flex items-center gap-1.5">
+                <div class="relative flex-1">
+                    <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5 text-gray-400">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
                     </div>
                     <input type="text" 
                            id="customUserSearchInput" 
-                           placeholder="Search customer, mobile, email..." 
+                           placeholder="Search name, phone, email..." 
                            autocomplete="off"
-                           class="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/80 dark:bg-gray-900 py-1.5 pl-9 pr-8 text-xs text-gray-900 dark:text-white outline-none focus:border-[#1555a8] focus:bg-white dark:focus:bg-gray-900 transition-all">
+                           class="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50/90 dark:bg-gray-900 py-1.5 pl-8 pr-7 text-xs text-gray-900 dark:text-white outline-none focus:border-[#1555a8] focus:bg-white dark:focus:bg-gray-900 transition-all">
                     <button type="button" 
                             id="clearSearchBtn" 
                             onclick="clearUserSearch()"
-                            class="hidden absolute inset-y-0 right-0 pr-2.5 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                            class="hidden absolute inset-y-0 right-0 pr-2 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
                         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
                 </div>
+
+                <!-- View Mode Toggle Buttons -->
+                <div class="inline-flex items-center p-0.5 rounded-lg bg-gray-100 dark:bg-gray-900 border border-gray-200/80 dark:border-gray-700 shrink-0">
+                    <button type="button" 
+                            id="btnViewCards" 
+                            onclick="setUserViewMode('cards')" 
+                            title="Cards View"
+                            class="p-1.5 sm:px-2.5 sm:py-1 text-xs font-semibold rounded-md transition-all flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                        </svg>
+                        <span class="hidden sm:inline">Cards</span>
+                    </button>
+                    <button type="button" 
+                            id="btnViewTable" 
+                            onclick="setUserViewMode('table')" 
+                            title="Table View"
+                            class="p-1.5 sm:px-2.5 sm:py-1 text-xs font-semibold rounded-md transition-all flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span class="hidden sm:inline">Table</span>
+                    </button>
+                </div>
+
+                <select id="customPageLength" onchange="onPageLengthChange(this.value)" class="hidden sm:block text-xs bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 text-gray-700 dark:text-gray-300">
+                    <option value="10">10</option>
+                    <option value="25" selected>25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
             </div>
 
-            <!-- VIEW 1: COMPACT CARDS VIEW (DEFAULT ON MOBILE) -->
-            <div id="mobileCardsViewWrapper" class="pt-3">
-                <div id="mobileCardsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3 transition-transform duration-300 ease-out">
+            <!-- VIEW 1: COMPACT HIGH-DENSITY CARDS (DEFAULT ON MOBILE) -->
+            <div id="mobileCardsViewWrapper" class="pt-1">
+                <div id="mobileCardsContainer" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2 sm:gap-2.5 transition-transform duration-300 ease-out">
                     <!-- Populated dynamically via DataTables drawCallback -->
                 </div>
-                <div id="cardsEmptyState" class="hidden p-8 text-center text-xs text-gray-500 bg-gray-50/60 dark:bg-gray-900/40 rounded-xl border border-gray-200 dark:border-gray-700">
+                <div id="cardsEmptyState" class="hidden p-6 text-center text-xs text-gray-500 bg-gray-50/60 dark:bg-gray-900/40 rounded-xl border border-gray-200 dark:border-gray-700">
                     No customers found matching current filters.
                 </div>
             </div>
 
             <!-- VIEW 2: COMPACT TABLE VIEW (WITH HORIZONTAL SCROLL) -->
-            <div id="tableViewWrapper" class="hidden pt-3">
+            <div id="tableViewWrapper" class="hidden pt-1">
                 <div id="slidingTableContainer" class="max-w-full overflow-x-auto rounded-xl border border-gray-100 dark:border-gray-700/80 shadow-2xs transition-transform duration-300 ease-out">
                     <table id="usersTable" class="min-w-full divide-y divide-gray-100 dark:divide-gray-700 border-collapse text-left" style="width:100%">
                         <thead>
-                            <tr class="bg-gray-50/80 dark:bg-meta-4 text-[11px] sm:text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                <th class="w-8 px-2 py-2.5 text-center"></th>
-                                <th class="w-10 px-2 py-2.5 text-center">Avatar</th>
-                                <th class="px-2.5 py-2.5 text-left min-w-[140px]">Customer / Mobile</th>
-                                <th class="px-2.5 py-2.5 text-center whitespace-nowrap">Khata Type</th>
-                                <th class="px-2.5 py-2.5 text-right whitespace-nowrap">Khata Due (Udhar)</th>
-                                <th class="px-2.5 py-2.5 text-right whitespace-nowrap">Credit Balance</th>
-                                <th class="px-2.5 py-2.5 text-right whitespace-nowrap">Main Balance</th>
-                                <th class="px-2.5 py-2.5 text-right whitespace-nowrap">Shop Done</th>
-                                <th class="px-2.5 py-2.5 text-right whitespace-nowrap">Actions</th>
+                            <tr class="bg-gray-50/80 dark:bg-meta-4 text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                <th class="w-6 px-1.5 py-1.5 text-center"></th>
+                                <th class="w-8 px-1 py-1.5 text-center">Avatar</th>
+                                <th class="px-2 py-1.5 text-left min-w-[130px]">Customer / Mobile</th>
+                                <th class="px-2 py-1.5 text-center whitespace-nowrap">Khata Type</th>
+                                <th class="px-2 py-1.5 text-right whitespace-nowrap">Khata Due (Udhar)</th>
+                                <th class="px-2 py-1.5 text-right whitespace-nowrap">Credit Balance</th>
+                                <th class="px-2 py-1.5 text-right whitespace-nowrap">Main Balance</th>
+                                <th class="px-2 py-1.5 text-right whitespace-nowrap">Shop Done</th>
+                                <th class="px-2 py-1.5 text-right whitespace-nowrap">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100 dark:divide-gray-700/60 text-xs">
@@ -312,7 +252,7 @@
             </div>
 
             <!-- Unified Bottom Pagination & Info Bar (Synchronized for Both Views) -->
-            <div id="unifiedPaginationBar" class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 pt-3 mt-3 border-t border-gray-100 dark:border-gray-700/80 text-xs text-gray-500">
+            <div id="unifiedPaginationBar" class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pt-2 border-t border-gray-100 dark:border-gray-700/80 text-xs text-gray-500">
                 <div id="customTableInfo" class="text-center sm:text-left text-[11px] sm:text-xs text-gray-500 dark:text-gray-400">
                     <!-- Populated dynamically via DataTables -->
                 </div>
@@ -352,12 +292,17 @@
     }
     #usersTable {
         width: 100% !important;
-        font-size: 0.8125rem;
+        font-size: 0.75rem;
+    }
+    #usersTable th {
+        padding: 0.35rem 0.5rem !important;
+        font-size: 0.6875rem !important;
     }
     #usersTable td {
         overflow: visible !important;
         vertical-align: middle;
-        padding: 0.5rem 0.625rem;
+        padding: 0.25rem 0.5rem !important;
+        line-height: 1.25;
     }
     #usersTable tbody tr {
         cursor: pointer;
@@ -909,9 +854,28 @@
                 }
             });
         });
+        // Intercept customer-lookup clicks to open React/SPA-style AJAX Khata sheet
+        $(document).on('click', 'a[href*="customer-lookup"]', function(e) {
+            const href = $(this).attr('href');
+            if (!href) return;
+            try {
+                if (href.includes('user_id=')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const url = new URL(href, window.location.origin);
+                    const userId = url.searchParams.get('user_id');
+                    if (userId) {
+                        openKhataModal(userId);
+                    }
+                }
+            } catch(err) {
+                console.error(err);
+            }
+        });
     });
 </script>
 
 @include('admin.partials.onboard_modal')
+@include('admin.partials.khata_modal')
 
 @endsection

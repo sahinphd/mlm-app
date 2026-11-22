@@ -74,7 +74,7 @@
 
         <!-- ===== Main Content Start ===== -->
         <main>
-          <div class="p-4 mx-auto max-w-screen-2xl md:p-6">
+          <div class="p-2 sm:p-4 mx-auto max-w-screen-2xl md:p-6">
             @yield('content')
           </div>
         </main>
@@ -84,21 +84,8 @@
     </div>
     <!-- ===== Page Wrapper End ===== -->
 
-    <!-- ===== Google Translate Widget ===== -->
-    <div id="google_translate_wrapper" class="bg-white dark:bg-gray-800 shadow-lg border dark:border-gray-700 z-[9999] fixed bottom-5 right-5 rounded-lg p-1">
-        <div id="google_translate_element"></div>
-    </div>
-
-    <script>
-        function googleTranslateElementInit() {
-            new google.translate.TranslateElement({
-                pageLanguage: 'en',
-                includedLanguages: 'en,bn,hi',
-                autoDisplay: false
-            }, 'google_translate_element');
-        }
-    </script>
-    <script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+    <!-- ===== Floating Right-Edge Language Drawer ===== -->
+    @include('partials.language_drawer')
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>

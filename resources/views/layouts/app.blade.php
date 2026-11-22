@@ -89,20 +89,8 @@
             @yield('content')
         </main>
 
-        <!-- ===== Google Translate Widget ===== -->
-        <div id="google_translate_wrapper" class="bg-white shadow-lg border z-[9999] fixed bottom-5 right-5 rounded-lg p-1">
-            <div id="google_translate_element"></div>
-        </div>
-
-        <script>
-            function googleTranslateElementInit() {
-                new google.translate.TranslateElement({
-                    pageLanguage: 'en',
-                    includedLanguages: 'en,bn,hi',
-                    autoDisplay: false
-                }, 'google_translate_element');
-            }
-        </script>
+        <!-- ===== Floating Language Drawer ===== -->
+        @include('partials.language_drawer')
         
         <script>
             // record when splash was shown so we can ensure a minimum visible time
@@ -136,7 +124,6 @@
                 }
             });
         </script>
-        <script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
         @stack('scripts')
     </body>
