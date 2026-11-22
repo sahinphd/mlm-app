@@ -119,7 +119,9 @@ class SettingController extends Controller
             'registration_enabled' => 'on',
             'enable_bv_commission' => 'on',
             'default_emi_amount' => 500,
-            'emi_frequency' => 7, // days (weekly)
+            'emi_frequency' => 7, // days (weekly, bi-weekly, monthly)
+            'emi_day_anchor' => 'none', // 'none', 'friday', 'monday', etc.
+            'emi_queue_mode' => 'sequential', // 'sequential' (queue at end) or 'concurrent' (parallel)
             'late_penalty_amount' => 80,
             'enable_push_notifications' => 'off',
             'truecaller_login' => 'off',

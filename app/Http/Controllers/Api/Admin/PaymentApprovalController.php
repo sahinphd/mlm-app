@@ -66,6 +66,9 @@ class PaymentApprovalController extends Controller
             'description' => 'Admin approved manual payment request',
         ]);
 
+        // Auto-settle overdue credit if user has overdue EMIs
+        app(\App\Services\MLMService::class)->settleOverdueEmisFromWallet($pr->user);
+
         return response()->json(['message' => 'Approved', 'data' => $pr]);
     }
 

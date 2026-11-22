@@ -158,6 +158,9 @@ class PaymentManagementController extends Controller
                 $this->mlmService->distributeJoiningCommissions($user->id);
             }
 
+            // Auto-settle overdue credit if user has overdue EMIs
+            $this->mlmService->settleOverdueEmisFromWallet($user);
+
             // Notify User
             $user->notify(new \App\Notifications\PaymentUpdateNotification($paymentRequest));
         });

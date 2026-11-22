@@ -385,7 +385,7 @@
                         <h3 class="font-medium text-black dark:text-white">EMI & Credit Settings</h3>
                     </div>
 
-                    <div class="mt-5.5 grid grid-cols-1 gap-5.5 sm:grid-cols-3">
+                    <div class="mt-5.5 grid grid-cols-1 gap-5.5 sm:grid-cols-2 lg:grid-cols-3">
                         <div>
                             <label class="mb-3 block text-sm font-medium text-black dark:text-white">Default EMI Amount ({{ $settings['currency'] ?? 'INR' }})</label>
                             <input type="number" name="default_emi_amount" value="{{ $settings['default_emi_amount'] ?? 500 }}" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
@@ -393,11 +393,33 @@
                         <div>
                             <label class="mb-3 block text-sm font-medium text-black dark:text-white">EMI Frequency (Days)</label>
                             <input type="number" name="emi_frequency" value="{{ $settings['emi_frequency'] ?? 7 }}" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
-                            <p class="mt-1 text-xs">7 = Weekly, 30 = Monthly</p>
+                            <p class="mt-1 text-xs text-gray-500">Interval between installments (e.g. 7 = Weekly, 15 = Bi-weekly, 30 = Monthly)</p>
                         </div>
                         <div>
                             <label class="mb-3 block text-sm font-medium text-black dark:text-white">Late Penalty Amount ({{ $settings['currency'] ?? 'INR' }})</label>
                             <input type="number" name="late_penalty_amount" value="{{ $settings['late_penalty_amount'] ?? 80 }}" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
+                        </div>
+                        <div>
+                            <label class="mb-3 block text-sm font-medium text-black dark:text-white">EMI Day Anchor (Fixed Weekday Collection)</label>
+                            <select name="emi_day_anchor" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
+                                <option value="none" {{ ($settings['emi_day_anchor'] ?? 'none') === 'none' ? 'selected' : '' }}>None (Calculate from purchase/base date)</option>
+                                <option value="friday" {{ ($settings['emi_day_anchor'] ?? '') === 'friday' ? 'selected' : '' }}>Every Friday (Fixed weekly collection)</option>
+                                <option value="monday" {{ ($settings['emi_day_anchor'] ?? '') === 'monday' ? 'selected' : '' }}>Every Monday</option>
+                                <option value="tuesday" {{ ($settings['emi_day_anchor'] ?? '') === 'tuesday' ? 'selected' : '' }}>Every Tuesday</option>
+                                <option value="wednesday" {{ ($settings['emi_day_anchor'] ?? '') === 'wednesday' ? 'selected' : '' }}>Every Wednesday</option>
+                                <option value="thursday" {{ ($settings['emi_day_anchor'] ?? '') === 'thursday' ? 'selected' : '' }}>Every Thursday</option>
+                                <option value="saturday" {{ ($settings['emi_day_anchor'] ?? '') === 'saturday' ? 'selected' : '' }}>Every Saturday</option>
+                                <option value="sunday" {{ ($settings['emi_day_anchor'] ?? '') === 'sunday' ? 'selected' : '' }}>Every Sunday</option>
+                            </select>
+                            <p class="mt-1 text-xs text-gray-500">e.g. Set to 'Every Friday' so EMIs are due on Fridays</p>
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="mb-3 block text-sm font-medium text-black dark:text-white">Multiple Orders EMI Scheduling Mode</label>
+                            <select name="emi_queue_mode" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
+                                <option value="sequential" {{ ($settings['emi_queue_mode'] ?? 'sequential') === 'sequential' ? 'selected' : '' }}>Queue at End of Existing EMIs (Recommended - Prevents overlapping payment burden)</option>
+                                <option value="concurrent" {{ ($settings['emi_queue_mode'] ?? '') === 'concurrent' ? 'selected' : '' }}>Multiple Parallel Active EMIs (Each order starts immediately from purchase date)</option>
+                            </select>
+                            <p class="mt-1 text-xs text-gray-500">Sequential mode schedules new EMIs after the customer's current active EMIs finish, avoiding multiple EMIs on the same day.</p>
                         </div>
                     </div>
 

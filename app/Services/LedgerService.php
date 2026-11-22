@@ -307,6 +307,9 @@ class LedgerService
 
             $now = Carbon::now();
 
+            // Auto-settle overdue credit for recipient if they have overdue EMIs
+            app(\App\Services\MLMService::class)->settleOverdueEmisFromWallet($recipient);
+
             return [
                 'transaction_id' => $txnId,
                 'amount' => $amount,

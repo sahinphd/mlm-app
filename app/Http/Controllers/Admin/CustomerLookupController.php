@@ -250,15 +250,25 @@ class CustomerLookupController extends Controller
                 $admin
             );
 
-            $updatedCustomer = $this->formatCustomerData($user);
+            // Auto-settle overdue credit/EMIs first if any
+            $settleInfo = $this->mlmService->settleOverdueEmisFromWallet($user);
+
+            $updatedCustomer = $this->formatCustomerData($user->fresh(['wallet', 'creditAccount', 'referralRecord']));
             $txData = $this->getCustomerTransactions($user, $request);
+
+            $msg = 'Successfully added ₹' . number_format($amount, 2) . ' to ' . $user->name . "'s wallet.";
+            if ($settleInfo['settled_count'] > 0) {
+                $msg .= ' Automatically cleared ' . $settleInfo['settled_count'] . ' overdue EMI(s) (₹' . number_format($settleInfo['total_recovered'], 2) . ' recovered to restore credit).';
+            }
 
             return response()->json([
                 'success' => true,
-                'message' => 'Successfully added ₹' . number_format($amount, 2) . ' to ' . $user->name . "'s wallet.",
+                'message' => $msg,
                 'customer' => $updatedCustomer,
                 'transactions' => $txData['data'],
                 'pagination' => $txData['pagination'],
+                'settled_emis' => $settleInfo['settled_count'],
+                'settled_amount' => $settleInfo['total_recovered'],
             ]);
         } catch (\Throwable $e) {
             return response()->json([

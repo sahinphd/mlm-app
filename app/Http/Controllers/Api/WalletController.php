@@ -42,7 +42,10 @@ class WalletController extends Controller
             'description' => $request->input('description'),
         ]);
 
-        return response()->json(['message' => 'Wallet credited', 'wallet' => $wallet]);
+        // Auto-settle overdue credit if user has overdue EMIs
+        app(\App\Services\MLMService::class)->settleOverdueEmisFromWallet($user);
+
+        return response()->json(['message' => 'Wallet credited', 'wallet' => $wallet->fresh()]);
     }
 
     public function debit(Request $request)

@@ -335,29 +335,179 @@ class MLMService
     {
         $settings = $this->getSettings();
         $emiAmount = (float) ($settings['default_emi_amount'] ?? 500);
-        $interval = (int) ($settings['emi_frequency'] ?? 7);
+        $interval = max(1, (int) ($settings['emi_frequency'] ?? 7));
+        $dayAnchor = strtolower(trim($settings['emi_day_anchor'] ?? 'none'));
+        $queueMode = strtolower(trim($settings['emi_queue_mode'] ?? 'sequential'));
         $total = $customAmount !== null ? $customAmount : $order->total_amount;
-        
+
+        $today = \Illuminate\Support\Carbon::today()->startOfDay();
+        $baseDate = $today->copy();
+
+        if ($queueMode === 'sequential') {
+            // Find user's latest scheduled pending or overdue EMI from previous orders
+            $latestEmi = \App\Models\EmiSchedule::where('user_id', $user->id)
+                ->whereIn('status', ['pending', 'overdue'])
+                ->where('order_id', '!=', $order->id)
+                ->orderBy('due_date', 'desc')
+                ->first();
+
+            if ($latestEmi) {
+                $latestDueDate = \Illuminate\Support\Carbon::parse($latestEmi->due_date)->startOfDay();
+                if ($latestDueDate->greaterThanOrEqualTo($today)) {
+                    $baseDate = $latestDueDate;
+                }
+            }
+        }
+
+        // Determine first due date
+        $validDays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+        if ($dayAnchor !== 'none' && in_array($dayAnchor, $validDays)) {
+            // If baseDate is a previous EMI on this anchor day, next is +$interval days
+            if (strtolower($baseDate->englishDayOfWeek) === $dayAnchor && !$baseDate->equalTo($today)) {
+                $firstDue = $baseDate->copy()->addDays($interval);
+            } else {
+                $firstDue = $baseDate->copy()->next($dayAnchor);
+                // If today is within 2 days of that anchor day, push by interval to give a fair first billing window
+                if ($baseDate->equalTo($today) && $firstDue->diffInDays($today) < 2) {
+                    $firstDue->addDays($interval);
+                }
+            }
+        } else {
+            $firstDue = $baseDate->copy()->addDays($interval);
+        }
+
         $remainingBalance = $total;
-        $i = 1;
-        
+        $i = 0;
+
         while ($remainingBalance > 0) {
             $installment = min($remainingBalance, $emiAmount);
-            $due = \Illuminate\Support\Carbon::now()->addDays($interval * $i);
-            
+            $due = $firstDue->copy()->addDays($interval * $i);
+
             \App\Models\EmiSchedule::create([
                 'user_id' => $user->id,
                 'order_id' => $order->id,
                 'total_amount' => $total,
                 'installment_amount' => $installment,
                 'interval_days' => $interval,
-                'due_date' => $due,
-                'status' => 'pending'
+                'due_date' => $due->toDateString(),
+                'status' => 'pending',
+                'commission_distributed' => false,
             ]);
-            
+
             $remainingBalance -= $installment;
             $i++;
         }
+    }
+
+    /**
+     * Settle overdue and past-due EMIs (and associated late penalties) from wallet balance.
+     * Overdue EMIs are settled in chronological order (oldest first).
+     * Restores credit account available limit and distributes deferred commissions.
+     */
+    public function settleOverdueEmisFromWallet(User $user): array
+    {
+        $wallet = Wallet::where('user_id', $user->id)->first();
+        if (!$wallet || (float)$wallet->main_balance <= 0) {
+            return ['settled_count' => 0, 'total_recovered' => 0.0, 'settled_emis' => []];
+        }
+
+        $today = now()->toDateString();
+        // Overdue EMIs or pending EMIs due today or in the past
+        $overdueEmis = \App\Models\EmiSchedule::where('user_id', $user->id)
+            ->where(function ($q) use ($today) {
+                $q->where('status', 'overdue')
+                  ->orWhere(function ($sub) use ($today) {
+                      $sub->where('status', 'pending')
+                          ->where('due_date', '<=', $today);
+                  });
+            })
+            ->orderBy('due_date', 'asc')
+            ->orderBy('id', 'asc')
+            ->get();
+
+        if ($overdueEmis->isEmpty()) {
+            return ['settled_count' => 0, 'total_recovered' => 0.0, 'settled_emis' => []];
+        }
+
+        $settled = [];
+        $totalRecovered = 0.0;
+
+        foreach ($overdueEmis as $emi) {
+            $installment = (float) $emi->installment_amount;
+            if ((float) $wallet->main_balance < $installment) {
+                // Insufficient balance for this full installment
+                break;
+            }
+
+            DB::transaction(function () use ($user, $wallet, $emi, $installment, &$settled, &$totalRecovered) {
+                // Deduct from wallet
+                $wallet->main_balance = (float) $wallet->main_balance - $installment;
+                $wallet->save();
+
+                WalletTransaction::create([
+                    'wallet_id' => $wallet->id,
+                    'type' => 'debit',
+                    'source' => 'emi',
+                    'amount' => $installment,
+                    'reference_id' => 'emi:' . $emi->id,
+                    'description' => 'Auto-recovery for Overdue EMI #' . $emi->id . ' from wallet balance (Order #' . $emi->order_id . ')',
+                ]);
+
+                // Restore Credit Account
+                $ca = \App\Models\CreditAccount::where('user_id', $user->id)->first();
+                if ($ca) {
+                    $ca->used_credit = max(0, (float) $ca->used_credit - $installment);
+                    $ca->available_credit = min((float) $ca->credit_limit, (float) $ca->available_credit + $installment);
+                    $ca->save();
+
+                    \App\Models\CreditTransaction::create([
+                        'credit_account_id' => $ca->id,
+                        'type' => 'credit',
+                        'amount' => $installment,
+                        'source' => 'repayment',
+                        'reference_id' => 'emi:' . $emi->id,
+                        'description' => 'Overdue EMI Repayment auto-recovered from wallet',
+                    ]);
+                }
+
+                // Settle unpaid penalty if any for this EMI
+                $penalty = \App\Models\Penalty::where('emi_schedule_id', $emi->id)->where('status', 'unpaid')->first();
+                if ($penalty && (float)$wallet->main_balance >= (float)$penalty->amount) {
+                    $pAmount = (float)$penalty->amount;
+                    $wallet->main_balance = (float)$wallet->main_balance - $pAmount;
+                    $wallet->save();
+
+                    WalletTransaction::create([
+                        'wallet_id' => $wallet->id,
+                        'type' => 'debit',
+                        'source' => 'penalty',
+                        'amount' => $pAmount,
+                        'reference_id' => 'penalty:' . $penalty->id,
+                        'description' => 'Auto-settled Penalty for Overdue EMI #' . $emi->id,
+                    ]);
+
+                    $penalty->status = 'paid';
+                    $penalty->save();
+                    $totalRecovered += $pAmount;
+                }
+
+                // Mark EMI as paid
+                $emi->status = 'paid';
+                $emi->save();
+
+                // Distribute deferred commission
+                $this->distributeEmiRepaymentCommissions($emi);
+
+                $settled[] = $emi;
+                $totalRecovered += $installment;
+            });
+        }
+
+        return [
+            'settled_count' => count($settled),
+            'total_recovered' => $totalRecovered,
+            'settled_emis' => $settled,
+        ];
     }
 
     public function getSettings()
@@ -375,6 +525,8 @@ class MLMService
                 'default_order_status' => 'processing',
                 'default_emi_amount' => 500,
                 'emi_frequency' => 7,
+                'emi_day_anchor' => 'none',
+                'emi_queue_mode' => 'sequential',
                 'late_penalty_amount' => 80,
                 'joining_commission_level_1' => 100,
                 'joining_commission_level_2' => 50,

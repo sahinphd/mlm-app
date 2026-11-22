@@ -212,6 +212,9 @@ class CommissionWithdrawalController extends Controller
                 $comm->update(['status' => 'withdrawn']);
             }
 
+            // Auto-settle overdue credit if user has overdue EMIs
+            app(\App\Services\MLMService::class)->settleOverdueEmisFromWallet($user);
+
             DB::commit();
             return redirect()->route('commissions.withdrawal')->with('success', 'Commission withdrawn to main balance successfully.');
         } catch (\Exception $e) {
@@ -275,6 +278,9 @@ class CommissionWithdrawalController extends Controller
             foreach ($withdrawableBvCommissions as $comm) {
                 $comm->update(['status' => 'withdrawn']);
             }
+
+            // Auto-settle overdue credit if user has overdue EMIs
+            app(\App\Services\MLMService::class)->settleOverdueEmisFromWallet($user);
 
             DB::commit();
             return redirect()->route('commissions.withdrawal')->with('success', 'BV points converted to main balance successfully.');
