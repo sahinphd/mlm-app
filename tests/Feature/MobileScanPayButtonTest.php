@@ -28,11 +28,11 @@ class MobileScanPayButtonTest extends TestCase
         $response = $this->actingAs($user)->get('/dashboard');
 
         $response->assertStatus(200);
+        $response->assertSee('phonepeScanPayFab');
         $response->assertSee('phonepe-fab-btn');
         $response->assertSee('Instant QR Payment');
         $response->assertSee(route('wallet.scan-pay'));
         $response->assertSee('phonepe-scan-laser-line');
-        $response->assertSee('md:hidden');
     }
 
     public function test_scan_and_pay_route_is_accessible()

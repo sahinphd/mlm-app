@@ -340,9 +340,6 @@
     </div>
 </div>
 
-<!-- PhonePe Style Mobile Bottom Fixed Scan & Pay Button -->
-@include('partials.mobile_scan_pay_fab')
-
 <script>
 function confirmPayment(emiId) {
     Swal.fire({

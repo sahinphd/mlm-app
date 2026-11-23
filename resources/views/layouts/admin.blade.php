@@ -115,6 +115,11 @@
 
 <!-- ===== Floating Language Drawer ===== -->
 @include('partials.language_drawer')
+
+<!-- ===== PhonePe Style Mobile/Desktop Scan & Pay Floating Button ===== -->
+@if(request()->routeIs('dashboard') || request()->is('dashboard'))
+    @include('partials.mobile_scan_pay_fab')
+@endif
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     window.confirmSubmit = function(event, title, text) {
