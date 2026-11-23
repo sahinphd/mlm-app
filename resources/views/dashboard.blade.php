@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
 @section('content')
-<div class="grid grid-cols-1 gap-4 md:gap-6">
+<div class="grid grid-cols-1 gap-4 md:gap-6 pb-28 md:pb-6">
     <!-- Dashboard Header & Referral -->
     <div class="rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03] md:p-6 text-center">
         <h2 class="mb-3 text-xl font-semibold text-gray-800 dark:text-white/90 md:text-2xl">Dashboard</h2>
@@ -339,6 +339,9 @@
         </div>
     </div>
 </div>
+
+<!-- PhonePe Style Mobile Bottom Fixed Scan & Pay Button -->
+@include('partials.mobile_scan_pay_fab')
 
 <script>
 function confirmPayment(emiId) {
