@@ -88,7 +88,21 @@ class SettingController extends Controller
             $request->merge(['payment_qr_path' => 'images/payments/' . $filename]);
         }
 
-        $data = $request->except(['_token', 'logo', 'logo_dark', 'logo_icon', 'auth_logo', 'fcm_service_account', 'payment_qr_code']);
+        // Handle ID Card Authorized Signature Upload
+        if ($request->hasFile('id_card_signature')) {
+            $file = $request->file('id_card_signature');
+            $filename = 'authorized-signature.' . $file->getClientOriginalExtension();
+            $path = public_path('images/signatures');
+            if (!File::isDirectory($path)) {
+                File::makeDirectory($path, 0777, true, true);
+            }
+            $file->move($path, $filename);
+            $request->merge(['id_card_signature_path' => 'images/signatures/' . $filename]);
+        } elseif ($request->boolean('remove_id_card_signature')) {
+            $request->merge(['id_card_signature_path' => null]);
+        }
+
+        $data = $request->except(['_token', 'logo', 'logo_dark', 'logo_icon', 'auth_logo', 'fcm_service_account', 'payment_qr_code', 'id_card_signature', 'remove_id_card_signature']);
         
         // Handle checkboxes that might be missing if unchecked
         $checkboxes = ['enable_bv_commission', 'use_custom_qr', 'truecaller_login', 'enforce_shop_credit_pool_limit'];
@@ -111,6 +125,9 @@ class SettingController extends Controller
         $settingsFile = 'settings.json';
         $defaults = [
             'site_name' => config('app.name', 'MLM App'),
+            'id_card_brand_name' => 'JANASEVA MIDIO VANDAR',
+            'id_card_signature_title' => 'Authorized Signatory',
+            'id_card_signature_path' => 'images/signatures/default-signature.svg',
             'contact_email' => 'admin@example.com',
             'currency' => 'INR',
             'min_withdrawal' => 500,

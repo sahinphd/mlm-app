@@ -28,6 +28,26 @@ class LedgerService
             return null;
         }
 
+        // 0. Format: Full URL (e.g. from camera scan or URL input: https://.../wallet/scan-pay?code=CUST:15 or ?recipient_id=15)
+        if (filter_var($payload, FILTER_VALIDATE_URL) || str_contains($payload, '?') || str_contains($payload, 'scan-pay')) {
+            $parsedUrl = parse_url($payload);
+            if (!empty($parsedUrl['query'])) {
+                parse_str($parsedUrl['query'], $queryParams);
+                if (!empty($queryParams['code'])) {
+                    return $this->parseQrPayload((string)$queryParams['code']);
+                }
+                if (!empty($queryParams['recipient_id'])) {
+                    return $this->parseQrPayload((string)$queryParams['recipient_id']);
+                }
+                if (!empty($queryParams['user_id'])) {
+                    return $this->parseQrPayload((string)$queryParams['user_id']);
+                }
+            }
+            if (!empty($parsedUrl['path']) && preg_match('#/(?:scan-pay|customer-qr|user)/([0-9]+)#i', $parsedUrl['path'], $m)) {
+                return (int) $m[1];
+            }
+        }
+
         // 1. Format: "CUST:<id>"
         if (preg_match('/^CUST:([0-9]+)$/i', $payload, $matches)) {
             $num = (int) $matches[1];

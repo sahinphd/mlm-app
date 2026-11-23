@@ -87,13 +87,25 @@ class ProfileController extends Controller
         return redirect()->back()->with('status', $message);
     }
 
-    public function idCard()
+    public function idCard(\App\Services\LedgerService $ledgerService)
     {
         $user = Auth::user();
         $user->load('referralRecord');
+        $customerData = $ledgerService->formatCustomerQrData($user);
+        $qrPayload = $ledgerService->getCustomerQrPayload($user);
+        $paymentUrl = route('wallet.scan-pay', ['code' => $qrPayload]);
+        $settings = \App\Http\Controllers\Admin\SettingController::getSystemSettings();
+
         return view('profile.id_card', [
             'user' => $user,
-            'page' => 'profile_id'
+            'customer' => $customerData,
+            'qrPayload' => $qrPayload,
+            'paymentUrl' => $paymentUrl,
+            'settings' => $settings,
+            'idCardBrandName' => $settings['id_card_brand_name'] ?? 'JANASEVA MIDIO VANDAR',
+            'signaturePath' => $settings['id_card_signature_path'] ?? 'images/signatures/default-signature.svg',
+            'signatureTitle' => $settings['id_card_signature_title'] ?? 'Authorized Signatory',
+            'page' => 'profile_id',
         ]);
     }
 }

@@ -56,6 +56,9 @@
             <button @click="activeTab = 'branding'" :class="activeTab === 'branding' ? 'border-primary text-primary' : 'border-transparent text-black dark:text-white'" class="border-b-2 py-4 text-sm font-medium hover:text-primary md:text-base">
                 Branding
             </button>
+            <button @click="activeTab = 'idcard'" :class="activeTab === 'idcard' ? 'border-primary text-primary' : 'border-transparent text-black dark:text-white'" class="border-b-2 py-4 text-sm font-medium hover:text-primary md:text-base">
+                ID Card Setup
+            </button>
             <button @click="activeTab = 'financial'" :class="activeTab === 'financial' ? 'border-primary text-primary' : 'border-transparent text-black dark:text-white'" class="border-b-2 py-4 text-sm font-medium hover:text-primary md:text-base">
                 Financial
             </button>
@@ -164,6 +167,85 @@
                                 <img src="{{ asset('images/logo/auth-logo.svg') }}?v={{ time() }}" class="h-10" alt="Auth Logo">
                             </div>
                             <input type="file" name="auth_logo" class="w-full cursor-pointer rounded-lg border-[1.5px] border-stroke bg-transparent font-medium outline-none transition file:mr-5 file:border-collapse file:cursor-pointer file:border-0 file:border-r file:border-solid file:border-stroke file:bg-whiter file:py-3 file:px-5 file:hover:bg-primary file:hover:bg-opacity-10 focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:file:border-form-strokedark dark:file:bg-white/5 dark:file:text-white dark:focus:border-primary">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ID Card Setup Tab -->
+            <div x-show="activeTab === 'idcard'" class="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+                <div class="border-b border-stroke py-4 px-7 dark:border-strokedark flex items-center justify-between">
+                    <div>
+                        <h3 class="font-medium text-black dark:text-white">ID Card Branding &amp; Signature Setup</h3>
+                        <p class="text-xs text-body dark:text-gray-400 mt-0.5">Customize the brand name, authorized signatory signature, and title printed on member ID cards.</p>
+                    </div>
+                    <a href="{{ route('profile.id-card') }}" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded bg-[#1555a8] text-white hover:bg-[#12468d] transition shadow-xs">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                        <span>Preview ID Card</span>
+                    </a>
+                </div>
+                <div class="p-7 space-y-6">
+                    <!-- Brand Name Field -->
+                    <div>
+                        <label class="mb-2.5 block text-sm font-medium text-black dark:text-white">
+                            ID Card Brand Name <span class="text-meta-1">*</span>
+                        </label>
+                        <input type="text" name="id_card_brand_name" value="{{ $settings['id_card_brand_name'] ?? 'JANASEVA MIDIO VANDAR' }}" placeholder="JANASEVA MIDIO VANDAR" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black font-semibold focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
+                        <p class="mt-1 text-xs text-body dark:text-gray-400">
+                            This brand name is prominently printed on both the Front and Back sides of every member's Digital and Printable ID card (e.g. <strong>JANASEVA MIDIO VANDAR</strong>).
+                        </p>
+                    </div>
+
+                    <!-- Authorized Signatory Title -->
+                    <div>
+                        <label class="mb-2.5 block text-sm font-medium text-black dark:text-white">
+                            Signature Label / Signatory Title
+                        </label>
+                        <input type="text" name="id_card_signature_title" value="{{ $settings['id_card_signature_title'] ?? 'Authorized Signatory' }}" placeholder="Authorized Signatory / Secretary / Director" class="w-full rounded border border-stroke bg-gray py-3 px-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary">
+                        <p class="mt-1 text-xs text-body dark:text-gray-400">
+                            The title text printed directly below the signature line on the front of the ID card (defaults to <strong>Authorized Signatory</strong>).
+                        </p>
+                    </div>
+
+                    <!-- Authorized Signature File Upload & Current Preview -->
+                    <div class="rounded-sm border border-stroke p-5 dark:border-strokedark bg-gray-50/50 dark:bg-meta-4/20">
+                        <label class="mb-3 block text-sm font-medium text-black dark:text-white">
+                            Authorized Signature Image
+                        </label>
+                        <div class="flex flex-col sm:flex-row items-center gap-6">
+                            <!-- Current Signature Preview -->
+                            <div class="shrink-0 flex flex-col items-center">
+                                <span class="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Current Signature</span>
+                                <div class="h-16 w-48 rounded border border-stroke bg-white p-2 flex items-center justify-center shadow-xs dark:border-strokedark dark:bg-boxdark">
+                                    @if(!empty($settings['id_card_signature_path']) && file_exists(public_path($settings['id_card_signature_path'])))
+                                        <img src="{{ asset($settings['id_card_signature_path']) }}?v={{ time() }}" class="max-h-12 max-w-full object-contain" alt="Current Signature">
+                                    @elseif(file_exists(public_path('images/signatures/default-signature.svg')))
+                                        <img src="{{ asset('images/signatures/default-signature.svg') }}" class="max-h-12 max-w-full object-contain" alt="Default Signature">
+                                    @else
+                                        <span class="text-xs text-gray-400 font-serif italic">No signature uploaded</span>
+                                    @endif
+                                </div>
+                                <span class="text-[10px] text-gray-400 mt-1">Printed on front bottom-right</span>
+                            </div>
+
+                            <!-- Upload Input -->
+                            <div class="flex-1 w-full">
+                                <label class="mb-2 block text-xs text-gray-600 dark:text-gray-400">
+                                    Upload new signature image (transparent PNG recommended, or JPG/SVG):
+                                </label>
+                                <input type="file" name="id_card_signature" accept="image/*,.svg" class="w-full cursor-pointer rounded-lg border-[1.5px] border-stroke bg-transparent font-medium outline-none transition file:mr-5 file:border-collapse file:cursor-pointer file:border-0 file:border-r file:border-solid file:border-stroke file:bg-whiter file:py-3 file:px-5 file:hover:bg-primary file:hover:bg-opacity-10 focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:file:border-form-strokedark dark:file:bg-white/5 dark:file:text-white dark:focus:border-primary">
+                                
+                                @if(!empty($settings['id_card_signature_path']) && $settings['id_card_signature_path'] !== 'images/signatures/default-signature.svg')
+                                <div class="mt-2.5 flex items-center gap-2">
+                                    <label class="flex items-center gap-2 text-xs text-red-600 dark:text-red-400 cursor-pointer">
+                                        <input type="checkbox" name="remove_id_card_signature" value="1" class="rounded border-gray-300 text-red-600 focus:ring-red-500">
+                                        <span>Remove uploaded signature &amp; revert to default</span>
+                                    </label>
+                                </div>
+                                @endif
+                            </div>
                         </div>
                     </div>
                 </div>
