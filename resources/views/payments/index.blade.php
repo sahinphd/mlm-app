@@ -143,7 +143,7 @@
                 this.amount = '';
                 this.transactionId = '';
                 this.step = 1;
-                if (typeof loadRequests === 'function') loadRequests();
+                if (typeof loadRequests === 'function') loadRequests(1);
             } else {
                 Swal.fire({
                     icon: 'error',
@@ -424,7 +424,7 @@
             </div>
             <button
                 type="button"
-                onclick="loadRequests()"
+                onclick="loadRequests(currentPage)"
                 class="inline-flex items-center gap-1 text-xs text-brand-600 hover:text-brand-700 dark:text-brand-400 font-medium cursor-pointer">
                 <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -435,6 +435,12 @@
         <div id="requests" class="space-y-2.5">
             <p class="text-xs text-gray-400 text-center py-4">Loading requests...</p>
         </div>
+
+        <!-- Pagination Controls (Shown when > 5 transactions) -->
+        <div id="pagination-wrapper" class="hidden mt-4 pt-3 border-t border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row items-center justify-between gap-2.5">
+            <div id="pagination-info" class="text-[11px] text-gray-500 dark:text-gray-400"></div>
+            <div id="pagination-buttons" class="flex items-center gap-1"></div>
+        </div>
     </div>
 </div>
 
@@ -442,20 +448,33 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 const CURRENCY_SYMBOL = '{{ $currencySymbol }}';
+let currentPage = 1;
+const PER_PAGE = 5;
 
-async function loadRequests() {
+async function loadRequests(page = 1) {
+    currentPage = page;
     const el = document.getElementById('requests');
     const countEl = document.getElementById('requests-count');
+    const pagWrapper = document.getElementById('pagination-wrapper');
+    const pagInfo = document.getElementById('pagination-info');
+    const pagButtons = document.getElementById('pagination-buttons');
+
     try {
-        const res = await fetch('/api/payment-requests', {credentials:'same-origin'});
+        const res = await fetch(`/api/payment-requests?page=${page}&per_page=${PER_PAGE}`, {credentials:'same-origin'});
         const json = await res.json();
         el.innerHTML = '';
         
         const list = json.data || [];
-        if (countEl) countEl.innerText = list.length;
+        const total = (json.total !== undefined) ? json.total : list.length;
+        const lastPage = json.last_page || 1;
+        const from = json.from || (list.length > 0 ? (page - 1) * PER_PAGE + 1 : 0);
+        const to = json.to || (list.length > 0 ? from + list.length - 1 : 0);
+
+        if (countEl) countEl.innerText = total;
 
         if (list.length === 0) {
             el.innerHTML = '<p class="text-xs text-gray-400 text-center py-3">No payment requests submitted yet.</p>';
+            if (pagWrapper) pagWrapper.classList.add('hidden');
             return;
         }
 
@@ -494,13 +513,62 @@ async function loadRequests() {
             `;
             el.appendChild(d);
         });
+
+        // Handle Pagination Controls
+        if (lastPage > 1 && pagWrapper) {
+            pagWrapper.classList.remove('hidden');
+            if (pagInfo) {
+                pagInfo.innerHTML = `Showing <span class="font-semibold text-gray-700 dark:text-gray-200">${from}–${to}</span> of <span class="font-semibold text-gray-700 dark:text-gray-200">${total}</span>`;
+            }
+            if (pagButtons) {
+                let btns = '';
+                // Previous button
+                btns += `
+                    <button type="button" 
+                            onclick="loadRequests(${page - 1})" 
+                            ${page <= 1 ? 'disabled' : ''} 
+                            class="px-2.5 py-1 text-xs rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-50 disabled:opacity-40 disabled:pointer-events-none transition cursor-pointer">
+                        &larr; Prev
+                    </button>
+                `;
+
+                // Page numbers
+                for (let p = 1; p <= lastPage; p++) {
+                    if (p === 1 || p === lastPage || (p >= page - 1 && p <= page + 1)) {
+                        btns += `
+                            <button type="button" 
+                                    onclick="loadRequests(${p})" 
+                                    class="h-7 min-w-7 px-1.5 text-xs rounded-lg border text-center transition cursor-pointer ${p === page ? 'bg-brand-500 border-brand-500 text-white font-bold shadow-2xs' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-50'}">
+                                ${p}
+                            </button>
+                        `;
+                    } else if (p === page - 2 || p === page + 2) {
+                        btns += `<span class="px-1 text-xs text-gray-400">...</span>`;
+                    }
+                }
+
+                // Next button
+                btns += `
+                    <button type="button" 
+                            onclick="loadRequests(${page + 1})" 
+                            ${page >= lastPage ? 'disabled' : ''} 
+                            class="px-2.5 py-1 text-xs rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-50 disabled:opacity-40 disabled:pointer-events-none transition cursor-pointer">
+                        Next &rarr;
+                    </button>
+                `;
+                pagButtons.innerHTML = btns;
+            }
+        } else if (pagWrapper) {
+            pagWrapper.classList.add('hidden');
+        }
+
     } catch(e) {
         el.innerHTML = '<p class="text-xs text-rose-500 text-center py-2">Failed to load requests.</p>';
     }
 }
 
-// Initial load of history
-loadRequests();
+// Initial load of history (page 1)
+loadRequests(1);
 </script>
 @endpush
 @endsection

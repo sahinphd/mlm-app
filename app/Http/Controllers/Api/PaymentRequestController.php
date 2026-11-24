@@ -16,8 +16,18 @@ class PaymentRequestController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        $requests = PaymentRequest::where('user_id', $user->id)->orderBy('created_at', 'desc')->get();
-        return response()->json(['data' => $requests]);
+        $perPage = (int) $request->query('per_page', 5);
+
+        if ($request->has('all') && $request->boolean('all')) {
+            $requests = PaymentRequest::where('user_id', $user->id)->orderBy('created_at', 'desc')->get();
+            return response()->json(['data' => $requests]);
+        }
+
+        $paginated = PaymentRequest::where('user_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage);
+
+        return response()->json($paginated);
     }
 
     public function store(Request $request)
