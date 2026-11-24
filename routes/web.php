@@ -353,6 +353,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/admin/payments/{paymentRequest}/approve', [\App\Http\Controllers\Admin\PaymentManagementController::class, 'approve'])->name('admin.payments.approve');
         Route::post('/admin/payments/{paymentRequest}/reject', [\App\Http\Controllers\Admin\PaymentManagementController::class, 'reject'])->name('admin.payments.reject');
         Route::post('/admin/payments/{paymentRequest}/reopen', [\App\Http\Controllers\Admin\PaymentManagementController::class, 'reopen'])->name('admin.payments.reopen');
+        Route::post('/admin/payments/{paymentRequest}/note', [\App\Http\Controllers\Admin\PaymentManagementController::class, 'updateNote'])->name('admin.payments.update-note');
         Route::get('/admin/payments/export', [\App\Http\Controllers\Admin\PaymentManagementController::class, 'export'])->name('admin.payments.export');
 
         // Admin Commissions & Settings

@@ -207,6 +207,20 @@ class PaymentManagementController extends Controller
         return back()->with('success', 'Payment request moved back to pending.');
     }
 
+    public function updateNote(Request $request, PaymentRequest $paymentRequest)
+    {
+        $this->ensureAdmin();
+
+        $data = $request->validate([
+            'admin_note' => 'nullable|string|max:1000',
+        ]);
+
+        $paymentRequest->admin_note = $data['admin_note'] ?? null;
+        $paymentRequest->save();
+
+        return back()->with('success', 'Admin comment updated successfully.');
+    }
+
     private function filteredQuery(?string $status, string $q)
     {
         return PaymentRequest::query()

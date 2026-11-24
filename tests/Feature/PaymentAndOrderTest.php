@@ -58,4 +58,65 @@ class PaymentAndOrderTest extends TestCase
         $this->assertNotNull($wallet);
         $this->assertEquals(50, $wallet->main_balance);
     }
+
+    public function test_admin_payments_view_renders_with_list_and_card_toggle()
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $buyer = User::factory()->create(['name' => 'John Doe', 'email' => 'john@example.com']);
+
+        PaymentRequest::create([
+            'user_id' => $buyer->id,
+            'amount' => 500,
+            'method' => 'UPI',
+            'reference' => 'UTR12345678',
+            'status' => 'pending',
+        ]);
+
+        $response = $this->actingAs($admin)->get('/admin/payments');
+        $response->assertStatus(200);
+        $response->assertSee('Wallet Top-up Requests');
+        $response->assertSee('List');
+        $response->assertSee('Card');
+        $response->assertSee('UTR12345678');
+        $response->assertSee('John Doe');
+        $response->assertSee('Approve & Recharge', false);
+    }
+
+    public function test_admin_can_update_payment_comment_after_approval()
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $buyer = User::factory()->create(['name' => 'Jane Doe', 'email' => 'jane@example.com']);
+
+        $paymentRequest = PaymentRequest::create([
+            'user_id' => $buyer->id,
+            'amount' => 1000,
+            'method' => 'UPI',
+            'reference' => 'UTR998877',
+            'status' => 'approved',
+            'admin_note' => 'Original note',
+            'processed_at' => now(),
+        ]);
+
+        // Non-admin cannot update note
+        $this->actingAs($buyer)->post('/admin/payments/' . $paymentRequest->id . '/note', [
+            'admin_note' => 'Hacked note',
+        ])->assertStatus(403);
+
+        // Admin updates comment
+        $response = $this->actingAs($admin)->post('/admin/payments/' . $paymentRequest->id . '/note', [
+            'admin_note' => 'Updated comment after approval',
+        ]);
+
+        $response->assertSessionHas('success');
+        $this->assertDatabaseHas('payment_requests', [
+            'id' => $paymentRequest->id,
+            'admin_note' => 'Updated comment after approval',
+        ]);
+
+        // Verify page renders the updated comment and edit button
+        $pageResponse = $this->actingAs($admin)->get('/admin/payments');
+        $pageResponse->assertStatus(200);
+        $pageResponse->assertSee('Updated comment after approval');
+        $pageResponse->assertSee('Edit Comment');
+    }
 }
