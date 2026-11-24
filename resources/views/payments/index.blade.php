@@ -1,236 +1,505 @@
 @extends('layouts.admin')
 
 @section('content')
-<?php
+@php
     $settingsFile = 'settings.json';
     $currency = 'INR';
-    if (Illuminate\Support\Facades\Storage::disk('local')->exists($settingsFile)) {
-        $s = json_decode(Illuminate\Support\Facades\Storage::disk('local')->get($settingsFile), true);
+    if (\Illuminate\Support\Facades\Storage::disk('local')->exists($settingsFile)) {
+        $s = json_decode(\Illuminate\Support\Facades\Storage::disk('local')->get($settingsFile), true);
         $currency = $s['currency'] ?? 'INR';
     }
-?>
-<div class="max-w-2xl mx-auto">
-    @php
-        $user = auth()->user();
-        $isRestricted = ($user->role !== 'admin' && $user->kyc_status !== 'approved');
-        
-        $useCustomQr = ($systemSettings['use_custom_qr'] ?? 'off') === 'on';
-        if ($useCustomQr && !empty($systemSettings['payment_qr_path'])) {
-            $upiId = $systemSettings['custom_upi_id'] ?? env('APP_QR_CODE', 'sahinahmed.com@ybl');
-            $qrUrl = asset($systemSettings['payment_qr_path']);
-        } else {
-            $upiId = env('APP_QR_CODE', 'sahinahmed.com@ybl');
-            $qrUrl = 'https://quickchart.io/qr?text=upi%3A%2F%2Fpay%3Fpa%3D' . urlencode($upiId) . '%26pn%3DDuare%20Dokandar%26cu%3DINR&size=160&margin=2';
-        }
-    @endphp
+    $currencySymbol = ($currency === 'INR' || empty($currency)) ? '₹' : $currency;
 
-    <div class="mb-6 p-6 rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] shadow-sm">
-        <div class="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div class="text-center md:text-left">
-                <h3 class="text-xl font-bold text-gray-900 dark:text-white">Pay via UPI QR</h3>
-                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Scan the QR code to pay manually, then fill the form below.</p>
-                <div class="mt-4 inline-flex items-center gap-2 bg-gray-100 dark:bg-gray-700 px-4 py-2 rounded-full">
-                    <span class="font-mono text-xs font-bold text-gray-700 dark:text-gray-300">{{ $upiId }}</span>
-                    <button onclick="copyUPI('{{ $upiId }}')" class="text-brand-600 hover:text-brand-700 text-xs font-semibold ml-2">Copy</button>
-                </div>
-            </div>
-            <div class="bg-white dark:bg-gray-900 p-2 rounded-xl shadow-inner border border-gray-100 dark:border-gray-800">
-                <img src="{{ $qrUrl }}" alt="UPI QR" class="w-32 h-32 rounded-lg">
-                <p class="text-center text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-wider">Scan to pay</p>
-            </div>
-        </div>
-    </div>
+    $user = auth()->user();
+    $isRestricted = ($user->role !== 'admin' && $user->kyc_status !== 'approved');
+
+    $useCustomQr = ($systemSettings['use_custom_qr'] ?? 'off') === 'on';
+    $customQrPath = (!empty($systemSettings['payment_qr_path'])) ? asset($systemSettings['payment_qr_path']) : null;
+    $upiId = $systemSettings['custom_upi_id'] ?? env('APP_QR_CODE', 'sahinahmed.com@ybl');
+    $siteName = $systemSettings['site_name'] ?? config('app.name', 'Duare Dokandar');
+@endphp
+
+<div class="max-w-xl mx-auto space-y-4" x-data="{
+    step: 1,
+    amount: '',
+    presetAmounts: [100, 200, 500, 1000, 2000, 5000],
+    upiId: '{{ $upiId }}',
+    siteName: '{{ addslashes($siteName) }}',
+    currencySymbol: '{{ $currencySymbol }}',
+    transactionId: '',
+    isSubmitting: false,
+    showStaticQrModal: false,
+
+    setAmount(val) {
+        this.amount = val;
+    },
+
+    get formattedAmount() {
+        const num = parseFloat(this.amount);
+        return isNaN(num) ? '0.00' : num.toFixed(2);
+    },
+
+    get upiUrl() {
+        if (!this.amount || parseFloat(this.amount) <= 0) return '';
+        const amt = parseFloat(this.amount).toFixed(2);
+        const pa = encodeURIComponent(this.upiId);
+        const pn = encodeURIComponent(this.siteName);
+        const tn = encodeURIComponent('Wallet Topup');
+        return `upi://pay?pa=${pa}&pn=${pn}&am=${amt}&cu=INR&tn=${tn}`;
+    },
+
+    get qrCodeUrl() {
+        if (!this.upiUrl) return '';
+        return `https://quickchart.io/qr?text=${encodeURIComponent(this.upiUrl)}&size=220&margin=1`;
+    },
+
+    proceedToPay() {
+        const amt = parseFloat(this.amount);
+        if (isNaN(amt) || amt < 1) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Enter Valid Amount',
+                text: 'Please enter a valid amount (at least 1) to proceed.',
+                confirmButtonColor: '#3085d6',
+            });
+            return;
+        }
+        this.step = 2;
+    },
+
+    changeAmount() {
+        this.step = 1;
+    },
+
+    copyUpi() {
+        const id = this.upiId;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(id).then(() => {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Copied!',
+                    text: 'UPI ID copied: ' + id,
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+            }).catch(() => this.fallbackCopy(id));
+        } else {
+            this.fallbackCopy(id);
+        }
+    },
+
+    fallbackCopy(text) {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        Swal.fire({
+            icon: 'success',
+            title: 'Copied!',
+            text: 'UPI ID copied: ' + text,
+            timer: 1500,
+            showConfirmButton: false
+        });
+    },
+
+    async submitPayment() {
+        const ref = (this.transactionId || '').trim();
+        if (!ref) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Transaction ID Required',
+                text: 'Please enter the 12-digit UPI UTR / Transaction Reference number from your payment app.',
+                confirmButtonColor: '#3085d6',
+            });
+            return;
+        }
+
+        this.isSubmitting = true;
+        try {
+            const res = await fetch('/api/payment-requests', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    amount: this.amount,
+                    method: 'UPI',
+                    reference: ref
+                })
+            });
+
+            const data = await res.json();
+            if (res.ok) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Request Submitted!',
+                    text: 'Your top-up request of ' + this.currencySymbol + this.formattedAmount + ' (UTR: ' + ref + ') has been submitted. Wallet will be credited after admin verification.',
+                    confirmButtonColor: '#10b981',
+                });
+                this.amount = '';
+                this.transactionId = '';
+                this.step = 1;
+                if (typeof loadRequests === 'function') loadRequests();
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Submission Failed',
+                    text: data.message || 'Unable to submit payment request.',
+                    confirmButtonColor: '#ef4444',
+                });
+            }
+        } catch (err) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Connection Error',
+                text: 'Could not connect to the server. Please check your connection and try again.',
+            });
+        } finally {
+            this.isSubmitting = false;
+        }
+    }
+}">
 
     @if($isRestricted)
-        <div class="mb-6 p-6 rounded-2xl border border-warning-200 bg-warning-50 flex flex-col items-center text-center gap-4">
-            <div class="h-16 w-16 rounded-full bg-warning-100 flex items-center justify-center text-warning-600">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div class="p-4 rounded-2xl border border-warning-200 bg-warning-50 dark:border-warning-900/50 dark:bg-warning-900/10 flex items-start gap-3.5 shadow-xs">
+            <div class="h-10 w-10 shrink-0 rounded-xl bg-warning-100 dark:bg-warning-900/30 flex items-center justify-center text-warning-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
             </div>
-            <div>
+            <div class="flex-1">
                 @if($user->kyc_status === 'pending')
-                    <h3 class="text-lg font-bold text-warning-800">KYC Approval Pending</h3>
-                    <p class="text-sm text-warning-700 mt-1">Your profile has been submitted for KYC. Please wait for an admin to approve it before you can top-up your wallet.</p>
+                    <h3 class="text-sm font-bold text-warning-800 dark:text-warning-300">KYC Approval Pending</h3>
+                    <p class="text-xs text-warning-700 dark:text-warning-400 mt-0.5">Your profile is submitted for KYC verification. Top-up will be unlocked once an admin approves it.</p>
                 @else
-                    <h3 class="text-lg font-bold text-warning-800">KYC Approval Required</h3>
-                    <p class="text-sm text-warning-700 mt-1">You must complete your profile and have your KYC approved by the admin before you can top-up your wallet.</p>
+                    <h3 class="text-sm font-bold text-warning-800 dark:text-warning-300">KYC Approval Required</h3>
+                    <p class="text-xs text-warning-700 dark:text-warning-400 mt-0.5">You must complete your KYC profile and get approved before requesting a wallet top-up.</p>
                 @endif
+                <div class="mt-2.5">
+                    <a href="{{ route('profile.edit') }}" class="inline-flex items-center text-xs font-semibold text-brand-600 hover:text-brand-700 dark:text-brand-400">
+                        {{ $user->kyc_status === 'pending' ? 'View KYC Status' : 'Complete Profile Now' }} &rarr;
+                    </a>
+                </div>
             </div>
-            <a href="{{ route('profile.edit') }}" class="px-5 py-2.5 rounded bg-dark-900 text-danger text-sm font-semibold hover:bg-gray-800 transition">
-                {{ $user->kyc_status === 'pending' ? 'View Profile' : 'Complete Profile' }}
-            </a>
         </div>
     @endif
 
-    <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6 mb-6 {{ $isRestricted ? 'opacity-50 grayscale pointer-events-none' : '' }}">
-        <h2 class="mb-5 text-xl font-semibold text-gray-800 dark:text-white/90">Wallet Top-up (Manual)</h2>
-
-        <form id="payment-form" class="space-y-5">
-            <div>
-              <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                Amount<span class="text-error-500">*</span>
-              </label>
-              <input
-                type="number"
-                name="amount"
-                step="0.01"
-                required
-                placeholder="0.00"
-                class="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
-              />
+    <!-- Compact Main Payment Card -->
+    <div class="rounded-2xl border border-gray-200 bg-white p-5 md:p-6 dark:border-gray-800 dark:bg-white/[0.03] shadow-sm {{ $isRestricted ? 'opacity-50 pointer-events-none select-none' : '' }}">
+        
+        <!-- Header & Step Indicator -->
+        <div class="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-800">
+            <div class="flex items-center gap-3">
+                <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-500/10 text-brand-500 dark:bg-brand-500/20">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                </div>
+                <div>
+                    <h2 class="text-base font-bold text-gray-900 dark:text-white">UPI Wallet Top-up</h2>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Instant deposit via UPI or QR code</p>
+                </div>
             </div>
 
+            <!-- Steps Badge -->
+            <div class="flex items-center gap-1.5 text-xs font-medium">
+                <span :class="step === 1 ? 'bg-brand-500 text-white font-semibold shadow-2xs' : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 font-semibold'" 
+                      class="px-2.5 py-1 rounded-full transition-all">
+                    <span x-show="step === 1">1. Amount</span>
+                    <span x-show="step === 2">✓ {{ $currencySymbol }}<span x-text="formattedAmount"></span></span>
+                </span>
+                <span x-show="step === 2" class="px-2.5 py-1 rounded-full bg-brand-500 text-white font-semibold shadow-2xs transition-all">
+                    2. Pay & Submit
+                </span>
+            </div>
+        </div>
+
+        <!-- =================== STEP 1: ENTER AMOUNT =================== -->
+        <div x-show="step === 1" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" class="pt-5 space-y-4">
             <div>
-              <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                Method (e.g. UPI/Bank)<span class="text-error-500">*</span>
-              </label>
-              <input
-                type="text"
-                name="method"
-                required
-                placeholder="UPI / Bank Transfer"
-                class="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
-              />
+                <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-2">
+                    Enter Amount to Deposit
+                </label>
+                <div class="relative">
+                    <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-gray-500 font-bold text-xl dark:text-gray-400">
+                        {{ $currencySymbol }}
+                    </div>
+                    <input
+                        type="number"
+                        x-model="amount"
+                        @keydown.enter.prevent="proceedToPay()"
+                        step="1"
+                        min="1"
+                        placeholder="500"
+                        class="h-14 w-full rounded-xl border border-gray-300 bg-gray-50/50 pl-10 pr-4 text-2xl font-bold text-gray-900 shadow-2xs placeholder:text-gray-300 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-600 dark:focus:border-brand-500"
+                        autofocus
+                    />
+                </div>
             </div>
 
+            <!-- Quick Amount Chips -->
             <div>
-              <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                Reference (optional)
-              </label>
-              <input
-                type="text"
-                name="reference"
-                placeholder="Transaction ID"
-                class="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
-              />
+                <span class="text-[11px] font-medium text-gray-400 dark:text-gray-500 block mb-2">Quick Select:</span>
+                <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                    <template x-for="preset in presetAmounts" :key="preset">
+                        <button
+                            type="button"
+                            @click="setAmount(preset)"
+                            :class="amount == preset ? 'border-brand-500 bg-brand-50 text-brand-600 dark:bg-brand-500/20 dark:border-brand-500 dark:text-brand-300 font-bold shadow-2xs ring-2 ring-brand-500/20' : 'border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 dark:border-gray-800 dark:bg-white/[0.04] dark:text-gray-300 dark:hover:bg-gray-800'"
+                            class="py-2.5 px-1 text-center rounded-xl border text-xs transition active:scale-95 cursor-pointer">
+                            {{ $currencySymbol }}<span x-text="preset"></span>
+                        </button>
+                    </template>
+                </div>
             </div>
 
-            <div class="flex justify-end pt-2">
-                <button type="submit" id="submit-btn" class="flex items-center justify-center px-5 py-3 text-sm font-medium text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600">
-                    Request Top-up
+            <!-- Proceed to Pay Button -->
+            <div class="pt-2">
+                <button
+                    type="button"
+                    @click="proceedToPay()"
+                    :disabled="!amount || parseFloat(amount) < 1"
+                    class="w-full h-12 flex items-center justify-center gap-2 rounded-xl bg-brand-500 px-5 text-sm font-bold text-white shadow-sm transition hover:bg-brand-600 active:scale-[0.99] disabled:opacity-50 disabled:pointer-events-none cursor-pointer">
+                    <span>Proceed to Pay</span>
+                    <span x-show="amount && parseFloat(amount) >= 1" class="font-mono">({{ $currencySymbol }}<span x-text="formattedAmount"></span>)</span>
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    </svg>
                 </button>
             </div>
-        </form>
+        </div>
+
+        <!-- =================== STEP 2: PAY VIA UPI / QR & SUBMIT TRANSACTION =================== -->
+        <div x-show="step === 2" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" class="pt-5 space-y-4" style="display: none;">
+            
+            <!-- Amount Summary Banner with Change Button -->
+            <div class="flex items-center justify-between p-3.5 rounded-xl bg-brand-50 dark:bg-brand-500/10 border border-brand-200/60 dark:border-brand-500/20">
+                <div>
+                    <span class="text-[11px] font-semibold text-brand-700 dark:text-brand-300 uppercase tracking-wider block">Payable Amount</span>
+                    <div class="text-2xl font-black text-brand-900 dark:text-white mt-0.5">
+                        {{ $currencySymbol }}<span x-text="formattedAmount"></span>
+                    </div>
+                </div>
+                <button
+                    type="button"
+                    @click="changeAmount()"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 shadow-2xs hover:bg-gray-50 active:scale-95 transition cursor-pointer">
+                    <svg class="h-3.5 w-3.5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                    <span>Change Amount</span>
+                </button>
+            </div>
+
+            <!-- Primary Action 1: One-click "Open in UPI App" for Mobile -->
+            <div class="space-y-1.5 text-center">
+                <a
+                    :href="upiUrl"
+                    class="w-full h-12 flex items-center justify-center gap-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 px-4 text-sm font-bold text-white shadow-md hover:opacity-95 active:scale-[0.99] transition cursor-pointer">
+                    <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                    <span>Pay {{ $currencySymbol }}<span x-text="formattedAmount"></span> via UPI App</span>
+                </a>
+                <p class="text-[11px] text-gray-500 dark:text-gray-400">
+                    Tap to open PhonePe, Google Pay, Paytm, or BHIM with this amount.
+                </p>
+            </div>
+
+            <!-- Divider -->
+            <div class="relative flex items-center justify-center pt-1 pb-1">
+                <div class="border-t border-gray-200 dark:border-gray-800 w-full"></div>
+                <span class="bg-white dark:bg-gray-900 px-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest absolute">OR SCAN QR CODE</span>
+            </div>
+
+            <!-- Primary Action 2: Dynamic Amount-Specific QR Code -->
+            <div class="flex flex-col items-center justify-center p-4 rounded-xl border border-gray-100 dark:border-gray-800/80 bg-gray-50/70 dark:bg-white/[0.02]">
+                <div class="p-2 bg-white rounded-xl shadow-xs border border-gray-200 dark:border-gray-700">
+                    <img
+                        :src="qrCodeUrl"
+                        alt="UPI QR Code"
+                        class="w-44 h-44 object-contain rounded-lg"
+                        loading="lazy"
+                        x-on:error="$el.src = 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=' + encodeURIComponent(upiUrl)"
+                    />
+                </div>
+                
+                <p class="text-xs font-bold text-gray-800 dark:text-gray-200 mt-2.5 text-center">
+                    Scan to pay {{ $currencySymbol }}<span x-text="formattedAmount"></span>
+                </p>
+
+                <!-- Copy UPI ID Pill -->
+                <div class="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-xs shadow-2xs">
+                    <span class="text-gray-400 font-mono text-[10px] uppercase">UPI ID:</span>
+                    <span class="font-mono font-bold text-gray-800 dark:text-gray-200 text-xs">{{ $upiId }}</span>
+                    <button
+                        type="button"
+                        @click="copyUpi()"
+                        class="text-brand-600 hover:text-brand-700 dark:text-brand-400 text-xs font-bold ml-1 cursor-pointer">
+                        Copy
+                    </button>
+                </div>
+
+                @if($useCustomQr && $customQrPath)
+                    <div class="mt-2">
+                        <button
+                            type="button"
+                            @click="showStaticQrModal = true"
+                            class="text-[11px] font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 underline cursor-pointer">
+                            View Merchant Shop QR Code
+                        </button>
+                    </div>
+                @endif
+            </div>
+
+            <!-- Primary Action 3: Ask Transaction ID / UTR and Submit -->
+            <div class="pt-3 border-t border-gray-100 dark:border-gray-800 space-y-3">
+                <div>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="block text-xs font-bold text-gray-800 dark:text-white uppercase tracking-wider">
+                            UPI Transaction ID / UTR <span class="text-error-500">*</span>
+                        </label>
+                        <span class="text-[10px] text-gray-400">12-digit number</span>
+                    </div>
+                    <input
+                        type="text"
+                        x-model="transactionId"
+                        @keydown.enter.prevent="submitPayment()"
+                        placeholder="e.g. 412345678901 (from payment app receipt)"
+                        class="h-11 w-full rounded-xl border border-gray-300 bg-transparent px-3.5 text-sm text-gray-800 shadow-2xs placeholder:text-gray-400 focus:border-brand-500 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500"
+                    />
+                    <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1">
+                        💡 After paying in your UPI app, copy the 12-digit UTR/UPI Ref number and paste it above to submit.
+                    </p>
+                </div>
+
+                <div class="flex items-center gap-2 pt-1">
+                    <button
+                        type="button"
+                        @click="changeAmount()"
+                        class="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 transition cursor-pointer">
+                        Back
+                    </button>
+                    <button
+                        type="button"
+                        @click="submitPayment()"
+                        :disabled="isSubmitting || !transactionId || transactionId.trim().length < 4"
+                        class="flex-1 h-11 flex items-center justify-center gap-2 rounded-xl bg-brand-500 px-5 text-sm font-bold text-white shadow-sm transition hover:bg-brand-600 disabled:opacity-50 disabled:pointer-events-none cursor-pointer">
+                        <svg x-show="isSubmitting" class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span x-text="isSubmitting ? 'Submitting...' : 'Submit Payment Request'"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6">
-        <h3 class="mb-5 text-lg font-semibold text-gray-800 dark:text-white/90">Your Requests</h3>
-        <div id="requests" class="space-y-4"></div>
+    @if($useCustomQr && $customQrPath)
+        <!-- Optional Modal for Merchant Static QR -->
+        <div x-show="showStaticQrModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" style="display: none;" @click.self="showStaticQrModal = false">
+            <div class="bg-white dark:bg-gray-900 rounded-2xl p-5 max-w-sm w-full space-y-3 text-center shadow-xl border border-gray-200 dark:border-gray-800">
+                <div class="flex items-center justify-between pb-2 border-b border-gray-100 dark:border-gray-800">
+                    <h4 class="text-sm font-bold text-gray-900 dark:text-white">Merchant Shop QR</h4>
+                    <button @click="showStaticQrModal = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-lg font-bold">&times;</button>
+                </div>
+                <img src="{{ $customQrPath }}" alt="Merchant QR" class="w-56 h-56 mx-auto object-contain rounded-xl border border-gray-100 dark:border-gray-800" />
+                <p class="text-xs text-gray-500">Scan this code and enter the exact amount manually in your UPI app.</p>
+                <button @click="showStaticQrModal = false" class="w-full py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-xs font-semibold rounded-xl text-gray-700 dark:text-gray-300">Close</button>
+            </div>
+        </div>
+    @endif
+
+    <!-- Compact Requests History -->
+    <div class="rounded-2xl border border-gray-200 bg-white p-4 md:p-5 dark:border-gray-800 dark:bg-white/[0.03] shadow-xs">
+        <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+                <h3 class="text-sm font-bold text-gray-800 dark:text-white/90">Your Top-up History</h3>
+                <span id="requests-count" class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300">0</span>
+            </div>
+            <button
+                type="button"
+                onclick="loadRequests()"
+                class="inline-flex items-center gap-1 text-xs text-brand-600 hover:text-brand-700 dark:text-brand-400 font-medium cursor-pointer">
+                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <span>Refresh</span>
+            </button>
+        </div>
+        <div id="requests" class="space-y-2.5">
+            <p class="text-xs text-gray-400 text-center py-4">Loading requests...</p>
+        </div>
     </div>
 </div>
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-const CURRENCY = '{{ $currency }}';
-async function loadRequests(){
-    const res = await fetch('/api/payment-requests', {credentials:'same-origin'});
-    const json = await res.json();
+const CURRENCY_SYMBOL = '{{ $currencySymbol }}';
+
+async function loadRequests() {
     const el = document.getElementById('requests');
-    el.innerHTML = '';
-    
-    if (json.data.length === 0) {
-        el.innerHTML = '<p class="text-sm text-gray-500 text-center py-4">No payment requests yet.</p>';
-        return;
-    }
-
-    json.data.forEach(r=>{
-        const d = document.createElement('div');
-        d.className = 'p-4 rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-white/[0.03] space-y-2';
-        
-        let statusColor = 'bg-warning-50 text-warning-600';
-        if(r.status === 'approved') statusColor = 'bg-success-50 text-white-600';
-        if(r.status === 'rejected') statusColor = 'bg-error-50 text-error-600';
-
-        const date = new Date(r.created_at).toLocaleString();
-        
-        d.innerHTML = `
-            <div class="flex items-center justify-between">
-                <div>
-                    <span class="text-sm font-semibold text-gray-800 dark:text-white/90">Amount: ${CURRENCY}${parseFloat(r.amount).toLocaleString()}</span>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">${r.method || 'N/A'} ${r.reference ? ' - ' + r.reference : ''}</p>
-                </div>
-                <div class="px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColor}">
-                    ${r.status.toUpperCase()}
-                </div>
-            </div>
-            <div class="flex items-center justify-between text-[10px] text-gray-400">
-                <span>${date}</span>
-                ${r.processed_at ? `<span>Processed: ${new Date(r.processed_at).toLocaleString()}</span>` : ''}
-            </div>
-            ${r.admin_note ? `
-                <div class="mt-2 p-2 rounded bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 text-xs text-gray-600 dark:text-gray-400 italic">
-                    Note: ${r.admin_note}
-                </div>
-            ` : ''}
-        `;
-        el.appendChild(d);
-    });
-}
-
-document.getElementById('payment-form').addEventListener('submit', async (e)=>{
-    e.preventDefault();
-    const data = new FormData(e.target);
-    const body = {amount: data.get('amount'), method: data.get('method'), reference: data.get('reference')};
-    
-    const submitBtn = document.getElementById('submit-btn');
-    const originalText = submitBtn.innerText;
-    submitBtn.disabled = true;
-    submitBtn.innerText = 'Processing...';
-
+    const countEl = document.getElementById('requests-count');
     try {
-        const res = await fetch('/api/payment-requests', {
-            method:'POST', 
-            credentials:'same-origin', 
-            headers:{
-                'Content-Type':'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-            }, 
-            body:JSON.stringify(body)
-        });
+        const res = await fetch('/api/payment-requests', {credentials:'same-origin'});
+        const json = await res.json();
+        el.innerHTML = '';
+        
+        const list = json.data || [];
+        if (countEl) countEl.innerText = list.length;
 
-        if(res.ok){ 
-            Swal.fire({
-                icon: 'success',
-                title: 'Request Created',
-                text: 'Your payment top-up request has been submitted successfully.',
-                confirmButtonColor: '#3085d6',
-            });
-            e.target.reset(); 
-            loadRequests(); 
-        } else { 
-            const j = await res.json(); 
-            Swal.fire({
-                icon: 'error',
-                title: 'Oops...',
-                text: j.message || 'Something went wrong!',
-            });
+        if (list.length === 0) {
+            el.innerHTML = '<p class="text-xs text-gray-400 text-center py-3">No payment requests submitted yet.</p>';
+            return;
         }
-    } catch (error) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Connection Error',
-            text: 'Could not connect to the server. Please try again later.',
-        });
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerText = originalText;
-    }
-});
 
-function copyUPI(id) {
-    navigator.clipboard.writeText(id).then(() => {
-        Swal.fire({
-            icon: 'success',
-            title: 'Copied!',
-            text: 'UPI ID copied to clipboard: ' + id,
-            timer: 2000,
-            showConfirmButton: false
+        list.forEach(r => {
+            const d = document.createElement('div');
+            d.className = 'p-3 rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50/70 dark:bg-white/[0.02] flex flex-col gap-1.5';
+            
+            let statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">PENDING</span>';
+            if (r.status === 'approved') {
+                statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">APPROVED</span>';
+            } else if (r.status === 'rejected') {
+                statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400">REJECTED</span>';
+            }
+
+            const date = new Date(r.created_at).toLocaleString(undefined, {
+                month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+            });
+
+            d.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold text-gray-900 dark:text-white">${CURRENCY_SYMBOL}${parseFloat(r.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                        <span class="text-[10px] font-semibold text-gray-400 uppercase">${r.method || 'UPI'}</span>
+                    </div>
+                    ${statusBadge}
+                </div>
+                <div class="flex items-center justify-between text-[11px] text-gray-500 dark:text-gray-400">
+                    <span class="font-mono truncate max-w-[200px]" title="${r.reference || ''}">Ref: ${r.reference || 'N/A'}</span>
+                    <span class="text-[10px] text-gray-400">${date}</span>
+                </div>
+                ${r.admin_note ? `
+                    <div class="mt-1 p-2 rounded-lg bg-white dark:bg-gray-800/80 border border-gray-200/60 dark:border-gray-700/60 text-[11px] text-gray-600 dark:text-gray-300">
+                        <strong class="font-semibold text-gray-700 dark:text-gray-200">Admin Note:</strong> ${r.admin_note}
+                    </div>
+                ` : ''}
+            `;
+            el.appendChild(d);
         });
-    });
+    } catch(e) {
+        el.innerHTML = '<p class="text-xs text-rose-500 text-center py-2">Failed to load requests.</p>';
+    }
 }
 
+// Initial load of history
 loadRequests();
 </script>
 @endpush

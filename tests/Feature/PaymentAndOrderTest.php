@@ -13,10 +13,20 @@ class PaymentAndOrderTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_payments_view_renders_successfully()
+    {
+        $user = User::factory()->create(['kyc_status' => 'approved']);
+        $response = $this->actingAs($user)->get('/payments');
+        $response->assertStatus(200);
+        $response->assertSee('UPI Wallet Top-up');
+        $response->assertSee('Payable Amount');
+        $response->assertSee('Open in UPI App');
+    }
+
     public function test_manual_payment_and_order_flow()
     {
         $admin = User::factory()->create(['role' => 'admin']);
-        $buyer = User::factory()->create();
+        $buyer = User::factory()->create(['kyc_status' => 'approved']);
 
         // Buyer creates a payment request
         $resp = $this->actingAs($buyer)->postJson('/api/payment-requests', [

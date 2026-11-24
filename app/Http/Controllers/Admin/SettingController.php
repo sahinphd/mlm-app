@@ -129,6 +129,7 @@ class SettingController extends Controller
             'id_card_signature_title' => 'Authorized Signatory',
             'id_card_signature_path' => 'images/signatures/default-signature.svg',
             'contact_email' => 'admin@example.com',
+            'contact_phone' => '+91 90910 90858',
             'currency' => 'INR',
             'min_withdrawal' => 500,
             'default_credit_limit' => 5000,

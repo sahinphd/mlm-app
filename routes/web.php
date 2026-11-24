@@ -13,7 +13,16 @@ Route::get('/', function (Request $request) {
     return view('auth.index');
 });
 
-// public auth pages
+// Public Shop & Cart Routes
+Route::get('/shop', [\App\Http\Controllers\ShopController::class, 'index'])->name('shop.index');
+Route::post('/shop/cart/sync', [\App\Http\Controllers\ShopController::class, 'syncCart'])->name('shop.cart.sync');
+Route::match(['get', 'post'], '/shop/checkout', [\App\Http\Controllers\ShopController::class, 'checkout'])->name('shop.checkout');
+
+// Public Blog Routes
+Route::get('/blog', [\App\Http\Controllers\BlogController::class, 'index'])->name('blog.index');
+Route::get('/blog/{slug}', [\App\Http\Controllers\BlogController::class, 'show'])->name('blog.show');
+
+// Public auth pages
 Route::get('/register', function(){ return view('auth.register'); })->name('register.view');
 Route::get('/login', function(){ return view('auth.login'); })->name('login.view');
 // Route::get('/forgot-password', function(){ return view('auth.forgot-password'); })->name('password.request');
@@ -218,8 +227,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/credit/emis/{id}/pay', [\App\Http\Controllers\EmiController::class, 'payEmi'])->name('credit.emis.pay');
     Route::post('/credit/penalties/{id}/pay', [\App\Http\Controllers\EmiController::class, 'payPenalty'])->name('credit.penalties.pay');
 
-    Route::get('/shop', [\App\Http\Controllers\ShopController::class, 'index'])->name('shop.index');
-    Route::get('/shop/checkout', [\App\Http\Controllers\ShopController::class, 'checkout'])->name('shop.checkout');
     Route::post('/shop/place-order', [\App\Http\Controllers\ShopController::class, 'placeOrder'])->name('shop.place-order');
     Route::get('/orders', [\App\Http\Controllers\ShopController::class, 'orderHistory'])->name('orders.index');
 
@@ -302,6 +309,11 @@ Route::middleware('auth')->group(function () {
         Route::post('/admin/customer-lookup/{user}/update-credit-limit', [\App\Http\Controllers\Admin\CustomerLookupController::class, 'updateCreditLimit'])->name('admin.customer-lookup.update-credit-limit');
         Route::get('/admin/customer-lookup/{user}/qr', [\App\Http\Controllers\QrCodeController::class, 'customerQr'])->name('admin.customer-qr');
 
+        // Bulk ID Cards
+        Route::get('/admin/id-cards', [\App\Http\Controllers\Admin\IdCardController::class, 'index'])->name('admin.id-cards.index');
+        Route::match(['get', 'post'], '/admin/id-cards/print', [\App\Http\Controllers\Admin\IdCardController::class, 'print'])->name('admin.id-cards.print');
+        Route::get('/admin/id-cards/{user}/single-print', [\App\Http\Controllers\Admin\IdCardController::class, 'singlePrint'])->name('admin.id-cards.single-print');
+
         // Admin Products
         Route::get('/admin/products', [\App\Http\Controllers\Admin\ProductController::class, 'index'])->name('admin.products');
         Route::get('/admin/products/create', [\App\Http\Controllers\Admin\ProductController::class, 'create'])->name('admin.products.create');
@@ -317,6 +329,14 @@ Route::middleware('auth')->group(function () {
         Route::get('/admin/packages/{package}/edit', [\App\Http\Controllers\Admin\PackageController::class, 'edit'])->name('admin.packages.edit');
         Route::post('/admin/packages/{package}', [\App\Http\Controllers\Admin\PackageController::class, 'update'])->name('admin.packages.update');
         Route::delete('/admin/packages/{package}', [\App\Http\Controllers\Admin\PackageController::class, 'destroy'])->name('admin.packages.destroy');
+
+        // Admin Blog Posts
+        Route::get('/admin/blogs', [\App\Http\Controllers\Admin\BlogController::class, 'index'])->name('admin.blogs.index');
+        Route::get('/admin/blogs/create', [\App\Http\Controllers\Admin\BlogController::class, 'create'])->name('admin.blogs.create');
+        Route::post('/admin/blogs/store', [\App\Http\Controllers\Admin\BlogController::class, 'store'])->name('admin.blogs.store');
+        Route::get('/admin/blogs/{blog}/edit', [\App\Http\Controllers\Admin\BlogController::class, 'edit'])->name('admin.blogs.edit');
+        Route::post('/admin/blogs/{blog}', [\App\Http\Controllers\Admin\BlogController::class, 'update'])->name('admin.blogs.update');
+        Route::delete('/admin/blogs/{blog}', [\App\Http\Controllers\Admin\BlogController::class, 'destroy'])->name('admin.blogs.destroy');
 
         // Admin Orders
         Route::get('/admin/orders', [\App\Http\Controllers\Admin\OrderController::class, 'index'])->name('admin.orders');

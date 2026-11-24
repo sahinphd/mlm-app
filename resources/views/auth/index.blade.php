@@ -38,16 +38,19 @@
                     <p class="mt-6 text-lg text-gray-600 dark:text-gray-300">
                         Your trusted local shop for fresh goods, traditional spices, and daily essentials — now online.
                     </p>
-                    <div class="mt-8 flex flex-wrap gap-4">
+                    <div class="mt-8 flex flex-wrap gap-4 items-center">
+                        <a href="{{ route('shop.index') }}" class="px-6 py-3.5 bg-blue-600 text-white font-bold rounded-full shadow-md hover:bg-blue-700 transition transform hover:-translate-y-1 inline-flex items-center gap-2">
+                            <i class="fas fa-shopping-bag"></i> Browse All Products
+                        </a>
                         @guest
-                            <a href="{{ route('register') }}" class="px-6 py-3 bg-blue-600 text-white font-semibold rounded-full shadow-md hover:bg-blue-700 transition transform hover:-translate-y-1">
-                                Get Started <i class="fas fa-arrow-right ml-2"></i>
+                            <a href="{{ route('register') }}" class="px-6 py-3.5 border-2 border-blue-600 text-blue-600 dark:text-blue-400 font-semibold rounded-full hover:bg-blue-50 dark:hover:bg-blue-900/30 transition">
+                                Get Started <i class="fas fa-arrow-right ml-1"></i>
                             </a>
-                            <a href="{{ route('login') }}" class="px-6 py-3 border-2 border-blue-600 text-blue-600 dark:text-blue-400 font-semibold rounded-full hover:bg-blue-50 dark:hover:bg-blue-900/30 transition">
+                            <a href="{{ route('login') }}" class="px-5 py-3 text-gray-700 dark:text-gray-300 font-semibold hover:text-blue-600 transition">
                                 Log in
                             </a>
                         @else
-                            <a href="{{ url('/dashboard') }}" class="px-6 py-3 bg-blue-600 text-white font-semibold rounded-full shadow-md hover:bg-blue-700 transition">
+                            <a href="{{ url('/dashboard') }}" class="px-6 py-3.5 border-2 border-blue-600 text-blue-600 dark:text-blue-400 font-semibold rounded-full hover:bg-blue-50 dark:hover:bg-blue-900/30 transition">
                                 Dashboard →
                             </a>
                         @endguest
@@ -124,6 +127,20 @@
                         </div>
                         <h3 class="text-xl font-semibold mt-4 dark:text-white">Home Delivery</h3>
                         <p class="mt-2 text-gray-500 dark:text-gray-400">Fast and free delivery — just call or WhatsApp.</p>
+                    </div>
+                </div>
+
+                <!-- Dedicated Shop CTA Banner -->
+                <div class="mt-14 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-3xl p-8 md:p-10 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 reveal">
+                    <div class="max-w-xl text-center md:text-left">
+                        <span class="inline-block bg-white/20 text-white text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full mb-3">Online Shopping Store</span>
+                        <h3 class="text-2xl md:text-3xl font-extrabold tracking-tight">Browse All Listed Products & Packages</h3>
+                        <p class="mt-2 text-blue-100 text-sm">Choose items, add to cart, and enjoy seamless doorstep delivery with reward BV points on every purchase.</p>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <a href="{{ route('shop.index') }}" class="px-8 py-4 bg-white text-blue-700 font-extrabold rounded-full shadow-lg hover:bg-blue-50 transition transform hover:scale-105 inline-flex items-center gap-2.5 text-base">
+                            <i class="fas fa-shopping-cart"></i> Go to Shop Page →
+                        </a>
                     </div>
                 </div>
             </div>
@@ -280,6 +297,8 @@
                     <p>© {{ date('Y') }} duaredokandar.in — responsive, real, relatable.</p>
                     <p class="mt-2">
                         Crafted with <i class="fas fa-heart text-red-500"></i> for the neighbourhood &nbsp;|&nbsp;
+                        <a href="{{ route('shop.index') }}" class="hover:text-blue-600 font-semibold text-blue-600 dark:text-blue-400">Shop Catalog</a> &nbsp;|&nbsp;
+                        <a href="{{ route('blog.index') }}" class="hover:text-blue-600 font-semibold text-blue-600 dark:text-blue-400">Blog Articles</a> &nbsp;|&nbsp;
                         <a href="#" @click.prevent="showTerms = true" class="hover:text-blue-600">Terms & Conditions</a>
                     </p>
                 </div>
